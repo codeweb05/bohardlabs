@@ -18,8 +18,9 @@ package at a time.
 Two things the workflow does that are easy to miss:
 
 - **Playwright Chromium is installed before the tests.** Every story runs as a real browser
-  test through `@storybook/addon-vitest`, so the browser has to exist first. `--with-deps`
-  pulls the system libraries the runner image does not ship.
+  test through `@storybook/addon-vitest`, so the browser has to exist first. The install
+  runs in `@bohardlabs/storybook`, which is the package that actually depends on Playwright.
+  `--with-deps` pulls the system libraries the runner image does not ship.
 - **The Storybook build is uploaded as an artifact** and the Pages job downloads it rather
   than building it a second time.
 

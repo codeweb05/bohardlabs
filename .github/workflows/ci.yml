@@ -28,9 +28,10 @@ jobs:
 
       # The Storybook suite runs every story in a real Chromium, so the browser has to
       # exist before the tests do. `--with-deps` pulls the system libraries the runner
-      # image does not ship.
+      # image does not ship. Playwright is a dependency of the showcase, not the root;
+      # `pnpm exec playwright` at the workspace root fails with command-not-found.
       - name: Install Playwright Chromium
-        run: pnpm exec playwright install chromium --with-deps
+        run: pnpm --filter @bohardlabs/storybook exec playwright install chromium --with-deps
 
       # oxlint, then ESLint for the rules oxlint has no equivalent for (sonarjs), then
       # formatting, typecheck, build, and the tests. See docs/tooling.md for why both

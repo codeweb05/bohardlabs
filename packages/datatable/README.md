@@ -322,7 +322,7 @@ rather than a part of its composition.
 | `DEFAULT_PAGE_SIZE`, `DENSITY_CONFIG`, …            | the defaults, so an app can match them           |
 | `useInlineEdit`                                     | inline row editing; `onSave` is your own write   |
 | `slots`, `dateFormats`                              | swap in the app's confirm dialog and date format |
-| `@bohardlabs/datatable/server`                           | `useServerSidePagination` (needs React Query)    |
+| `@bohardlabs/datatable/server`                      | `useServerSidePagination` (needs React Query)    |
 
 Every prop is documented in `types.ts` with the gotcha attached, and rendered as a prop
 table in Storybook.
@@ -335,3 +335,8 @@ pnpm storybook   # from the repo root
 
 The stories are the demo, the interaction tests and the accessibility checks at once. Start
 with **Guides → Getting started** and **Guides → Server-side data**.
+
+## License
+
+[PolyForm Noncommercial 1.0.0](../../LICENSE). Commercial use needs a paid license; email
+sj40863@gmail.com.

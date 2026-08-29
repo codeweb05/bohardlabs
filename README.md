@@ -12,8 +12,8 @@ pnpm validate    # lint + typecheck + test + build
 
 ## Packages
 
-| Package              | What it is                                            | Status                |
-| -------------------- | ----------------------------------------------------- | --------------------- |
+| Package              | What it is                                            | Status        |
+| -------------------- | ----------------------------------------------------- | ------------- |
 | `packages/datatable` | Server-driven React data table (TanStack Table + MUI) | first release |
 
 Packages are scoped `@bohardlabs/*`. `@bohardlabs/datatable` is the first to publish; see
@@ -25,6 +25,12 @@ the [roadmap](docs/roadmap.md#1-publishing).
 they document, and they double as the test suite: `@storybook/addon-vitest` runs each one
 in a real browser, `play` functions are the interaction tests, and an axe violation fails
 the run.
+
+## License
+
+[PolyForm Noncommercial 1.0.0](LICENSE). Personal, research, hobby, and qualifying
+non-profit or government use is allowed. Commercial use needs a paid license; email
+sj40863@gmail.com.
 
 ## Working here
 

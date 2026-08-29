@@ -26,9 +26,9 @@ what is next, or what is blocked.
 
 **Decisions**
 
-- [`decisions/README.md`](decisions/README.md): the log. Eight so far: npm scope, ESM-only,
+- [`decisions/README.md`](decisions/README.md): the log. Nine so far: npm scope, ESM-only,
   the React Compiler, `noUncheckedIndexedAccess`, where the DataTable backlog lives, MUI
-  versioning.
+  versioning, the noncommercial license.
 - [`decisions/open-questions.md`](decisions/open-questions.md): the ones not made yet. Do
   not guess an answer to something parked here.
 

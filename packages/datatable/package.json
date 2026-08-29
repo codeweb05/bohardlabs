@@ -2,11 +2,13 @@
   "name": "@bohardlabs/datatable",
   "version": "0.1.0",
   "description": "Server-driven React data table built on TanStack Table and MUI",
+  "license": "PolyForm-Noncommercial-1.0.0",
   "type": "module",
   "sideEffects": false,
   "files": [
     "dist",
-    "CHANGELOG.md"
+    "CHANGELOG.md",
+    "LICENSE"
   ],
   "exports": {
     ".": {

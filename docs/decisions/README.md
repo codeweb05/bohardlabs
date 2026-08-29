@@ -12,14 +12,15 @@ ask. The day one is answered, it leaves that file and becomes the next numbered 
 
 | #    | Decision                                                                                     | Status      | Date       |
 | ---- | -------------------------------------------------------------------------------------------- | ----------- | ---------- |
-| 0001 | [npm scope is `@bohar/*`](0001-npm-scope.md)                                                  | superseded  | 2026-08-28 |
+| 0001 | [npm scope is `@bohar/*`](0001-npm-scope.md)                                                 | superseded  | 2026-08-28 |
 | 0002 | [Packages ship ESM only](0002-esm-only.md)                                                   | provisional | 2026-08-28 |
 | 0003 | [The React Compiler runs here, not in the consumer](0003-react-compiler.md)                  | decided     | 2026-08-28 |
 | 0004 | [`noUncheckedIndexedAccess` goes on, in its own change](0004-no-unchecked-indexed-access.md) | decided     | 2026-08-28 |
 | 0005 | [The DataTable feature backlog lives in this repo](0005-datatable-roadmap-location.md)       | decided     | 2026-08-28 |
 | 0006 | [MUI: pinned to the app first, then upgraded](0006-mui-version.md)                           | decided     | 2026-08-28 |
-| 0007 | [npm scope is `@bohard/*`](0007-npm-scope.md)                                                 | superseded  | 2026-08-29 |
-| 0008 | [npm scope is `@bohardlabs/*`](0008-npm-scope.md)                                             | decided     | 2026-08-29 |
+| 0007 | [npm scope is `@bohard/*`](0007-npm-scope.md)                                                | superseded  | 2026-08-29 |
+| 0008 | [npm scope is `@bohardlabs/*`](0008-npm-scope.md)                                            | decided     | 2026-08-29 |
+| 0009 | [Public terms are PolyForm Noncommercial](0009-noncommercial-license.md)                     | decided     | 2026-08-29 |
 
 **Status** means: `decided` is settled and the reasoning is in the file; `provisional` is
 settled until a named trigger fires, and the file says what the trigger is; `superseded`
