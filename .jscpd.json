@@ -1,0 +1,18 @@
+{
+  "threshold": 5,
+  "minLines": 5,
+  "reporters": ["console"],
+  "format": ["typescript", "javascript", "tsx", "jsx"],
+  "path": ["packages"],
+  "ignore": [
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.stories.ts",
+    "**/*.stories.tsx",
+    "**/*.mdx",
+    "**/coverage/**",
+    "**/.turbo/**"
+  ]
+}
