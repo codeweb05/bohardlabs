@@ -4,6 +4,9 @@
 > `src/components/DataTable/…` are the component's old home in that app; it now lives at
 > `packages/datatable/src/` here. The rest reads unchanged.
 
+This is the feature backlog for one package. Where it stands next to everything else in
+the repo is on [`../../roadmap.md`](../../roadmap.md).
+
 Candidate features for `src/components/DataTable/`, ranked by value rather than by novelty. Each entry says what exists today, so the estimate reflects real remaining work.
 
 **Direction:** this component is being extracted into a standalone npm library. That widens the scope in two ways. Features that only an analyst would use (pivot, aggregation, charting) are now in scope, because the library's audience is larger than SkipWash ops. And anything SkipWash-specific (MUI theme tokens, our `t()`, our axios layer) has to become injectable rather than imported. Items below are tagged **[lib]** where the packaging constraint changes the design.

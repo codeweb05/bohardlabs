@@ -37,7 +37,7 @@ const cancelEdit = vi.fn();
 /** The draft differs from the row so tests can prove which one the input reads. */
 const draft: Partial<Item> = {id: 'row-1', name: 'Bleach', quantity: 9, status: 'PENDING'};
 
-function editingContext(overrides: Partial<TableEditingContextValue<Item>> = {}): TableEditingContextValue<Item> {
+function editingContext(overrides: Partial<TableEditingContextValue<RowData>> = {}): TableEditingContextValue<RowData> {
   return {
     editingRowId: 'row-1',
     editingData: draft,
@@ -67,10 +67,10 @@ function Harness({
 function renderCell(
   columns: DataTableColumnDef<Item>[],
   columnId: string,
-  overrides: Partial<TableEditingContextValue<Item>> = {},
+  overrides: Partial<TableEditingContextValue<RowData>> = {},
 ) {
   return render(
-    <TableEditingContext.Provider value={editingContext(overrides) as TableEditingContextValue<RowData>}>
+    <TableEditingContext.Provider value={editingContext(overrides)}>
       <Harness columns={columns} columnId={columnId} />
     </TableEditingContext.Provider>,
   );
@@ -282,7 +282,7 @@ describe('EditableCell — custom renderer', () => {
 // ===========================================================================
 describe('EditableCell — re-rendering', () => {
   it('keeps the same field when re-rendered with unchanged props', () => {
-    const context = editingContext() as TableEditingContextValue<RowData>;
+    const context = editingContext();
     const {rerender} = render(
       <TableEditingContext.Provider value={context}>
         <Harness columns={[textColumn]} columnId="name" />

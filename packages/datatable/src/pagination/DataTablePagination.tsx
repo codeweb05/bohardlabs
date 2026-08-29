@@ -113,8 +113,8 @@ export function DataTablePagination<TData extends RowData>({
         {/* Total rows info */}
         <Typography
           variant="body2"
-          color="text.secondary"
           sx={{
+            color: 'text.secondary',
             fontSize: {xs: '0.75rem', sm: '0.8125rem'},
             whiteSpace: 'nowrap',
           }}
@@ -133,8 +133,8 @@ export function DataTablePagination<TData extends RowData>({
           >
             <Typography
               variant="body2"
-              color="text.secondary"
               sx={{
+                color: 'text.secondary',
                 fontSize: {xs: '0.75rem', sm: '0.8125rem'},
                 display: {xs: 'none', sm: 'block'},
               }}
@@ -181,8 +181,8 @@ export function DataTablePagination<TData extends RowData>({
         {showPageInfo && !isMobile && (
           <Typography
             variant="body2"
-            color="text.secondary"
             sx={{
+              color: 'text.secondary',
               fontSize: {xs: '0.75rem', sm: '0.8125rem'},
               whiteSpace: 'nowrap',
               mr: 1,

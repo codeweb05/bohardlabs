@@ -50,13 +50,13 @@ const config: StorybookConfig = {
       propFilter: (prop) => (prop.parent ? !/node_modules/.test(prop.parent.fileName) : true),
     },
   },
-  // `@storybook/react-vite` ships no React plugin of its own (Vite's esbuild handles the
-  // JSX), so the React Compiler would not run here. The table's components depend on it
+  // `@storybook/react-vite` ships no React plugin of its own (Vite's oxc transform handles
+  // the JSX), so the React Compiler would not run here. The table's components depend on it
   // for the memoization they are written against, which means without this the showcase
   // and its browser tests exercise different behaviour from the published build.
   viteFinal: (viteConfig) => ({
     ...viteConfig,
-    plugins: [...(viteConfig.plugins ?? []), react({babel: {plugins: ['babel-plugin-react-compiler']}})],
+    plugins: [...(viteConfig.plugins ?? []), react({compiler: true})],
   }),
 };
 

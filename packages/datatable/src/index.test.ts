@@ -17,6 +17,7 @@ import * as server from './server';
 
 /** Every runtime export of the main entry, alphabetical. Add to this list only with intent. */
 const PUBLIC_API = [
+  'ConfirmDialog',
   'DEFAULT_HEADER_CASE',
   'DEFAULT_LABELS',
   'DEFAULT_PAGE_SIZE',
@@ -55,7 +56,7 @@ describe('public API', () => {
   });
 
   it('does not leak internal components', () => {
-    for (const internal of ['ResizeHandle', 'TableHeader', 'TableRow', 'DateFilter', 'ExportMenu', 'ConfirmDialog']) {
+    for (const internal of ['ResizeHandle', 'TableHeader', 'TableRow', 'DateFilter', 'ExportMenu', 'BulkActions']) {
       expect(dataTable).not.toHaveProperty(internal);
     }
   });
@@ -107,7 +108,7 @@ function bareImportsFrom(entry: string): Set<string> {
 describe('peer isolation', () => {
   /**
    * The reason this test exists: React Query is an optional peer, so an app that never
-   * installs it must still be able to `import {DataTable} from '@bohar/datatable'`. One
+   * installs it must still be able to `import {DataTable} from '@bohardlabs/datatable'`. One
    * stray import anywhere in the graph turns that into a resolution failure at build time
    * for someone else, and nothing else in the suite would notice.
    */

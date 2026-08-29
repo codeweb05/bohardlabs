@@ -34,7 +34,8 @@ Practical consequences:
 ├── apps/
 │   └── storybook/     # the showcase; aggregates stories from every package
 ├── docs/              # see docs/README.md for the map
-│   ├── decisions/     # decisions not yet made. Read before assuming one.
+│   ├── roadmap.md     # where everything stands; links to every plan, backlog and decision
+│   ├── decisions/     # the decision log, one file each, plus open-questions.md
 │   ├── repo/          # how this repo works: tooling, CI
 │   ├── packages/      # per-package history and roadmap
 │   ├── extraction/    # what else is worth pulling out of the apps, and why
@@ -68,11 +69,11 @@ Run from the root; Turborepo fans out and caches.
 
 Tests are the exception to "Turborepo fans out": `vitest.config.ts` at the root declares one
 run with a project per package plus one for the stories, so `pnpm test` is a single Vitest
-process. `vitest run --project @bohar/datatable` or `--project storybook` narrows it.
+process. `vitest run --project @bohardlabs/datatable` or `--project storybook` narrows it.
 Coverage is the reason the config lives at the root rather than in each package; the comment
 in the file has the details.
 
-`pnpm --filter @bohar/datatable build` scopes a Turborepo task to one package. Lint is not
+`pnpm --filter @bohardlabs/datatable build` scopes a Turborepo task to one package. Lint is not
 one of them: one flat config at the root covers everything, so `pnpm lint` is always the
 whole workspace.
 
@@ -170,8 +171,12 @@ For human-readable text (README, changelog, story docs, comments):
 - Avoid LLM tells ("it's not just X, it's Y", "delve", overwrought openers).
 - Reread before finishing; delete anything that doesn't earn its place.
 
-## Open questions
+## Decisions and status
 
-`docs/decisions/open-questions.md` holds decisions that are not made yet, the npm scope above all.
-Read it before assuming one. Do not invent an answer to a question parked there; either
-use the placeholder or ask.
+`docs/decisions/` is the decision log, one numbered file per decision, and
+`docs/decisions/open-questions.md` holds the ones not made yet. Read both before assuming
+an answer. Do not invent an answer to a question parked there; either use the placeholder
+or ask.
+
+`docs/roadmap.md` is where everything stands. It changes in the same commit as the thing it
+tracks: a plan starting or finishing, a decision landing, a package publishing.

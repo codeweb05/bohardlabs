@@ -1,4 +1,4 @@
-# @bohar/admin-shell Implementation Plan
+# @bohardlabs/admin-shell Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -6,16 +6,16 @@
 
 **Architecture:** Every app-specific thing the current layout reaches for becomes a slot or a prop. The sidebar's open state is a context with a persisted boolean, the drawer takes a brand node and a footer node, the navigation menu takes an items array and a link component, and the header takes an actions node. Routing and auth never enter the package; the two pure redirect helpers that guard against open redirects come along because they are pure.
 
-**Tech Stack:** React 19, MUI v7 (`AppBar`, `Drawer`, `List`, `useMediaQuery`), `@bohar/admin-ui` for the pieces the shell renders, Vitest + Testing Library, Storybook.
+**Tech Stack:** React 19, MUI v7 (`AppBar`, `Drawer`, `List`, `useMediaQuery`), `@bohardlabs/admin-ui` for the pieces the shell renders, Vitest + Testing Library, Storybook.
 
-**Spec:** [`docs/extraction/README.md`](../../../extraction/README.md), section "5. `@bohar/admin-shell`"
+**Spec:** [`docs/extraction/README.md`](../../../extraction/README.md), section "5. `@bohardlabs/admin-shell`"
 
 **Source being ported:** `skipwash-latest/skipwash-admin/src/components/layouts/` (595 loc across
 `AuthLayout`, `ProtectedLayout`, `MainLayout`, `Header`, `Sidebar`, `MenuContent`),
 `src/contexts/SidebarContext.tsx` + `contexts/useSidebar.ts` (66), `src/hooks/useStorage.ts`,
 `src/hooks/useFullscreen.ts`, `src/utils/redirect.ts` (67), and their tests.
 
-**Blocked on:** plan 2. `AppSidebar`'s stories render `@bohar/admin-ui`'s `BrandedLoader`,
+**Blocked on:** plan 2. `AppSidebar`'s stories render `@bohardlabs/admin-ui`'s `BrandedLoader`,
 and `SessionGate` takes a loader node that in practice is that component.
 
 ## This is design work, not a port
@@ -37,9 +37,9 @@ know the drawer width. It does not need to know what a route is.
 
 ## Global Constraints
 
-- Package name `@bohar/admin-shell`, `"private": true`, version `0.0.0`.
+- Package name `@bohardlabs/admin-shell`, `"private": true`, version `0.0.0`.
 - No `@/…` imports. No `@tanstack/react-router` import anywhere, not even as a type.
-- `@bohar/admin-ui` is a **peer**, for the same reason it is a peer of `@bohar/form`: two
+- `@bohardlabs/admin-ui` is a **peer**, for the same reason it is a peer of `@bohardlabs/form`: two
   copies mean two labels contexts and a consumer's translations stop reaching the parts of
   the shell that come from it.
 - Labels follow the house pattern: a `ShellLabels` interface, `DEFAULT_SHELL_LABELS` in
@@ -100,7 +100,7 @@ unchanged. `package.json`:
 
 ```json
 {
-  "name": "@bohar/admin-shell",
+  "name": "@bohardlabs/admin-shell",
   "version": "0.0.0",
   "private": true,
   "description": "Slot-based admin chrome: app bar, mini-drawer sidebar, navigation menu and content region",
@@ -123,7 +123,7 @@ unchanged. `package.json`:
     "clean": "rm -rf dist *.tsbuildinfo"
   },
   "peerDependencies": {
-    "@bohar/admin-ui": "workspace:^",
+    "@bohardlabs/admin-ui": "workspace:^",
     "@emotion/react": "^11.0.0",
     "@emotion/styled": "^11.0.0",
     "@mui/icons-material": "^7.0.0",
@@ -132,7 +132,7 @@ unchanged. `package.json`:
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
-    "@bohar/admin-ui": "workspace:*",
+    "@bohardlabs/admin-ui": "workspace:*",
     "@emotion/react": "catalog:",
     "@emotion/styled": "catalog:",
     "@mui/icons-material": "catalog:",
@@ -187,8 +187,12 @@ function Probe() {
   return (
     <div>
       <span data-testid="state">{`${isOpen ? 'open' : 'closed'}/${isMobile ? 'mobile' : 'desktop'}`}</span>
-      <button type="button" onClick={toggleSidebar}>toggle</button>
-      <button type="button" onClick={() => setSidebarOpen(false)}>close</button>
+      <button type="button" onClick={toggleSidebar}>
+        toggle
+      </button>
+      <button type="button" onClick={() => setSidebarOpen(false)}>
+        close
+      </button>
     </div>
   );
 }
@@ -248,11 +252,11 @@ describe('SidebarProvider', () => {
     // Closing a temporary drawer is dismissing a menu, not setting a preference.
     renderProbe({matchesMobile: true});
     await userEvent.click(screen.getByRole('button', {name: 'toggle'}));
-    expect(localStorage.getItem('bohar-sidebar-open')).toBeNull();
+    expect(localStorage.getItem('bohardlabs-sidebar-open')).toBeNull();
   });
 
   it('ignores the stored preference on mobile', async () => {
-    localStorage.setItem('bohar-sidebar-open', 'true');
+    localStorage.setItem('bohardlabs-sidebar-open', 'true');
     renderProbe({matchesMobile: true});
     expect(screen.getByTestId('state')).toHaveTextContent('closed/mobile');
   });
@@ -265,8 +269,8 @@ describe('SidebarProvider', () => {
 
   it('picks up a change from another tab', () => {
     const {rerender} = renderProbe();
-    localStorage.setItem('bohar-sidebar-open', 'false');
-    window.dispatchEvent(new StorageEvent('storage', {key: 'bohar-sidebar-open', newValue: 'false'}));
+    localStorage.setItem('bohardlabs-sidebar-open', 'false');
+    window.dispatchEvent(new StorageEvent('storage', {key: 'bohardlabs-sidebar-open', newValue: 'false'}));
     rerender(<div />);
     // Re-render the probe and assert it reads closed.
   });
@@ -294,7 +298,7 @@ Write out the two cases sketched with comments.
 
 - [ ] **Step 4: Run and watch it fail**
 
-Run: `pnpm --filter @bohar/admin-shell test SidebarContext`
+Run: `pnpm --filter @bohardlabs/admin-shell test SidebarContext`
 Expected: FAIL, cannot resolve `./SidebarContext`.
 
 - [ ] **Step 5: Implement**
@@ -305,7 +309,7 @@ file importing only the hook does not pull the provider in. Do not port
 support and a `console.warn`, and the provider needs one boolean. Write the twenty lines
 directly, with the read and the write in `try`/`catch`.
 
-`DEFAULT_STORAGE_KEY = 'bohar-sidebar-open'`.
+`DEFAULT_STORAGE_KEY = 'bohardlabs-sidebar-open'`.
 
 - [ ] **Step 6: Run the tests**
 
@@ -320,7 +324,7 @@ export {useSidebar} from './useSidebar';
 export type {SidebarContextValue} from './useSidebar';
 ```
 
-Run: `pnpm install && pnpm --filter @bohar/admin-shell build`
+Run: `pnpm install && pnpm --filter @bohardlabs/admin-shell build`
 
 ```
 feat(admin-shell): scaffold the package and the sidebar state
@@ -631,7 +635,9 @@ describe('NavMenu', () => {
 
   it('renders through a custom link component', () => {
     const Link = ({to, children, ...rest}: {to: string; children: ReactNode}) => (
-      <a href={to} data-custom="yes" {...rest}>{children}</a>
+      <a href={to} data-custom="yes" {...rest}>
+        {children}
+      </a>
     );
     renderMenu({sections, activePath: '/', linkComponent: Link, getLinkProps: (item) => ({to: item.path})});
     expect(screen.getByRole('link', {name: 'Orders'})).toHaveAttribute('data-custom', 'yes');
@@ -710,15 +716,27 @@ rather than ship one that does nothing.
 
 ```tsx
 describe('useFullscreen', () => {
-  it('reports not fullscreen initially', () => {/* ... */});
-  it('requests fullscreen on the document element', async () => {/* ... */});
-  it('exits when already fullscreen', async () => {/* ... */});
-  it('follows the fullscreenchange event', () => {/* dispatch it, assert isFullscreen flips */});
+  it('reports not fullscreen initially', () => {
+    /* ... */
+  });
+  it('requests fullscreen on the document element', async () => {
+    /* ... */
+  });
+  it('exits when already fullscreen', async () => {
+    /* ... */
+  });
+  it('follows the fullscreenchange event', () => {
+    /* dispatch it, assert isFullscreen flips */
+  });
   it('does not reject when the browser refuses', async () => {
     // requestFullscreen rejecting must not produce an unhandled rejection
   });
-  it('reports isSupported false when the API is missing', () => {/* delete the method */});
-  it('removes its listener on unmount', () => {/* ... */});
+  it('reports isSupported false when the API is missing', () => {
+    /* delete the method */
+  });
+  it('removes its listener on unmount', () => {
+    /* ... */
+  });
 });
 ```
 
@@ -781,9 +799,15 @@ describe('AppHeader', () => {
 });
 
 describe('FullscreenButton', () => {
-  it('is labelled for entering', () => {/* 'Enter full screen' */});
-  it('is labelled for exiting once fullscreen', () => {/* 'Exit full screen' */});
-  it('renders nothing when the API is unavailable', () => {/* ... */});
+  it('is labelled for entering', () => {
+    /* 'Enter full screen' */
+  });
+  it('is labelled for exiting once fullscreen', () => {
+    /* 'Exit full screen' */
+  });
+  it('renders nothing when the API is unavailable', () => {
+    /* ... */
+  });
 });
 ```
 
@@ -834,8 +858,12 @@ this layout, and the attribute is what points it at the element that does.
 
 ```tsx
 describe('AppShell', () => {
-  it('renders the header slot', () => {/* ... */});
-  it('renders the sidebar slot', () => {/* ... */});
+  it('renders the header slot', () => {
+    /* ... */
+  });
+  it('renders the sidebar slot', () => {
+    /* ... */
+  });
   it('renders children inside the main landmark', () => {
     renderShell({children: <h1>Orders</h1>});
     expect(screen.getByRole('main')).toContainElement(screen.getByRole('heading', {name: 'Orders'}));
@@ -852,7 +880,9 @@ describe('AppShell', () => {
     expect(screen.getByRole('main')).toHaveAttribute('data-scroll-restoration-id', 'main-scroll');
   });
 
-  it('uses a custom restoration id', () => {/* ... */});
+  it('uses a custom restoration id', () => {
+    /* ... */
+  });
 
   it('omits the attribute when restoration is disabled', () => {
     renderShell({scrollRestorationId: null});
@@ -982,16 +1012,28 @@ Expected: PASS, roughly 16 tests.
 
 ```tsx
 describe('SessionGate', () => {
-  it('shows the loader while loading', () => {/* ... */});
-  it('does not redirect while loading', () => {/* onRedirect not called */});
-  it('renders children when the status matches', () => {/* ... */});
-  it('renders nothing when it does not', () => {/* ... */});
-  it('calls onRedirect when it does not', () => {/* ... */});
+  it('shows the loader while loading', () => {
+    /* ... */
+  });
+  it('does not redirect while loading', () => {
+    /* onRedirect not called */
+  });
+  it('renders children when the status matches', () => {
+    /* ... */
+  });
+  it('renders nothing when it does not', () => {
+    /* ... */
+  });
+  it('calls onRedirect when it does not', () => {
+    /* ... */
+  });
   it('calls onRedirect once across re-renders', () => {
     // The effect must not re-fire on every parent render, or a navigation that
     // takes two frames turns into a loop of navigations.
   });
-  it('calls onRedirect again after the status changes and comes back', () => {/* ... */});
+  it('calls onRedirect again after the status changes and comes back', () => {
+    /* ... */
+  });
   it('works as an anonymous-only gate', () => {
     // expect="anonymous": an authenticated user is redirected away from /login
   });
@@ -1062,7 +1104,7 @@ so the filtering is visible in the showcase.
 `parameters.a11y.test = 'error'` is set globally in the Storybook preview, so a violation
 fails the story test rather than warning. Run:
 
-Run: `pnpm --filter @bohar/storybook test`
+Run: `pnpm --filter @bohardlabs/storybook test`
 Expected: PASS.
 
 Colour contrast on the collapsed drawer and the accessible name of every icon-only button
@@ -1070,7 +1112,7 @@ are the two that will fail first. Fix them in the component, not by relaxing the
 
 - [ ] **Step 6: Run everything and hand off**
 
-Run: `pnpm --filter @bohar/admin-shell test && pnpm --filter @bohar/admin-shell build`
+Run: `pnpm --filter @bohardlabs/admin-shell test && pnpm --filter @bohardlabs/admin-shell build`
 Expected: PASS, roughly 95 tests.
 
 ```
@@ -1086,7 +1128,7 @@ feat(admin-shell): public surface and stories
 - Create: `packages/admin-shell/README.md`
 - Create: `.changeset/<generated-name>.md`
 - Modify: `README.md`
-- Modify: `docs/superpowers/plans/README.md`
+- Modify: `docs/roadmap.md`
 - Move: this file to `docs/superpowers/plans/done/`
 
 - [ ] **Step 1: Write the README**
@@ -1116,7 +1158,7 @@ Sections:
 
 - [ ] **Step 3: Write the changeset**
 
-`pnpm changeset`, `@bohar/admin-shell`, **minor**:
+`pnpm changeset`, `@bohardlabs/admin-shell`, **minor**:
 
 ```
 Initial release. An admin layout with a collapsing mini-drawer, a matching app bar, a
@@ -1137,7 +1179,8 @@ mv docs/superpowers/plans/open/2026-08-28-admin-shell-package.md \
    docs/superpowers/plans/done/2026-08-28-admin-shell-package.md
 ```
 
-Move the row in `docs/superpowers/plans/README.md` from Open to Done and fix its link.
+In `docs/roadmap.md`, section "New packages", set this plan's row to `done (today's date)`
+and fix its link, which now points at `done/`.
 This is the last of the five, so also update the board's opening line, which currently
 tells the reader to take them in order.
 
@@ -1177,4 +1220,4 @@ nothing. Add it when an app actually needs a second level, with the expand and c
 behaviour designed rather than inferred.
 
 **Adopting the package in the apps.** Needs the package published, and needs
-`@bohar/admin-ui` published first for the sign-out dialog the footer slot renders.
+`@bohardlabs/admin-ui` published first for the sign-out dialog the footer slot renders.

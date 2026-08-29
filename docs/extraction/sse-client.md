@@ -1,4 +1,4 @@
-# Proposal: `@bohar/sse-client`
+# Proposal: `@bohardlabs/sse-client`
 
 **Status:** deferred, 2026-08-28. **Source:** `skipwash-admin/src/lib/sse/sse-client.ts`, 141 loc.
 **Apps using it:** 1 of 4.
@@ -50,7 +50,7 @@ Any one of these:
   of every open tab reconnecting on the same schedule. Adding exponential backoff with
   jitter, `Last-Event-ID` replay, and an online/offline listener would roughly double the
   size and put it clearly past the threshold.
-- `@bohar/api-client` ships. The two share a bearer token, a base URL, a tenant header and
+- `@bohardlabs/api-client` ships. The two share a bearer token, a base URL, a tenant header and
   a 401 policy, and the SSE client currently imports `tokenService` and `env` directly. If
   the API client exists, this becomes `createApiClient(...).createEventStream(url)` reusing
   the config that is already there, which is a subpath on an existing package rather than
@@ -64,11 +64,11 @@ is done.
 
 Small. Two app imports to invert:
 
-| Now | Would become |
-| --- | --- |
-| `env.VITE_API_BASE_URL` | `baseURL` in options |
-| `tokenService.getAccessToken()` | `getToken: () => Promise<string \| null>` in options |
-| `'x-tenant-id': 'ADMIN'` hardcoded | `headers` in options |
+| Now                                | Would become                                         |
+| ---------------------------------- | ---------------------------------------------------- |
+| `env.VITE_API_BASE_URL`            | `baseURL` in options                                 |
+| `tokenService.getAccessToken()`    | `getToken: () => Promise<string \| null>` in options |
+| `'x-tenant-id': 'ADMIN'` hardcoded | `headers` in options                                 |
 
 Everything else is already parameterised. `MAX_AUTH_RETRIES = 3` and the 5000ms delay would
 become options with the current values as defaults.
@@ -81,6 +81,6 @@ needs a network or a browser.
 
 ## Recommendation
 
-Do not extract on its own. When `@bohar/api-client` lands, port this into it as
-`@bohar/api-client/sse` and keep the tests. If a second app needs it before that, extract it
+Do not extract on its own. When `@bohardlabs/api-client` lands, port this into it as
+`@bohardlabs/api-client/sse` and keep the tests. If a second app needs it before that, extract it
 standalone at that point.

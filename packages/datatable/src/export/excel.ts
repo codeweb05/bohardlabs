@@ -5,7 +5,7 @@
  * library (`write-excel-file`) can be swapped without touching consumers.
  */
 
-import type {Cell, Row, SheetData} from 'write-excel-file/browser';
+import type {CellObject, Row, SheetData} from 'write-excel-file/browser';
 
 export interface ExcelCell {
   readonly value: string | number | boolean | Date | null;
@@ -36,7 +36,7 @@ export function createDataRow(values: readonly string[]): ExcelCell[] {
   return values.map((value) => ({value}));
 }
 
-function toLibCell(cell: ExcelCell): Cell {
+function toLibCell(cell: ExcelCell): CellObject {
   return {
     value: cell.value ?? undefined,
     fontWeight: cell.fontWeight,
@@ -59,9 +59,10 @@ export async function writeExcelFile(rows: ExcelCell[][], options: ExcelSheetOpt
   const sheetData: SheetData = rows.map(toLibRow);
   const columns = options.columns?.map((c) => ({width: c.width}));
 
+  // v4 split the writer from the destination: the call builds the workbook and returns a
+  // writer, and `toFile` is what triggers the browser download that `fileName` used to.
   await writeXlsxFile(sheetData, {
-    fileName: options.fileName,
     sheet: options.sheetName ?? 'Sheet1',
     ...(columns && {columns}),
-  });
+  }).toFile(options.fileName);
 }

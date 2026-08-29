@@ -92,7 +92,7 @@ type Story = StoryObj<typeof meta>;
  * buttons on their own 6% primary wash. It comes from stock MUI's palette rather than
  * anything the table chose, and darkening those labels is a decision about the library's
  * default look, not a fix to make a story pass. Only this rule is switched off, and only
- * where it fires, so a new violation still fails the story. See docs/datatable-port.md.
+ * where it fires, so a new violation still fails the story. See docs/packages/datatable/port.md.
  */
 const KNOWN_CONTRAST_EXCEPTION = {
   a11y: {config: {rules: [{id: 'color-contrast', enabled: false}]}},
@@ -286,7 +286,12 @@ export const ExpandableRows: Story = {
     renderExpandedRow: (row) => (
       <Box sx={{px: 3, py: 2}}>
         <Typography variant="subtitle2">Delivery note</Typography>
-        <Typography variant="body2" color="text.secondary">
+        <Typography
+          variant="body2"
+          sx={{
+            color: 'text.secondary',
+          }}
+        >
           {row.original.note || 'No note for this order'}
         </Typography>
       </Box>

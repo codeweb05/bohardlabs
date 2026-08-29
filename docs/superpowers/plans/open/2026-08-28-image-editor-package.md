@@ -1,20 +1,20 @@
-# @bohar/image-editor Implementation Plan
+# @bohardlabs/image-editor Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Extract the crop/zoom/rotate/flip image editor duplicated across four admin apps into a standalone package with no app imports and no hardcoded strings.
 
-**Architecture:** A headless hook (`useImageEditor`) holding transform state and doing the canvas work, plus a MUI dialog (`ImageEditor`) that renders controls around it. All user-facing text comes from a `Labels` object with English defaults, following the pattern `@bohar/datatable` already uses. `react-easy-crop` is the only non-MUI dependency and it is a peer.
+**Architecture:** A headless hook (`useImageEditor`) holding transform state and doing the canvas work, plus a MUI dialog (`ImageEditor`) that renders controls around it. All user-facing text comes from a `Labels` object with English defaults, following the pattern `@bohardlabs/datatable` already uses. `react-easy-crop` is the only non-MUI dependency and it is a peer.
 
 **Tech Stack:** React 19, MUI 7, `react-easy-crop` 5, Vite lib mode, Vitest + jsdom, Storybook 10.
 
-**Spec:** [`docs/extraction/README.md`](../../../extraction/README.md), section "1. `@bohar/image-editor`"
+**Spec:** [`docs/extraction/README.md`](../../../extraction/README.md), section "1. `@bohardlabs/image-editor`"
 
 **Source being ported:** `skipwash-latest/skipwash-admin/src/components/ImageEditor/` (817 loc, 4 files). The copy in `smart/admin-v2` is byte-identical apart from semicolons; do not consult it.
 
 ## Global Constraints
 
-- Package name `@bohar/image-editor`, `"private": true`, version `0.0.0`.
+- Package name `@bohardlabs/image-editor`, `"private": true`, version `0.0.0`.
 - No `@/…` imports. Anything the app supplied becomes a prop or an option.
 - No hardcoded user-facing string in a component. Use the `Labels` pattern below.
 - No hardcoded colour. Theme tokens only (`text.secondary`, `action.hover`, `divider`).
@@ -49,14 +49,14 @@
 In `pnpm-workspace.yaml`, inside the `catalog:` block, after the `dayjs` line:
 
 ```yaml
-  'react-easy-crop': ^5.5.6
+'react-easy-crop': ^5.5.6
 ```
 
 - [ ] **Step 2: Write `packages/image-editor/package.json`**
 
 ```json
 {
-  "name": "@bohar/image-editor",
+  "name": "@bohardlabs/image-editor",
   "version": "0.0.0",
   "private": true,
   "description": "Crop, zoom, rotate and flip an image in a MUI dialog",
@@ -301,10 +301,10 @@ export {};
 - [ ] **Step 7: Install and verify the package is wired into the workspace**
 
 Run: `pnpm install`
-Then: `pnpm --filter @bohar/image-editor build`
+Then: `pnpm --filter @bohardlabs/image-editor build`
 Expected: Vite reports a build with no entry modules of substance, and `tsc` emits an empty `dist/index.d.ts`. No error.
 
-Then: `pnpm --filter @bohar/image-editor test`
+Then: `pnpm --filter @bohardlabs/image-editor test`
 Expected: PASS, "no test files" (that is what `--passWithNoTests` is for).
 
 - [ ] **Step 8: Hand off for commit**
@@ -383,14 +383,14 @@ describe('ImageEditorLabelsProvider', () => {
 
 - [ ] **Step 2: Run it and watch it fail**
 
-Run: `pnpm --filter @bohar/image-editor test`
+Run: `pnpm --filter @bohardlabs/image-editor test`
 Expected: FAIL, "Failed to resolve import './index'".
 
 - [ ] **Step 3: Write `labels.ts`**
 
 The values are the English strings the app's `en.json` carries today, with sentence case applied so they match the rest of the workspace (`headerCase` in the table settled on sentence case).
 
-```ts
+````ts
 /**
  * Every user-facing string the editor can render.
  *
@@ -447,7 +447,7 @@ export const DEFAULT_LABELS: ImageEditorLabels = {
   changeImage: 'Change image',
   processing: 'Processing…',
 };
-```
+````
 
 - [ ] **Step 4: Write `LabelsContext.tsx`**
 
@@ -490,7 +490,7 @@ export type {ImageEditorLabels} from './labels';
 
 - [ ] **Step 6: Run the tests**
 
-Run: `pnpm --filter @bohar/image-editor test`
+Run: `pnpm --filter @bohardlabs/image-editor test`
 Expected: PASS, 3 tests.
 
 - [ ] **Step 7: Hand off for commit**
@@ -585,7 +585,7 @@ export interface UseImageEditorOptions {
 
 - [ ] **Step 2: Typecheck**
 
-Run: `pnpm --filter @bohar/image-editor typecheck`
+Run: `pnpm --filter @bohardlabs/image-editor typecheck`
 Expected: PASS.
 
 - [ ] **Step 3: Hand off for commit**
@@ -682,11 +682,11 @@ describe('useImageEditor', () => {
   });
 
   it('clamps the output to maxOutputWidth, keeping the aspect ratio', async () => {
-    const {result} = renderHook(() =>
-      useImageEditor({imageSrc: SRC, maxOutputWidth: 100, maxOutputHeight: 1000}),
-    );
+    const {result} = renderHook(() => useImageEditor({imageSrc: SRC, maxOutputWidth: 100, maxOutputHeight: 1000}));
 
-    act(() => result.current.onCropComplete({x: 0, y: 0, width: 400, height: 200}, {x: 0, y: 0, width: 400, height: 200}));
+    act(() =>
+      result.current.onCropComplete({x: 0, y: 0, width: 400, height: 200}, {x: 0, y: 0, width: 400, height: 200}),
+    );
 
     const output = await result.current.generateCroppedImage();
 
@@ -695,11 +695,11 @@ describe('useImageEditor', () => {
   });
 
   it('clamps to maxOutputHeight when height is the binding constraint', async () => {
-    const {result} = renderHook(() =>
-      useImageEditor({imageSrc: SRC, maxOutputWidth: 1000, maxOutputHeight: 100}),
-    );
+    const {result} = renderHook(() => useImageEditor({imageSrc: SRC, maxOutputWidth: 1000, maxOutputHeight: 100}));
 
-    act(() => result.current.onCropComplete({x: 0, y: 0, width: 200, height: 400}, {x: 0, y: 0, width: 200, height: 400}));
+    act(() =>
+      result.current.onCropComplete({x: 0, y: 0, width: 200, height: 400}, {x: 0, y: 0, width: 200, height: 400}),
+    );
 
     const output = await result.current.generateCroppedImage();
 
@@ -728,7 +728,7 @@ describe('useImageEditor', () => {
 
 - [ ] **Step 2: Run and watch it fail**
 
-Run: `pnpm --filter @bohar/image-editor test`
+Run: `pnpm --filter @bohardlabs/image-editor test`
 Expected: FAIL, "Failed to resolve import './useImageEditor'".
 
 - [ ] **Step 3: Port the hook**
@@ -741,7 +741,7 @@ import type {CropArea, ImageEditorResult, UseImageEditorOptions} from './types';
 
 - [ ] **Step 4: Run the tests**
 
-Run: `pnpm --filter @bohar/image-editor test`
+Run: `pnpm --filter @bohardlabs/image-editor test`
 Expected: PASS, 8 tests.
 
 If "clamps the output to maxOutputWidth" fails with `height: 50` expected but something else received, the port dropped the second `if` in `computeOutputSize`; both clamps apply in sequence and the second reads the width the first already reduced.
@@ -828,7 +828,15 @@ describe('ImageEditor', () => {
 
   it('exposes every transform control with an accessible name', () => {
     setup();
-    for (const name of ['Rotate left 90°', 'Rotate right 90°', 'Flip horizontal', 'Flip vertical', 'Zoom in', 'Zoom out', 'Reset']) {
+    for (const name of [
+      'Rotate left 90°',
+      'Rotate right 90°',
+      'Flip horizontal',
+      'Flip vertical',
+      'Zoom in',
+      'Zoom out',
+      'Reset',
+    ]) {
       expect(screen.getByRole('button', {name})).toBeInTheDocument();
     }
   });
@@ -836,9 +844,12 @@ describe('ImageEditor', () => {
   it('disables both footer actions while a crop is being produced', async () => {
     const user = userEvent.setup();
     let release: (() => void) | undefined;
-    const onApply = vi.fn(() => new Promise<void>((resolve) => {
-      release = resolve;
-    }));
+    const onApply = vi.fn(
+      () =>
+        new Promise<void>((resolve) => {
+          release = resolve;
+        }),
+    );
 
     render(<ImageEditor open imageSrc="blob:fake" onClose={vi.fn()} onApply={onApply} />);
 
@@ -855,7 +866,7 @@ describe('ImageEditor', () => {
 
 - [ ] **Step 2: Run and watch it fail**
 
-Run: `pnpm --filter @bohar/image-editor test`
+Run: `pnpm --filter @bohardlabs/image-editor test`
 Expected: FAIL, "Failed to resolve import './ImageEditor'".
 
 - [ ] **Step 3: Port the component**
@@ -892,7 +903,7 @@ and each control follows this shape:
 
 - [ ] **Step 4: Run the tests**
 
-Run: `pnpm --filter @bohar/image-editor test`
+Run: `pnpm --filter @bohardlabs/image-editor test`
 Expected: PASS, 16 tests across both files.
 
 - [ ] **Step 5: Write the real entry point**
@@ -926,7 +937,7 @@ export type {
 
 - [ ] **Step 6: Build and typecheck**
 
-Run: `pnpm --filter @bohar/image-editor build && pnpm --filter @bohar/image-editor typecheck`
+Run: `pnpm --filter @bohardlabs/image-editor build && pnpm --filter @bohardlabs/image-editor typecheck`
 Expected: both PASS. Check `dist/` contains `index.js`, `ImageEditor.js`, `useImageEditor.js`, `i18n/` and matching `.d.ts` files, and that no `node_modules` path appears in any of them (that is what the `external` predicate in `vite.config.ts` guarantees).
 
 - [ ] **Step 7: Hand off for commit**
@@ -951,10 +962,10 @@ feat(image-editor): port the dialog, labels instead of t()
 
 - [ ] **Step 1: Add the package to the showcase's dependencies**
 
-In `apps/storybook/package.json`, in `dependencies`, alongside `@bohar/datatable`:
+In `apps/storybook/package.json`, in `dependencies`, alongside `@bohardlabs/datatable`:
 
 ```json
-    "@bohar/image-editor": "workspace:*"
+    "@bohardlabs/image-editor": "workspace:*"
 ```
 
 Then run `pnpm install`.
@@ -1056,9 +1067,7 @@ export const Translated: Story = {
 
 export const Widescreen: Story = {
   args: {open: true, imageSrc: SAMPLE, onClose: () => {}, onApply: () => {}, aspectRatio: 16 / 9},
-  render: () => (
-    <ImageEditor open imageSrc={SAMPLE} aspectRatio={16 / 9} onClose={() => {}} onApply={() => {}} />
-  ),
+  render: () => <ImageEditor open imageSrc={SAMPLE} aspectRatio={16 / 9} onClose={() => {}} onApply={() => {}} />,
   play: async ({canvasElement}) => {
     const dialog = within(canvasElement.ownerDocument.body);
     await expect(await dialog.findByText('16:9')).toBeVisible();
@@ -1068,7 +1077,7 @@ export const Widescreen: Story = {
 
 - [ ] **Step 3: Run the story tests**
 
-Run: `pnpm --filter @bohar/storybook test`
+Run: `pnpm --filter @bohardlabs/storybook test`
 Expected: PASS. Every story also runs through axe, because `.storybook/preview.tsx` sets `parameters.a11y.test = 'error'`.
 
 If a story fails on "Buttons must have discernible text", Step 5 of Task 5 was skipped for one of the icon buttons. Fix the component, not the story.
@@ -1093,7 +1102,7 @@ feat(image-editor): stories, interaction tests, a11y
 - Create: `packages/image-editor/README.md`
 - Create: `.changeset/<generated-name>.md`
 - Modify: `README.md` (the root package table)
-- Modify: `docs/superpowers/plans/README.md`
+- Modify: `docs/roadmap.md`
 - Move: this file from `docs/superpowers/plans/open/` to `docs/superpowers/plans/done/`
 
 - [ ] **Step 1: Write the package README**
@@ -1102,12 +1111,12 @@ Open with what the package does and who it is for, not with install instructions
 
 The peer table has seven rows and every one is required:
 
-| Peer                                         | Needed for                          |
-| -------------------------------------------- | ----------------------------------- |
-| `react` ^19, `react-dom` ^19                 | everything                          |
-| `@mui/material` ^7, `@mui/icons-material` ^7 | the dialog, controls and icons      |
-| `@emotion/react` ^11, `@emotion/styled` ^11  | MUI's styling engine                |
-| `react-easy-crop` ^5                         | the crop surface itself             |
+| Peer                                         | Needed for                     |
+| -------------------------------------------- | ------------------------------ |
+| `react` ^19, `react-dom` ^19                 | everything                     |
+| `@mui/material` ^7, `@mui/icons-material` ^7 | the dialog, controls and icons |
+| `@emotion/react` ^11, `@emotion/styled` ^11  | MUI's styling engine           |
+| `react-easy-crop` ^5                         | the crop surface itself        |
 
 Include the one thing a consumer will get wrong: `imageSrc` must be same-origin or a
 `blob:`/`data:` URL. The hook sets `crossOrigin = 'anonymous'` on the image it decodes, so a
@@ -1125,7 +1134,7 @@ In `README.md`, under "## Packages", add a row:
 - [ ] **Step 3: Write the changeset**
 
 Run: `pnpm changeset`
-Select `@bohar/image-editor`, choose **minor** (the package is new and pre-1.0, so minor is the first real entry), and write the line a consumer's changelog will show. Not "extract ImageEditor from skipwash-admin", which means nothing to a stranger. Something like:
+Select `@bohardlabs/image-editor`, choose **minor** (the package is new and pre-1.0, so minor is the first real entry), and write the line a consumer's changelog will show. Not "extract ImageEditor from skipwash-admin", which means nothing to a stranger. Something like:
 
 ```
 Initial release. A MUI dialog for cropping, zooming, rotating and flipping an image,
@@ -1148,7 +1157,7 @@ mv docs/superpowers/plans/open/2026-08-28-image-editor-package.md \
    docs/superpowers/plans/done/2026-08-28-image-editor-package.md
 ```
 
-In `docs/superpowers/plans/README.md`, delete the image-editor row from "Open" and add it to "Done" with today's date. Fix the link path in the same edit: it now points at `done/`.
+In `docs/roadmap.md`, section "New packages", set the image-editor row to `done (today's date)` and fix its link, which now points at `done/`.
 
 - [ ] **Step 6: Hand off for commit**
 
@@ -1160,10 +1169,9 @@ feat(image-editor): README, changeset, first release prep
 
 ## Out of scope
 
-**Adopting the package in skipwash-admin.** The app cannot install `@bohar/image-editor`
-until it is published, and publishing needs the npm org that
-[`docs/decisions/open-questions.md`](../../../decisions/open-questions.md) is still waiting
-on. When that lands, the app change is: delete `src/components/ImageEditor/`, install the
+**Adopting the package in skipwash-admin.** The app cannot install `@bohardlabs/image-editor`
+until it is published, and publishing needs the npm org that the
+[roadmap](../../../roadmap.md#1-publishing) is still waiting on. When that lands, the app change is: delete `src/components/ImageEditor/`, install the
 package, and pass `labels` built from the existing `imageEditor.*` block in
 `src/lib/i18n/locales/en.json` so nothing user-visible changes.
 

@@ -12,13 +12,12 @@ pnpm validate    # lint + typecheck + test + build
 
 ## Packages
 
-| Package              | What it is                                            | Status                     |
-| -------------------- | ----------------------------------------------------- | -------------------------- |
-| `packages/datatable` | Server-driven React data table (TanStack Table + MUI) | skeleton, port in progress |
+| Package              | What it is                                            | Status                |
+| -------------------- | ----------------------------------------------------- | --------------------- |
+| `packages/datatable` | Server-driven React data table (TanStack Table + MUI) | first release |
 
-Nothing is published yet. Packages are scoped `@bohar/*` and stay private until a first
-release. Creating the npm org is the remaining publish step; see
-[`docs/decisions/open-questions.md`](docs/decisions/open-questions.md).
+Packages are scoped `@bohardlabs/*`. `@bohardlabs/datatable` is the first to publish; see
+the [roadmap](docs/roadmap.md#1-publishing).
 
 ## Showcase
 

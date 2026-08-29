@@ -195,7 +195,12 @@ export function ColumnVisibility<TData extends RowData>({
             pb: 1,
           }}
         >
-          <Typography variant="subtitle2" fontWeight={600}>
+          <Typography
+            variant="subtitle2"
+            sx={{
+              fontWeight: 600,
+            }}
+          >
             {labels.columns} ({visibleCount}/{totalCount})
           </Typography>
           <Box sx={{display: 'flex', gap: 0.5}}>
@@ -219,7 +224,16 @@ export function ColumnVisibility<TData extends RowData>({
         </Box>
 
         {canReorderColumns && (
-          <Typography variant="caption" color="text.secondary" sx={{display: 'block', flexShrink: 0, px: 2, pb: 1}}>
+          <Typography
+            variant="caption"
+            sx={{
+              color: 'text.secondary',
+              display: 'block',
+              flexShrink: 0,
+              px: 2,
+              pb: 1,
+            }}
+          >
             {labels.reorderHint}
           </Typography>
         )}

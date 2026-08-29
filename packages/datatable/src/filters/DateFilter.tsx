@@ -165,7 +165,10 @@ function RangeDateFilter<TData>({
           ...pickerSlotProps,
           textField: {
             ...pickerSlotProps.textField,
-            placeholder: labels.from,
+            // v9 pickers always render the accessible (sectioned) field, which has no
+            // placeholder. The name is what told these two fields apart, so it moves to
+            // the accessible name.
+            'aria-label': labels.from,
           },
         }}
         sx={{flex: 1, minWidth: 0}}
@@ -180,7 +183,10 @@ function RangeDateFilter<TData>({
           ...pickerSlotProps,
           textField: {
             ...pickerSlotProps.textField,
-            placeholder: labels.to,
+            // v9 pickers always render the accessible (sectioned) field, which has no
+            // placeholder. The name is what told these two fields apart, so it moves to
+            // the accessible name.
+            'aria-label': labels.to,
           },
         }}
         sx={{flex: 1, minWidth: 0}}

@@ -1,4 +1,4 @@
-# @bohar/form Implementation Plan
+# @bohardlabs/form Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -6,23 +6,23 @@
 
 **Architecture:** The package owns the one `createFormHookContexts()` call, exports the field and form components bound to it, and exports a `createAppForm` factory so a consumer registers their own domain fields alongside the built-in ones. Heavy fields are registered behind `lazyField`, so registering them costs a dynamic import that only resolves when the field renders. Nothing in the package fetches or knows a domain type.
 
-**Tech Stack:** React 19, MUI 7, `@tanstack/react-form` 1, `@mui/x-date-pickers` 8 + `dayjs` (optional peers), `mui-tel-input` 9 (optional peer), `@bohar/admin-ui` (peer), Vite lib mode, Vitest + jsdom, Storybook 10.
+**Tech Stack:** React 19, MUI 7, `@tanstack/react-form` 1, `@mui/x-date-pickers` 8 + `dayjs` (optional peers), `mui-tel-input` 9 (optional peer), `@bohardlabs/admin-ui` (peer), Vite lib mode, Vitest + jsdom, Storybook 10.
 
-**Spec:** [`docs/extraction/README.md`](../../../extraction/README.md), section "3. `@bohar/form`"
+**Spec:** [`docs/extraction/README.md`](../../../extraction/README.md), section "3. `@bohardlabs/form`"
 
 **Source being ported:** `skipwash-latest/skipwash-admin/src/components/form/` and `src/hooks/form.tsx` + `src/hooks/form-context.ts`. Roughly 2640 lines including tests.
 
-**Blocked on:** plan 2. `CancelButton` renders `UnsavedChangesDialog` from `@bohar/admin-ui`.
+**Blocked on:** plan 2. `CancelButton` renders `UnsavedChangesDialog` from `@bohardlabs/admin-ui`.
 
 ## Global Constraints
 
-- Package name `@bohar/form`, `"private": true`, version `0.0.0`.
+- Package name `@bohardlabs/form`, `"private": true`, version `0.0.0`.
 - No `@/…` imports. `DATE_PICKER_FORMAT` and `NAME_TOOLTIP_TRUNCATE_LENGTH`-style constants become defaulted props.
-- No hardcoded user-facing string. One `FormLabels` interface, one `DEFAULT_LABELS`, one context, same shape as `@bohar/datatable` and `@bohar/admin-ui`. The four strings currently hardcoded in English inside components (`'Show password'`, `'Hide password'`, and the two in `TimeField`) go into it.
+- No hardcoded user-facing string. One `FormLabels` interface, one `DEFAULT_LABELS`, one context, same shape as `@bohardlabs/datatable` and `@bohardlabs/admin-ui`. The four strings currently hardcoded in English inside components (`'Show password'`, `'Hide password'`, and the two in `TimeField`) go into it.
 - No hardcoded colour. Theme tokens only.
 - Never `any`, `@ts-ignore`, `@ts-expect-error`, `as unknown as`. TanStack Form's generics are wide; if a type will not line up, widen the field's own value type parameter rather than casting.
 - Icons import per-icon.
-- **`@bohar/admin-ui` is a peer, not a dependency.** Two copies in a consumer's tree means two `AdminUiLabelsProvider` contexts, and the consumer's translations silently stop reaching the dialog `CancelButton` opens. Same reasoning as React.
+- **`@bohardlabs/admin-ui` is a peer, not a dependency.** Two copies in a consumer's tree means two `AdminUiLabelsProvider` contexts, and the consumer's translations silently stop reaching the dialog `CancelButton` opens. Same reasoning as React.
 - `@mui/x-date-pickers`, `dayjs` and `mui-tel-input` are **optional** peers (`peerDependenciesMeta`). A consumer who never renders a date or phone field should not have to install them, and `lazyField` is what makes that true.
 - ESM only, `formats: ['es']`, `preserveModules: true`. `preserveModules` matters more here than anywhere else: it is what lets a bundler drop the heavy field chunks.
 - Every component gets a story with a `play`.
@@ -32,7 +32,7 @@
 
 `createFormHookContexts()` must be called **exactly once** in a consumer's application. TanStack Form's `useFieldContext` reads from the object that call returns; a second call creates a second context, and a field registered against one is invisible to a form built from the other.
 
-So the package makes that call, and exports `fieldContext`, `formContext`, `useFieldContext` and `useFormContext` from it. A consumer writing their own field imports `useFieldContext` **from `@bohar/form`**, never from `@tanstack/react-form`. This is the single thing most likely to be got wrong, and it fails at runtime with an unhelpful message, so it is called out in the README, in a doc comment on the export, and in a test.
+So the package makes that call, and exports `fieldContext`, `formContext`, `useFieldContext` and `useFormContext` from it. A consumer writing their own field imports `useFieldContext` **from `@bohardlabs/form`**, never from `@tanstack/react-form`. This is the single thing most likely to be got wrong, and it fails at runtime with an unhelpful message, so it is called out in the README, in a doc comment on the export, and in a test.
 
 ---
 
@@ -65,9 +65,9 @@ So the package makes that call, and exports `fieldContext`, `formContext`, `useF
 In `pnpm-workspace.yaml`, in the `catalog:` block:
 
 ```yaml
-  '@mui/x-date-pickers': ^8.14.0
-  '@tanstack/react-form': ^1.23.5
-  'mui-tel-input': ^9.0.1
+'@mui/x-date-pickers': ^8.14.0
+'@tanstack/react-form': ^1.23.5
+'mui-tel-input': ^9.0.1
 ```
 
 `dayjs` and `@tanstack/react-table` are already there; do not duplicate them. If a version listed above is already present with a different range, keep the existing one and note the difference in the handoff.
@@ -76,7 +76,7 @@ In `pnpm-workspace.yaml`, in the `catalog:` block:
 
 ```json
 {
-  "name": "@bohar/form",
+  "name": "@bohardlabs/form",
   "version": "0.0.0",
   "private": true,
   "description": "TanStack Form fields for MUI, with lazy boundaries around the heavy ones",
@@ -105,7 +105,7 @@ In `pnpm-workspace.yaml`, in the `catalog:` block:
     "clean": "rm -rf dist *.tsbuildinfo"
   },
   "peerDependencies": {
-    "@bohar/admin-ui": "workspace:*",
+    "@bohardlabs/admin-ui": "workspace:*",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
     "@mui/icons-material": "^7.0.0",
@@ -123,7 +123,7 @@ In `pnpm-workspace.yaml`, in the `catalog:` block:
     "mui-tel-input": {"optional": true}
   },
   "devDependencies": {
-    "@bohar/admin-ui": "workspace:*",
+    "@bohardlabs/admin-ui": "workspace:*",
     "@emotion/react": "catalog:",
     "@emotion/styled": "catalog:",
     "@mui/icons-material": "catalog:",
@@ -154,7 +154,7 @@ In `pnpm-workspace.yaml`, in the `catalog:` block:
 }
 ```
 
-`@bohar/admin-ui` appears in both blocks: `workspace:*` in devDependencies so this repo builds against the local copy, and `workspace:*` in peerDependencies, which pnpm rewrites to the published range on publish.
+`@bohardlabs/admin-ui` appears in both blocks: `workspace:*` in devDependencies so this repo builds against the local copy, and `workspace:*` in peerDependencies, which pnpm rewrites to the published range on publish.
 
 - [ ] **Step 3: Copy the tsconfigs, vite config and test setup**
 
@@ -174,7 +174,7 @@ import {createFormHookContexts} from '@tanstack/react-form';
  * pair, and any field registered against it renders with an empty context and throws.
  *
  * So: a consumer writing their own field component imports `useFieldContext` from
- * `@bohar/form`, never from `@tanstack/react-form`.
+ * `@bohardlabs/form`, never from `@tanstack/react-form`.
  */
 export const {fieldContext, useFieldContext, formContext, useFormContext} = createFormHookContexts();
 ```
@@ -222,7 +222,7 @@ describe('FormLabelsProvider', () => {
 
 - [ ] **Step 6: Run and watch it fail**
 
-Run: `pnpm --filter @bohar/form test`
+Run: `pnpm --filter @bohardlabs/form test`
 Expected: FAIL, "Failed to resolve import './index'".
 
 - [ ] **Step 7: Write the labels**
@@ -274,7 +274,7 @@ export type {FormLabels} from './i18n';
 
 - [ ] **Step 10: Install, test, build**
 
-Run: `pnpm install && pnpm --filter @bohar/form test && pnpm --filter @bohar/form build`
+Run: `pnpm install && pnpm --filter @bohardlabs/form test && pnpm --filter @bohardlabs/form build`
 Expected: 3 tests pass, build succeeds.
 
 - [ ] **Step 11: Hand off for commit**
@@ -348,7 +348,7 @@ The mixed shape is not a design choice, it is what TanStack Form and a Zod resol
 
 - [ ] **Step 2: Run and watch it fail, then write ErrorMessages**
 
-Run: `pnpm --filter @bohar/form test ErrorMessages` → FAIL.
+Run: `pnpm --filter @bohardlabs/form test ErrorMessages` → FAIL.
 
 ```tsx
 import FormHelperText from '@mui/material/FormHelperText';
@@ -544,7 +544,7 @@ export function FieldShell({
 }
 ```
 
-Run: `pnpm --filter @bohar/form test internal`
+Run: `pnpm --filter @bohardlabs/form test internal`
 Expected: PASS, 10 tests.
 
 - [ ] **Step 6: Export the two public pieces**
@@ -749,7 +749,7 @@ The two number cases are the ones worth the effort. `Number('')` is `0` and `Num
 
 - [ ] **Step 3: Run and watch it fail**
 
-Run: `pnpm --filter @bohar/form test TextField`
+Run: `pnpm --filter @bohardlabs/form test TextField`
 Expected: FAIL, module not found.
 
 - [ ] **Step 4: Write TextField**
@@ -832,7 +832,7 @@ The app version guarded typing while disabled with an early return inside `onCha
 
 - [ ] **Step 5: Run the tests**
 
-Run: `pnpm --filter @bohar/form test TextField`
+Run: `pnpm --filter @bohardlabs/form test TextField`
 Expected: PASS, 8 tests.
 
 - [ ] **Step 6: Export it**
@@ -1183,7 +1183,7 @@ feat(form): Select and Checkbox
 - Consumes: `useFieldContext`, `FieldShell`, `useLabels`, `renderField`.
 - Produces: `<TimeField label disabled? required? maxHours? minuteStep? helperText? />`. The field value is a **duration in minutes**, not a clock time.
 
-Its own task because it is the only field with real arithmetic, and because the two captions it renders ("Hours", "Minutes") are the last hardcoded English in the kit. Note it is a *duration* picker despite the name; `TimePickerField` in Task 7 is the clock one. The names are confusing and they are the names four apps already call, so they stay.
+Its own task because it is the only field with real arithmetic, and because the two captions it renders ("Hours", "Minutes") are the last hardcoded English in the kit. Note it is a _duration_ picker despite the name; `TimePickerField` in Task 7 is the clock one. The names are confusing and they are the names four apps already call, so they stay.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -1290,7 +1290,7 @@ describe('TimeField', () => {
 
 - [ ] **Step 2: Run and watch it fail**
 
-Run: `pnpm --filter @bohar/form test TimeField`
+Run: `pnpm --filter @bohardlabs/form test TimeField`
 Expected: FAIL, module not found.
 
 - [ ] **Step 3: Port the field**
@@ -1299,7 +1299,7 @@ Copy the app version, then: replace the label row with `FieldShell`, replace the
 
 - [ ] **Step 4: Run the tests**
 
-Run: `pnpm --filter @bohar/form test TimeField`
+Run: `pnpm --filter @bohardlabs/form test TimeField`
 Expected: PASS, 9 tests.
 
 If "forces minutes to zero at 24 hours" fails with `1440` expected and `1470` received, the recombination is adding the old minute value before the `isAtMaxHours` guard runs. The guard has to apply to the value being written, not to the value being displayed.
@@ -1614,9 +1614,7 @@ describe('lazyField', () => {
   });
 
   it('passes props through to the loaded component', async () => {
-    const Lazy = lazyField<{label: string}>(() =>
-      Promise.resolve(({label}: {label: string}) => <span>{label}</span>),
-    );
+    const Lazy = lazyField<{label: string}>(() => Promise.resolve(({label}: {label: string}) => <span>{label}</span>));
 
     render(<Lazy label="Start date" />);
 
@@ -1651,7 +1649,7 @@ The last case is `React.lazy`'s own caching, not something the wrapper implement
 
 - [ ] **Step 2: Run, fail, write it**
 
-```tsx
+````tsx
 import Skeleton from '@mui/material/Skeleton';
 import type {ComponentType} from 'react';
 import {Suspense, lazy} from 'react';
@@ -1674,7 +1672,7 @@ interface LazyFieldOptions {
  *
  * @example
  * ```tsx
- * const DateField = lazyField(() => import('@bohar/form').then((m) => m.DateField));
+ * const DateField = lazyField(() => import('@bohardlabs/form').then((m) => m.DateField));
  * ```
  */
 export function lazyField<TProps extends object>(
@@ -1692,7 +1690,7 @@ export function lazyField<TProps extends object>(
     );
   };
 }
-```
+````
 
 Run: PASS, 5 tests.
 
@@ -1722,7 +1720,7 @@ feat(form): lazyField
 
 **Interfaces:**
 
-- Consumes: `useFormContext` (Task 1), `useLabels` (Task 1), `UnsavedChangesDialog` from `@bohar/admin-ui`.
+- Consumes: `useFormContext` (Task 1), `useLabels` (Task 1), `UnsavedChangesDialog` from `@bohardlabs/admin-ui`.
 - Produces:
   - `<FormError />`: reads `errorMap.onSubmit` and renders a dismissible `Alert`.
   - `<SubscribeButton label loadingLabel? disabled? sx? />`.
@@ -1861,9 +1859,9 @@ Fill in each harness call rather than leaving the comments in the committed file
 
 - [ ] **Step 7: Run, fail, port CancelButton**
 
-Two changes from the app version: `t('common.cancel')` becomes `labels.cancel`, and `UnsavedChangesDialog` is imported from `@bohar/admin-ui` rather than a relative path. Everything else, including the `hasChanges ?? formIsDirty` precedence, stays.
+Two changes from the app version: `t('common.cancel')` becomes `labels.cancel`, and `UnsavedChangesDialog` is imported from `@bohardlabs/admin-ui` rather than a relative path. Everything else, including the `hasChanges ?? formIsDirty` precedence, stays.
 
-Run: `pnpm --filter @bohar/form test form/`
+Run: `pnpm --filter @bohardlabs/form test form/`
 Expected: PASS, 15 tests across three files.
 
 - [ ] **Step 8: Export the three, then hand off**
@@ -1976,9 +1974,7 @@ describe('createAppForm', () => {
 
     function Harness() {
       const form = useAppForm({defaultValues: {name: ''}});
-      return (
-        <form.AppField name="name">{(field) => <field.TextField label="Name" />}</form.AppField>
-      );
+      return <form.AppField name="name">{(field) => <field.TextField label="Name" />}</form.AppField>;
     }
 
     render(<Harness />);
@@ -2051,7 +2047,7 @@ describe('createAppForm', () => {
 
 - [ ] **Step 3: Run, fail, write createAppForm**
 
-```ts
+````ts
 import {createFormHook} from '@tanstack/react-form';
 
 import {fieldContext, formContext} from './context';
@@ -2071,7 +2067,7 @@ interface CreateAppFormOptions {
  * @example
  * ```tsx
  * // app/form.ts
- * import {createAppForm, lazyField} from '@bohar/form';
+ * import {createAppForm, lazyField} from '@bohardlabs/form';
  *
  * const BuildingSelectField = lazyField(() =>
  *   import('./fields/BuildingSelectField').then((m) => m.BuildingSelectField),
@@ -2091,7 +2087,7 @@ export function createAppForm(options: CreateAppFormOptions = {}) {
 
 /** The kit's fields with nothing added, for a consumer with no domain fields of their own. */
 export const {useAppForm, withForm} = createAppForm();
-```
+````
 
 The `Record<string, unknown>` on the two options is the one place a wide type is unavoidable: `createFormHook` accepts an open record of components and infers the field API from it. It is a widening, not a cast, and the inference on the result is unaffected. If TypeScript loses the inferred field names on `form.AppField`, make `CreateAppFormOptions` generic over the two records and pass them through, rather than adding an assertion.
 
@@ -2157,11 +2153,11 @@ export {DEFAULT_LABELS, FormLabelsProvider, useLabels} from './i18n';
 export type {FormLabels} from './i18n';
 ```
 
-Exporting `DateField` directly *and* registering a lazy copy in `fields.ts` is deliberate: a consumer who renders it outside a form, or who wants it eagerly, can import it, and the lazy registration still keeps it out of the default bundle because `fields.ts` imports it dynamically.
+Exporting `DateField` directly _and_ registering a lazy copy in `fields.ts` is deliberate: a consumer who renders it outside a form, or who wants it eagerly, can import it, and the lazy registration still keeps it out of the default bundle because `fields.ts` imports it dynamically.
 
 - [ ] **Step 5: Add the package to the showcase and write the stories**
 
-`apps/storybook/package.json` gains `"@bohar/form": "workspace:*"`, then `pnpm install`.
+`apps/storybook/package.json` gains `"@bohardlabs/form": "workspace:*"`, then `pnpm install`.
 
 `Form.stories.tsx` gets four stories, each a real working form:
 
@@ -2174,12 +2170,12 @@ Every story wraps its content in `FormLabelsProvider` only where it is demonstra
 
 - [ ] **Step 6: Run everything**
 
-Run: `pnpm --filter @bohar/form test && pnpm --filter @bohar/storybook test`
+Run: `pnpm --filter @bohardlabs/form test && pnpm --filter @bohardlabs/storybook test`
 Expected: PASS. Roughly 70 unit tests plus the four stories, each also running axe.
 
 - [ ] **Step 7: Confirm the lazy split actually works**
 
-Run: `pnpm --filter @bohar/form build`, then:
+Run: `pnpm --filter @bohardlabs/form build`, then:
 
 ```bash
 grep -rl "x-date-pickers" packages/form/dist | sort
@@ -2204,7 +2200,7 @@ feat(form): createAppForm, the field registry, and stories
 - Create: `packages/form/README.md`
 - Create: `.changeset/<generated-name>.md`
 - Modify: `README.md`
-- Modify: `docs/superpowers/plans/README.md`
+- Modify: `docs/roadmap.md`
 - Move: this file to `docs/superpowers/plans/done/`
 
 - [ ] **Step 1: Write the README**
@@ -2214,7 +2210,7 @@ Longer than the other two packages, because this one has a setup step that can b
 1. **What it is.** A field kit for TanStack Form and MUI, with the heavy fields behind lazy boundaries.
 2. **Install**, with the peer table marking the three optional peers and saying what each unlocks.
 3. **Setup.** The `createAppForm` call, in a file the app owns, with the `LocalizationProvider` requirement stated next to it.
-4. **The context rule**, as its own section with a heading, not a footnote. State plainly: do not call `createFormHookContexts()`; import `useFieldContext` from `@bohar/form`. Show the failure mode so a reader recognises it.
+4. **The context rule**, as its own section with a heading, not a footnote. State plainly: do not call `createFormHookContexts()`; import `useFieldContext` from `@bohardlabs/form`. Show the failure mode so a reader recognises it.
 5. **The fields**, one subsection each with a props table.
 6. **Writing your own field**, showing `FieldShell` + `useFieldContext` + `lazyField` together.
 7. **Labels**, with a worked `FormLabelsProvider`.
@@ -2228,7 +2224,7 @@ Longer than the other two packages, because this one has a setup step that can b
 
 - [ ] **Step 3: Write the changeset**
 
-`pnpm changeset`, select `@bohar/form`, **minor**:
+`pnpm changeset`, select `@bohardlabs/form`, **minor**:
 
 ```
 Initial release. TanStack Form fields for MUI: TextField, TextArea, Select, Checkbox,
@@ -2250,7 +2246,8 @@ mv docs/superpowers/plans/open/2026-08-28-form-kit-package.md \
    docs/superpowers/plans/done/2026-08-28-form-kit-package.md
 ```
 
-Move the row in `docs/superpowers/plans/README.md` from Open to Done and fix its link.
+In `docs/roadmap.md`, section "New packages", set this plan's row to `done (today's date)`
+and fix its link, which now points at `done/`.
 
 - [ ] **Step 6: Hand off for commit**
 
@@ -2264,7 +2261,7 @@ feat(form): README, changeset, first release prep
 
 **Four fields stay in the app.** `AddressField` and `LocationSearchField` carry `@react-google-maps/api` plus `@/types/location`; `BuildingSelectField` and `ScheduleField` carry `@/types/vendor`, `@/hooks/useLocationApi` and `@/utils/scheduleTime`. The app registers them through `createAppForm({fieldComponents: {...}})`, which is the case Task 11 exists to support.
 
-The two map fields could return later behind a `@bohar/form/maps` subpath export, once someone has decided whether the package should depend on Google Maps at all. `BuildingSelectField` is domain and never will.
+The two map fields could return later behind a `@bohardlabs/form/maps` subpath export, once someone has decided whether the package should depend on Google Maps at all. `BuildingSelectField` is domain and never will.
 
 **A Zod or standard-schema integration.** The kit reads whatever shape a validator produces, string or `{message}`, and does not care which library made it. Shipping an opinion about validators would double the peer matrix for no gain.
 

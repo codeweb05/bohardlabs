@@ -6,14 +6,20 @@
  * the contract, and every rearrangement inside would become a breaking change for someone.
  * Anything a consumer needs to influence comes in as a prop or a column definition.
  *
+ * `ConfirmDialog` is the one exception, and a deliberate one. It is not a part of the
+ * table's composition but a whole component the table happens to use, and an app that
+ * confirms deletions on its own detail pages should be able to use the same one rather
+ * than build a near-match. It doubles as the reference implementation of the
+ * `slots.confirmDialog` contract.
+ *
  * The table is server-first. It owns pagination, sorting, filter and search state, persists
  * it per `tableId`, and reports it through one `onServerStateChange` callback that a page
  * turns into query params.
  *
  * @example Server-driven, which is what this package is for
  * ```tsx
- * import {DataTable, useTableServerState} from '@bohar/datatable';
- * import type {DataTableColumnDef} from '@bohar/datatable';
+ * import {DataTable, useTableServerState} from '@bohardlabs/datatable';
+ * import type {DataTableColumnDef} from '@bohardlabs/datatable';
  *
  * const columns: DataTableColumnDef<Order>[] = [
  *   {id: 'reference', accessorKey: 'reference', header: 'Reference'},
@@ -59,11 +65,15 @@
  * reports state and renders rows; how those rows are fetched is the consumer's business.
  * One convenience hook, `useServerSidePagination`, does run the query for you, and it is
  * the only thing in the package that needs React Query, which is why it lives behind a
- * separate entry point: `@bohar/datatable/server`.
+ * separate entry point: `@bohardlabs/datatable/server`.
  */
 
 // The component
 export {DataTable} from './DataTable';
+
+// The confirmation the table shows before a destructive bulk action, usable on its own and
+// the shape `slots.confirmDialog` has to match. Props: `DataTableConfirmProps`, below.
+export {ConfirmDialog} from './ConfirmDialog';
 
 // Inline row editing. No React Query: `onSave` is the consumer's own write.
 export {useInlineEdit} from './hooks/useInlineEdit';

@@ -19,7 +19,7 @@ diverging copies for weeks.
 | `@/lib/react-query`          | `src/query/hooks.ts`: used only by the two `./server` hooks, which is why react-query is an optional peer    |
 | `@/lib/excel`                | `src/export/excel.ts`, dynamic-imported; `write-excel-file` is an optional peer                              |
 | `@/hooks/useDateFormat`      | `src/filters/dateFormats.ts`: the two format strings the filters actually used                               |
-| `@/components/ConfirmDialog` | `src/internal/ConfirmDialog.tsx`: internal, not exported                                                     |
+| `@/components/ConfirmDialog` | `src/ConfirmDialog.tsx`: exported, and the reference implementation of `slots.confirmDialog`                 |
 | `@/theme`                    | nothing; tests build a stock `createTheme()`                                                                 |
 
 ## Labels, not i18n
@@ -35,12 +35,19 @@ one filter).
 
 ## What is public
 
-`DataTable`, `useTableServerState`, `getInitialServerState`, the storage-key helpers, the
-labels, the context hooks, the types, and the five constants. Nothing else. The header,
-cells, filters, toolbar buttons and the resize handle stay internal: exporting them would
-freeze the internal composition into the contract, and every rearrangement inside would
-become a breaking change for someone. `src/index.test.ts` pins that list, including an
-assertion that the internals are absent.
+`DataTable`, `ConfirmDialog`, `useTableServerState`, `getInitialServerState`, the
+storage-key helpers, the labels, the context hooks, the types, and the five constants.
+Nothing else. The header, cells, filters, toolbar buttons and the resize handle stay
+internal: exporting them would freeze the internal composition into the contract, and every
+rearrangement inside would become a breaking change for someone. `src/index.test.ts` pins
+that list, including an assertion that the internals are absent.
+
+`ConfirmDialog` is the one component here that is not a part of the table's composition but
+a whole thing the table happens to use, which is why it moved out of `src/internal/` and
+onto the entry point. An app that confirms deletions on its own detail pages can use the
+same dialog rather than build a near-match, and it doubles as the reference implementation
+of the `slots.confirmDialog` contract: it takes `DataTableConfirmProps` and nothing else, so
+a consumer can wrap it and pass the wrapper back in as the slot.
 
 `./server` is a second entry point holding `useServerSidePagination`, the only export that
 needs `@tanstack/react-query`. Keeping it off the main entry is what lets react-query be an
@@ -54,8 +61,8 @@ Several components read a derived signature out of context purely so the compile
 invalidates their cached output (see the comments in `core/TableHeader.tsx`). Running the
 tests without the compiler changes how many times a handler fires, and three tests fail on
 the count. So `babel-plugin-react-compiler` runs in both the test config and the build,
-which also settles open question 3: consumers get compiled output regardless of their own
-build setup.
+which is [decision 0003](../../decisions/0003-react-compiler.md): consumers get compiled
+output regardless of their own build setup.
 
 This is also why the build is `vite build` rather than tsup. Rollup runs Babel through
 `@vitejs/plugin-react`; esbuild does not run Babel at all. `preserveModules` keeps the
@@ -110,8 +117,10 @@ a push.
 
 - The app still has its own copy. It switches to the package and deletes that copy as a
   separate change; two live copies is the failure mode to avoid.
-- `noUncheckedIndexedAccess` (open question 4) can now be turned on, in its own change.
-- The contrast finding above, as a decision about the default palette.
+- `noUncheckedIndexedAccess` ([decision 0004](../../decisions/0004-no-unchecked-indexed-access.md))
+  can now be turned on, in its own change.
+- The contrast finding above, as a decision about the default palette
+  ([open question A](../../decisions/open-questions.md#a-the-default-palettes-contrast)).
 
 Stories are done: `src/DataTable.stories.tsx` covers the states (default, empty, loading,
 error), the features (filtering, selection with bulk actions, row actions, expansion,

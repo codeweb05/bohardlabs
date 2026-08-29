@@ -1,4 +1,4 @@
-# Proposal: `@bohar/directions-map`
+# Proposal: `@bohardlabs/directions-map`
 
 **Status:** deferred, 2026-08-28. **Source:** `skipwash-admin/src/components/DirectionsMap/`
 (918 loc across 7 files) plus `src/lib/google-maps/` (35). **Apps using it:** 1 of 4.
@@ -11,15 +11,15 @@ recomputes every stop's arrival from the leg durations the Directions API return
 
 The parts:
 
-| File | LOC | What it does |
-| ---- | --: | ------------ |
-| `MapPanel.tsx` | 282 | The map, markers, info windows, bounds fitting |
-| `StopListPanel.tsx` | 174 | The list, the dnd-kit context, the layout toggle |
-| `StopListItem.tsx` | 170 | One row: drag handle, timing, warning state, remove |
+| File                | LOC | What it does                                            |
+| ------------------- | --: | ------------------------------------------------------- |
+| `MapPanel.tsx`      | 282 | The map, markers, info windows, bounds fitting          |
+| `StopListPanel.tsx` | 174 | The list, the dnd-kit context, the layout toggle        |
+| `StopListItem.tsx`  | 170 | One row: drag handle, timing, warning state, remove     |
 | `DirectionsMap.tsx` | 155 | Composition, reorder handling, the split/stacked switch |
-| `useTimeCascade.ts` | 126 | Arrival, departure and lateness per stop |
-| `useDirections.ts` | 72 | Debounced `DirectionsService` calls, waypoint assembly |
-| `markerUtils.ts` | 37 | Numbered marker icons |
+| `useTimeCascade.ts` | 126 | Arrival, departure and lateness per stop                |
+| `useDirections.ts`  |  72 | Debounced `DirectionsService` calls, waypoint assembly  |
+| `markerUtils.ts`    |  37 | Numbered marker icons                                   |
 
 The timing cascade is the interesting part and the reason this is on the list at all.
 Given a start time, a per-stop dwell time and the leg durations, it produces each stop's
@@ -69,7 +69,7 @@ it answers, when does this stop get served, is that inside its window, how late 
 running, are not specific to maps.
 
 If a scheduling feature in another app needs the same arithmetic, extract it alone as
-`@bohar/schedule-timing` and leave the map behind. That is a 130-line package with real
+`@bohardlabs/schedule-timing` and leave the map behind. That is a 130-line package with real
 tests and no peer matrix, which is a very different proposition from a 950-line package with
 six peers and no stories.
 

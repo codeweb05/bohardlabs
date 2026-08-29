@@ -1,4 +1,4 @@
-# @bohar/api-client Implementation Plan
+# @bohardlabs/api-client Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -8,7 +8,7 @@
 
 **Tech Stack:** axios 1, `@tanstack/react-query` 5 (optional peer, `./react` only), React 19 (optional peer), Vite lib mode with two entries, Vitest (node for core, jsdom for storage and hooks).
 
-**Spec:** [`docs/extraction/README.md`](../../../extraction/README.md), section "4. `@bohar/api-client`"
+**Spec:** [`docs/extraction/README.md`](../../../extraction/README.md), section "4. `@bohardlabs/api-client`"
 
 **Source being ported:** `skipwash-latest/skipwash-admin/src/lib/axios/` (617 loc with tests), `src/lib/auth/token-service.ts` (460), `src/lib/react-query/` (158), `src/contexts/AuthContext/permissions.ts` (63). Around 1200 lines of source, plus 1900 lines of existing tests worth reading before rewriting them.
 
@@ -33,7 +33,7 @@ person does not have to re-derive it.
 
 ## Global Constraints
 
-- Package name `@bohar/api-client`, `"private": true`, version `0.0.0`.
+- Package name `@bohardlabs/api-client`, `"private": true`, version `0.0.0`.
 - No `@/…` imports. `env`, `STORAGE_KEYS`, `API_ENDPOINTS`, `ROUTES`, `i18next` and
   `toastUtil` are all app-supplied and all become config.
 - **No module-scope mutable state.** The app's token service keeps `refreshPromise`,
@@ -93,7 +93,7 @@ everything else imports it.
 Add to the `catalog:` block in `pnpm-workspace.yaml`:
 
 ```yaml
-  axios: ^1.13.2
+axios: ^1.13.2
 ```
 
 `@tanstack/react-query` is already in the catalog from the datatable work. Check before
@@ -103,7 +103,7 @@ adding; if the range differs from `^5`, use whatever is there.
 
 ```json
 {
-  "name": "@bohar/api-client",
+  "name": "@bohardlabs/api-client",
   "version": "0.0.0",
   "private": true,
   "description": "Axios client, refresh-token service and React Query layer for the admin APIs",
@@ -366,7 +366,7 @@ translation lookup that would return a miss and lose it.
 
 - [ ] **Step 6: Run and watch it fail**
 
-Run: `pnpm --filter @bohar/api-client test error`
+Run: `pnpm --filter @bohardlabs/api-client test error`
 Expected: FAIL, cannot resolve `./error`.
 
 - [ ] **Step 7: Write `src/messages.ts`**
@@ -432,19 +432,27 @@ mappings exactly as the app has them; the test above pins all seven.
 
 - [ ] **Step 9: Run the tests**
 
-Run: `pnpm --filter @bohar/api-client test error`
+Run: `pnpm --filter @bohardlabs/api-client test error`
 Expected: PASS, 24 tests.
 
 - [ ] **Step 10: Write the temporary entry point, install, build**
 
 ```ts
-export {ApiError, ErrorCode, createApiError, getErrorCode, getErrorMessage, isApiError, isNetworkOrTimeoutError} from './error';
+export {
+  ApiError,
+  ErrorCode,
+  createApiError,
+  getErrorCode,
+  getErrorMessage,
+  isApiError,
+  isNetworkOrTimeoutError,
+} from './error';
 export {DEFAULT_MESSAGES} from './messages';
 export type {ErrorMessages} from './messages';
 export type {ApiRequestConfig, ApiResponse, ErrorResponse, PaginatedResponse, SuccessResponse} from './types';
 ```
 
-Run: `pnpm install && pnpm --filter @bohar/api-client build`
+Run: `pnpm install && pnpm --filter @bohardlabs/api-client build`
 
 - [ ] **Step 11: Hand off for commit**
 
@@ -817,15 +825,15 @@ covers most of these cases, and the ones it covers are the bugs that produced th
 
 **What changes on the way in:**
 
-| App | Package |
-| --- | --- |
-| module-scope `refreshTimer`, `refreshPromise`, `sessionGeneration`, `refreshRunId`, `refreshBlockedUntil` | closure state inside the factory |
-| `authAxios` built from `env` | built from `config.baseURL`, `config.timeout`, `config.headers` |
-| `API_ENDPOINTS.AUTH.*` | `config.endpoints`, defaulting to the `/v1/auth/*` paths |
-| `localStorage` directly | the `TokenStorage` from Task 3 |
-| `globalThis.dispatchEvent(new CustomEvent('auth:unauthorized'))` | `config.onUnauthorized?.()` |
-| `REFRESH_LOCK_NAME = 'skipwash-token-refresh'` | `config.lockName`, default `'bohar-token-refresh'` |
-| no teardown | `dispose()`, clearing the timer |
+| App                                                                                                       | Package                                                         |
+| --------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| module-scope `refreshTimer`, `refreshPromise`, `sessionGeneration`, `refreshRunId`, `refreshBlockedUntil` | closure state inside the factory                                |
+| `authAxios` built from `env`                                                                              | built from `config.baseURL`, `config.timeout`, `config.headers` |
+| `API_ENDPOINTS.AUTH.*`                                                                                    | `config.endpoints`, defaulting to the `/v1/auth/*` paths        |
+| `localStorage` directly                                                                                   | the `TokenStorage` from Task 3                                  |
+| `globalThis.dispatchEvent(new CustomEvent('auth:unauthorized'))`                                          | `config.onUnauthorized?.()`                                     |
+| `REFRESH_LOCK_NAME = 'skipwash-token-refresh'`                                                            | `config.lockName`, default `'bohardlabs-token-refresh'`              |
+| no teardown                                                                                               | `dispose()`, clearing the timer                                 |
 
 `dispose()` is new and not optional. A module singleton lives as long as the page; an
 instance a test creates leaves a `setTimeout` behind that fires into a torn-down suite.
@@ -994,7 +1002,8 @@ describe('a refresh that outlives its session', () => {
     let releaseRefresh: (() => void) | undefined;
     const {service, storage} = setup({
       respond: (call) => {
-        if (call.url !== '/v1/auth/refresh-token') return {status: 200, data: {success: true, data: tokens('first', 10)}};
+        if (call.url !== '/v1/auth/refresh-token')
+          return {status: 200, data: {success: true, data: tokens('first', 10)}};
         return {status: 200, data: {success: true, data: tokens('late')}};
       },
     });
@@ -1018,9 +1027,7 @@ describe('transient failures', () => {
   it('keeps the session alive when the refresh cannot reach the server', async () => {
     const {service, storage, onUnauthorized} = setup({
       respond: (call) =>
-        call.url === '/v1/auth/login'
-          ? {status: 200, data: {success: true, data: tokens('first', 10)}}
-          : {status: 503},
+        call.url === '/v1/auth/login' ? {status: 200, data: {success: true, data: tokens('first', 10)}} : {status: 503},
     });
     await service.login('a@b.c', 'pw');
 
@@ -1051,9 +1058,7 @@ describe('transient failures', () => {
     vi.useFakeTimers();
     const {service, calls} = setup({
       respond: (call) =>
-        call.url === '/v1/auth/login'
-          ? {status: 200, data: {success: true, data: tokens('first', 10)}}
-          : {status: 503},
+        call.url === '/v1/auth/login' ? {status: 200, data: {success: true, data: tokens('first', 10)}} : {status: 503},
     });
     await service.login('a@b.c', 'pw');
     calls.length = 0;
@@ -1139,9 +1144,7 @@ describe('restoreSession', () => {
     // A network blip on startup must not present as being signed out.
     const {service} = setup({
       respond: (call) =>
-        call.url === '/v1/auth/login'
-          ? {status: 200, data: {success: true, data: tokens('first', 10)}}
-          : {status: 503},
+        call.url === '/v1/auth/login' ? {status: 200, data: {success: true, data: tokens('first', 10)}} : {status: 503},
     });
     await service.login('a@b.c', 'pw');
 
@@ -1181,7 +1184,8 @@ describe('logout', () => {
 
   it('clears tokens even when the logout call fails', async () => {
     const {service, storage} = setup({
-      respond: (call) => (call.url.includes('logout') ? {status: 500} : {status: 200, data: {success: true, data: tokens('first')}}),
+      respond: (call) =>
+        call.url.includes('logout') ? {status: 500} : {status: 200, data: {success: true, data: tokens('first')}},
     });
     await service.login('a@b.c', 'pw');
 
@@ -1217,7 +1221,7 @@ Port the remaining machinery. Do not simplify any of the four mechanisms while p
 Each one exists because of a bug that reached production, and each has a test above that
 fails if it is removed.
 
-Run: `pnpm --filter @bohar/api-client test token-service`
+Run: `pnpm --filter @bohardlabs/api-client test token-service`
 Expected: PASS, roughly 30 tests.
 
 - [ ] **Step 6: Check the Web Lock path**
@@ -1284,7 +1288,10 @@ export interface ApiClientConfig {
   /** Cross-tab refresh lock name. Change it if two apps share an origin. */
   readonly lockName?: string;
   /** Diagnostics. Nothing is written to the console unless you pass this. */
-  readonly logger?: {debug?: (message: string, data?: unknown) => void; error?: (message: string, error: unknown) => void};
+  readonly logger?: {
+    debug?: (message: string, data?: unknown) => void;
+    error?: (message: string, error: unknown) => void;
+  };
   /** Escape hatch for adapters and proxy settings. Merged into both axios instances. */
   readonly axiosConfig?: AxiosRequestConfig;
 }
@@ -1366,7 +1373,7 @@ refreshed, and only the second forces a real rotation.
 
 - [ ] **Step 3: Run the tests**
 
-Run: `pnpm --filter @bohar/api-client test client`
+Run: `pnpm --filter @bohardlabs/api-client test client`
 Expected: PASS, 13 tests.
 
 - [ ] **Step 4: Export and hand off**
@@ -1456,7 +1463,9 @@ describe('formatPermissions', () => {
   });
 
   it('handles three levels', () => {
-    const tree = [{key: 'A', children: [{key: 'B', children: [{key: 'C', children: [{key: 'VIEW', type: 'action'}]}]}]}];
+    const tree = [
+      {key: 'A', children: [{key: 'B', children: [{key: 'C', children: [{key: 'VIEW', type: 'action'}]}]}]},
+    ];
     expect(formatPermissions(tree)).toEqual(['A.B.C:VIEW']);
   });
 
@@ -1547,7 +1556,7 @@ port, and it is three near-identical eight-line functions.
 
 Include the app's usage example in the doc comment, rewritten for the new shape:
 
-```ts
+````ts
 /**
  * @example
  * ```ts
@@ -1565,17 +1574,23 @@ Include the app's usage example in the doc comment, rewritten for the new shape:
  * const rolesRoute = createRoute({path: '/roles', beforeLoad: requirePermission('ADMIN_ROLE:VIEW')});
  * ```
  */
-```
+````
 
 - [ ] **Step 3: Run the tests**
 
-Run: `pnpm --filter @bohar/api-client test permissions`
+Run: `pnpm --filter @bohardlabs/api-client test permissions`
 Expected: PASS, 18 tests.
 
 - [ ] **Step 4: Export and hand off**
 
 ```ts
-export {createPermissionGuards, formatPermissions, hasAllPermissions, hasAnyPermission, hasPermission} from './permissions';
+export {
+  createPermissionGuards,
+  formatPermissions,
+  hasAllPermissions,
+  hasAnyPermission,
+  hasPermission,
+} from './permissions';
 export type {PermissionTreeNode} from './permissions';
 ```
 
@@ -1834,7 +1849,7 @@ step.
 
 - [ ] **Step 3: Verify the root entry is React-free**
 
-Run `pnpm --filter @bohar/api-client build`, then:
+Run `pnpm --filter @bohardlabs/api-client build`, then:
 
 ```bash
 grep -rl "react" packages/api-client/dist --include="*.js" | grep -v "^packages/api-client/dist/react/" | sort
@@ -1851,7 +1866,7 @@ ls packages/api-client/dist/index.js packages/api-client/dist/react/index.js
 
 - [ ] **Step 4: Run the whole suite**
 
-Run: `pnpm --filter @bohar/api-client test`
+Run: `pnpm --filter @bohardlabs/api-client test`
 Expected: PASS, roughly 130 tests.
 
 - [ ] **Step 5: Hand off for commit**
@@ -1869,7 +1884,7 @@ feat(api-client): finalise the public surface
 - Create: `packages/api-client/README.md`
 - Create: `.changeset/<generated-name>.md`
 - Modify: `README.md`
-- Modify: `docs/superpowers/plans/README.md`
+- Modify: `docs/roadmap.md`
 - Modify: `docs/extraction/README.md`
 - Move: this file to `docs/superpowers/plans/done/`
 
@@ -1899,19 +1914,19 @@ Sections, in order:
 
 - [ ] **Step 3: Record the precondition's answer**
 
-Update the "4. `@bohar/api-client`" section of
+Update the "4. `@bohardlabs/api-client`" section of
 [`docs/extraction/README.md`](../../../extraction/README.md) to say what was found about the
 envelope, so the paragraph telling the next reader to confirm it becomes a paragraph telling
 them what was confirmed.
 
 - [ ] **Step 4: Write the changeset**
 
-`pnpm changeset`, select `@bohar/api-client`, **minor**:
+`pnpm changeset`, select `@bohardlabs/api-client`, **minor**:
 
 ```
 Initial release. An axios client with bearer auth, a refresh-token service that
 coordinates across tabs and survives an outage without signing the user out, permission
-predicates and route guards, and an optional `@bohar/api-client/react` entry with a
+predicates and route guards, and an optional `@bohardlabs/api-client/react` entry with a
 configured QueryClient and error-aware query and mutation hooks.
 ```
 
@@ -1927,7 +1942,8 @@ mv docs/superpowers/plans/open/2026-08-28-api-client-package.md \
    docs/superpowers/plans/done/2026-08-28-api-client-package.md
 ```
 
-Move the row in `docs/superpowers/plans/README.md` from Open to Done and fix its link.
+In `docs/roadmap.md`, section "New packages", set this plan's row to `done (today's date)`
+and fix its link, which now points at `done/`.
 
 - [ ] **Step 7: Hand off for commit**
 

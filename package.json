@@ -1,11 +1,11 @@
 {
-  "name": "@bohar/root",
+  "name": "@bohardlabs/root",
   "version": "0.0.0",
   "private": true,
   "type": "module",
   "packageManager": "pnpm@11.9.0",
   "engines": {
-    "node": ">=20.19.0"
+    "node": ">=22.22.2"
   },
   "scripts": {
     "build": "turbo run build",
@@ -15,7 +15,7 @@
     "format": "oxfmt .",
     "format:check": "oxfmt --check .",
     "validate": "pnpm lint && pnpm format:check && turbo run typecheck build && pnpm test",
-    "storybook": "pnpm --filter @bohar/storybook dev",
+    "storybook": "pnpm --filter @bohardlabs/storybook dev",
     "build-storybook": "turbo run build-storybook",
     "changeset": "changeset",
     "version-packages": "changeset version && pnpm install --lockfile-only",
@@ -33,8 +33,7 @@
     "@types/node": "^26.4.0",
     "@vitest/browser-playwright": "^4.1.11",
     "@vitest/coverage-v8": "catalog:",
-    "eslint": "^9.39.2",
-    "eslint-plugin-react": "^7.37.5",
+    "eslint": "^10.9.1",
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-sonarjs": "^4.2.0",
     "eslint-plugin-storybook": "^10.5.10",

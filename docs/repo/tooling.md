@@ -100,8 +100,26 @@ continuously, where it is not.
 The reason is coverage. Vitest scopes coverage to the run's root, so a story run rooted at
 `apps/storybook` can only report on `apps/storybook`: the test panel spent a while reporting
 29% coverage of `.storybook/preview.tsx` and nothing at all about the library. One run rooted
-here puts `packages/*/src` in scope, and the stories and the unit tests land in the same
-number instead of two that cannot be added together.
+here puts `packages/*/src` in scope, so `pnpm test:cov` reports the stories and the unit tests
+as one number instead of two that cannot be added together.
+
+### The Storybook panel's percentage is not that number
+
+`pnpm test:cov` is the repo's coverage. The percentage in Storybook's test panel is a
+different and much lower figure, and the difference is structural rather than a
+misconfiguration.
+
+`@storybook/addon-vitest` creates its Vitest instance with `project: ['storybook:<configDir>']`
+(`dist/node/vitest.js`). That filter is hard-coded, so the run behind the panel contains the
+stories and nothing else. The package's unit tests never enter the process and never
+contribute a line. What the panel measures is how much of `packages/*/src` the story `play`
+functions reach on their own: about 62% of statements, against about 98% for the full run.
+
+The gap is mostly deliberate. Inline editing, the column filter panel and the React Query
+hooks behind `/server` have no story at all, because a unit test covers them more precisely
+and a browser test of the same behaviour costs a Chromium render for no extra signal. Read
+the panel as story coverage and nothing more. Chasing 100% there means writing stories whose
+only job is to re-cover what the unit tests already assert.
 
 Running them together also settles what `--concurrency=1` used to settle. Two Vitest runs at
 once are two process pools each sizing itself to the machine: the datatable project forks
@@ -109,7 +127,7 @@ jsdom workers, the story project drives a real Chromium. Together they oversubsc
 and the datatable suite starts failing on timing while it passes on its own. Inside one run
 the story project sits in its own `sequence.groupOrder`, so the two never overlap.
 
-`vitest run --project @bohar/datatable` or `--project storybook` narrows the run when only
+`vitest run --project @bohardlabs/datatable` or `--project storybook` narrows the run when only
 one half matters.
 
 ## Why both pnpm workspaces and Turborepo
@@ -118,7 +136,7 @@ They do different jobs and neither replaces the other.
 
 **pnpm workspaces** is the package manager's half. It decides what a workspace _is_: which
 directories are packages (`pnpm-workspace.yaml`), how their `node_modules` are linked, that
-`"@bohar/datatable": "workspace:*"` in `apps/storybook` resolves to the local folder rather
+`"@bohardlabs/datatable": "workspace:*"` in `apps/storybook` resolves to the local folder rather
 than the registry, and that `catalog:` pins one React version across everything so hooks
 never break on a duplicate copy. It has no idea what a build is.
 

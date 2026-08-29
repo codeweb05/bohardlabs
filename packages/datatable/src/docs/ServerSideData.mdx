@@ -34,7 +34,7 @@ every hand-wired table eventually has.
 ## Wiring it up
 
 ```tsx
-import {DataTable, useTableServerState} from '@bohar/datatable';
+import {DataTable, useTableServerState} from '@bohardlabs/datatable';
 import {keepPreviousData, useQuery} from '@tanstack/react-query';
 import {useMemo} from 'react';
 
@@ -127,8 +127,8 @@ For a page with no data layer of its own, `useServerSidePagination` owns the sta
 the search, builds the params and runs the query:
 
 ```tsx
-import {DataTable} from '@bohar/datatable';
-import {useServerSidePagination} from '@bohar/datatable/server';
+import {DataTable} from '@bohardlabs/datatable';
+import {useServerSidePagination} from '@bohardlabs/datatable/server';
 
 const table = useServerSidePagination<Order>({
   queryKey: ['orders'], // request params are appended to this for you
@@ -156,7 +156,7 @@ const table = useServerSidePagination<Order>({
 />;
 ```
 
-It lives behind `@bohar/datatable/server` so a consumer driving the table from its own API
+It lives behind `@bohardlabs/datatable/server` so a consumer driving the table from its own API
 hooks never installs React Query.
 
 Prefer the first route when the app already has typed API hooks: fetching stays where the

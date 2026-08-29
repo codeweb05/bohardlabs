@@ -1,5 +1,5 @@
 {
-  "name": "@bohar/storybook",
+  "name": "@bohardlabs/storybook",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -10,7 +10,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@bohar/datatable": "workspace:*"
+    "@bohardlabs/datatable": "workspace:*"
   },
   "devDependencies": {
     "@chromatic-com/storybook": "^5.3.0",
@@ -31,7 +31,7 @@
     "@vitest/browser-playwright": "catalog:",
     "@vitest/coverage-v8": "catalog:",
     "@vitest/runner": "catalog:",
-    "babel-plugin-react-compiler": "^1.0.0",
+    "oxc-transform-react": "catalog:",
     "playwright": "^1.62.1",
     "react": "catalog:",
     "react-dom": "catalog:",

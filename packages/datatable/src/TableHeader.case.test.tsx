@@ -68,8 +68,11 @@ describe('DataTable header casing', () => {
   it('gives sortable and non-sortable headers the same casing', () => {
     render(<DataTable columns={testColumns} data={testData} enableSorting />);
 
-    // The sortable header wraps its label in a <button>; it must inherit, not reset.
+    // The sortable header wraps its label in a <button>; it must inherit the cell's
+    // casing rather than fall back to the UA stylesheet's `none`. Asserted against the
+    // non-sortable header rather than against the literal `inherit`, so this compares the
+    // two cases the test is named for instead of how the value happens to be spelled.
     const sortButton = within(screen.getByRole('columnheader', {name: /Name/})).getByRole('button');
-    expect(window.getComputedStyle(sortButton).textTransform).toBe('inherit');
+    expect(window.getComputedStyle(sortButton).textTransform).toBe(getHeaderTransform('Description'));
   });
 });

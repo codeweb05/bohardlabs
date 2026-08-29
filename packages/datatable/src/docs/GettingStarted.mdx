@@ -4,14 +4,14 @@ import {Meta} from '@storybook/addon-docs/blocks';
 
 # Getting started
 
-`@bohar/datatable` is a server-driven React table: TanStack Table for the engine, MUI for the
+`@bohardlabs/datatable` is a server-driven React table: TanStack Table for the engine, MUI for the
 shell. The table owns pagination, sorting, filtering and search state, persists it, and
 reports it back through one callback. Client-side mode exists, but server mode is the point.
 
 ## Install
 
 ```bash
-pnpm add @bohar/datatable
+pnpm add @bohardlabs/datatable
 ```
 
 The package declares no `dependencies` of its own. Everything it uses is a peer, so your
@@ -82,8 +82,8 @@ No CSS import, no provider from this package, no global registry. Everything els
 ## Your first table
 
 ```tsx
-import {DataTable} from '@bohar/datatable';
-import type {DataTableColumnDef} from '@bohar/datatable';
+import {DataTable} from '@bohardlabs/datatable';
+import type {DataTableColumnDef} from '@bohardlabs/datatable';
 
 interface Order {
   id: string;

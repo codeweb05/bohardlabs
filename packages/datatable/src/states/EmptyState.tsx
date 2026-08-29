@@ -53,8 +53,8 @@ export function EmptyState({message, description, icon, actionLabel, onAction}: 
       {/* Message */}
       <Typography
         variant="h6"
-        color="text.primary"
         sx={{
+          color: 'text.primary',
           fontWeight: 600,
           mb: 0.5,
           fontSize: {xs: '1rem', sm: '1.125rem'},
@@ -67,8 +67,8 @@ export function EmptyState({message, description, icon, actionLabel, onAction}: 
       {description && (
         <Typography
           variant="body2"
-          color="text.secondary"
           sx={{
+            color: 'text.secondary',
             maxWidth: 400,
             mb: actionLabel ? 3 : 0,
           }}

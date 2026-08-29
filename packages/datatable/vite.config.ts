@@ -5,8 +5,11 @@ export default defineConfig({
   // The table's components are written against the React Compiler: several of them read a
   // derived signature out of context purely so the compiler invalidates their cached
   // output (see the comments in `core/TableHeader.tsx`). Tests that run without it
-  // observe a different number of renders, so the plugin is not optional here.
-  plugins: [react({babel: {plugins: ['babel-plugin-react-compiler']}})],
+  // observe a different number of renders, so this is not optional here.
+  //
+  // plugin-react 6 runs the compiler through oxc rather than Babel, so it is a plugin
+  // option now instead of a Babel plugin entry; `oxc-transform-react` is what backs it.
+  plugins: [react({compiler: true})],
   build: {
     target: 'es2022',
     sourcemap: true,
@@ -15,7 +18,7 @@ export default defineConfig({
       entry: {index: 'src/index.ts', server: 'src/server.ts'},
       formats: ['es'],
     },
-    rollupOptions: {
+    rolldownOptions: {
       // Every bare specifier is a peer or an optional peer. Nothing from node_modules
       // belongs in the output.
       external: (id) => !id.startsWith('.') && !id.startsWith('/') && !id.startsWith('\0'),

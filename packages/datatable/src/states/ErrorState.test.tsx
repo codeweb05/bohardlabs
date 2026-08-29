@@ -129,7 +129,7 @@ describe('ErrorState — dark theme', () => {
     );
 
     expect(screen.getByText('Request timed out')).toBeInTheDocument();
-    expect(screen.getByTestId('ErrorOutlineIcon')).toHaveStyle({color: dark.palette.error.main});
+    expect(screen.getByTestId('ErrorOutlinedIcon')).toHaveStyle({color: dark.palette.error.main});
   });
 
   it('still offers retry in dark mode', async () => {

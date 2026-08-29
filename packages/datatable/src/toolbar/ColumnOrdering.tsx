@@ -157,10 +157,21 @@ export function ColumnOrdering<TData extends RowData>({table, onOrderChange}: Re
         }}
       >
         <DialogTitle sx={{pb: 1}}>
-          <Typography variant="h6" fontWeight={600}>
+          <Typography
+            variant="h6"
+            sx={{
+              fontWeight: 600,
+            }}
+          >
             {labels.dragToReorder}
           </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{mt: 0.5}}>
+          <Typography
+            variant="body2"
+            sx={{
+              color: 'text.secondary',
+              mt: 0.5,
+            }}
+          >
             {labels.reorderHint}
           </Typography>
         </DialogTitle>
@@ -207,7 +218,7 @@ export function ColumnOrdering<TData extends RowData>({table, onOrderChange}: Re
                     slotProps={{
                       primary: {
                         variant: 'body2',
-                        fontWeight: 500,
+                        sx: {fontWeight: 500},
                       },
                     }}
                   />

@@ -1,7 +1,7 @@
 import {createContext, createElement, useContext, useMemo, type ReactNode} from 'react';
 
+import {ConfirmDialog} from '../ConfirmDialog';
 import {DATE_API_FORMAT, DATE_PICKER_FORMAT} from '../filters/dateFormats';
-import {ConfirmDialog} from '../internal/ConfirmDialog';
 import type {DataTableConfirmProps, DataTableDateFormats, DataTableSlots} from '../types';
 
 /**

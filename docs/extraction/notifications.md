@@ -1,4 +1,4 @@
-# Proposal: `@bohar/notifications`
+# Proposal: `@bohardlabs/notifications`
 
 **Status:** deferred, 2026-08-28. **Source:** `skipwash-admin/src/components/NotificationBell/`,
 `NotificationToast/`, `NotificationBanner/`, `src/hooks/useNotification*`, `usePushNotification`,
@@ -9,16 +9,16 @@
 
 The whole notification stack, and it is a stack rather than a component:
 
-| Piece | LOC | What it does |
-| ----- | --: | ------------ |
-| `NotificationBell` + hook | 544 | Bell with unread badge, dropdown list, infinite scroll, mark-read |
-| `NotificationToast` | 194 | Stacked transient toasts driven by the unread delta |
-| `NotificationBanner` + hook | 295 | Persistent in-app banners with pause on hover, dismiss all |
-| `useNotificationAlert` | 141 | Turns an unread count change into toasts and a bell animation |
-| `usePushNotification` | 163 | FCM token registration, foreground message handling, permission |
-| `lib/firebase` | 97 | App init and messaging, guarded for unsupported browsers |
-| `Settings/Notification` | 399 | The per-category, per-channel preferences matrix |
-| `useNotificationApi` | 95 | List, unread count, mark read |
+| Piece                       | LOC | What it does                                                      |
+| --------------------------- | --: | ----------------------------------------------------------------- |
+| `NotificationBell` + hook   | 544 | Bell with unread badge, dropdown list, infinite scroll, mark-read |
+| `NotificationToast`         | 194 | Stacked transient toasts driven by the unread delta               |
+| `NotificationBanner` + hook | 295 | Persistent in-app banners with pause on hover, dismiss all        |
+| `useNotificationAlert`      | 141 | Turns an unread count change into toasts and a bell animation     |
+| `usePushNotification`       | 163 | FCM token registration, foreground message handling, permission   |
+| `lib/firebase`              |  97 | App init and messaging, guarded for unsupported browsers          |
+| `Settings/Notification`     | 399 | The per-category, per-channel preferences matrix                  |
+| `useNotificationApi`        |  95 | List, unread count, mark read                                     |
 
 Duplicated in all four forks, which by the survey's own ranking rule should put it near the
 top.
@@ -59,7 +59,7 @@ for.
 
 - **The backend contract is settled and shared.** If skipwash-api and smarthip-backend agree
   on the notification list, unread-count and preferences shapes, most of the objection above
-  evaporates, and the same precondition that gates `@bohar/api-client` gates this.
+  evaporates, and the same precondition that gates `@bohardlabs/api-client` gates this.
 - **Someone wants to design it rather than port it.** The publishable shape is a headless
   core plus thin presentational parts: a `NotificationStore` fed by whatever transport the
   app has, a `useNotifications()` hook over it, and `Bell`, `Toast` and `Banner` as
@@ -70,8 +70,8 @@ for.
 
 ## Order, if it is ever built
 
-After `@bohar/api-client`, which owns the query client, the error handling and the auth the
-notification hooks all sit on. And after `@bohar/admin-shell`, which is where the bell and
+After `@bohardlabs/api-client`, which owns the query client, the error handling and the auth the
+notification hooks all sit on. And after `@bohardlabs/admin-shell`, which is where the bell and
 the banner get rendered: the shell's `actions` and `banner` slots are deliberately shaped to
 take them.
 
@@ -84,10 +84,10 @@ dismiss-all. Nothing in it is notification-specific; it is a transient message q
 would work for any of them.
 
 `lib/firebase/messaging.ts` (63 loc) is worth its own tiny package or a slot in a
-`@bohar/web-utils`, mostly because of what it gets right: it checks `isSupported()` before
+`@bohardlabs/web-utils`, mostly because of what it gets right: it checks `isSupported()` before
 touching the API, so Safari and Firefox private windows degrade instead of throwing.
 
 ## Recommendation
 
-Do not extract now. Revisit after `@bohar/api-client` and `@bohar/admin-shell` ship, and
+Do not extract now. Revisit after `@bohardlabs/api-client` and `@bohardlabs/admin-shell` ship, and
 treat it as a design task with its own brainstorming pass rather than a port with a plan.

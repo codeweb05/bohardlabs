@@ -1,4 +1,4 @@
-import ErrorIcon from '@mui/icons-material/ErrorOutline';
+import ErrorIcon from '@mui/icons-material/ErrorOutlined';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import {Alert, Box, Button, Typography} from '@mui/material';
 
@@ -68,8 +68,8 @@ export function ErrorState({error, onRetry, compact = false}: Readonly<ErrorStat
       {/* Error title */}
       <Typography
         variant="h6"
-        color="error.main"
         sx={{
+          color: 'error.main',
           fontWeight: 600,
           mb: 0.5,
           fontSize: {xs: '1rem', sm: '1.125rem'},
@@ -83,8 +83,8 @@ export function ErrorState({error, onRetry, compact = false}: Readonly<ErrorStat
       {error && (
         <Typography
           variant="body2"
-          color="text.secondary"
           sx={{
+            color: 'text.secondary',
             maxWidth: 400,
           }}
         >

@@ -192,8 +192,8 @@ export function CardItem<TData extends RowData>({
                 return (
                   <Typography
                     variant="subtitle2"
-                    fontWeight={600}
                     sx={{
+                      fontWeight: 600,
                       flex: 1,
                       textAlign: 'left',
                       overflow: 'hidden',
@@ -254,7 +254,14 @@ export function CardItem<TData extends RowData>({
                 if (layout === 'stacked') {
                   return (
                     <Box key={column.id}>
-                      <Typography variant="caption" color="text.secondary" sx={{display: 'block', lineHeight: 1.4}}>
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          color: 'text.secondary',
+                          display: 'block',
+                          lineHeight: 1.4,
+                        }}
+                      >
                         {label}
                       </Typography>
                       <Typography
@@ -281,7 +288,14 @@ export function CardItem<TData extends RowData>({
                       gap: 0.5,
                     }}
                   >
-                    <Typography variant="caption" color="text.secondary" sx={{flexShrink: 0, lineHeight: 1.6}}>
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        color: 'text.secondary',
+                        flexShrink: 0,
+                        lineHeight: 1.6,
+                      }}
+                    >
                       {label}:
                     </Typography>
                     <Typography

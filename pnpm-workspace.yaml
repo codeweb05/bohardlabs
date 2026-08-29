@@ -7,24 +7,25 @@ packages:
 # workspace (which breaks hooks) and a peer-dep range can never drift from what the
 # showcase actually runs against.
 catalog:
-  react: ^19.2.4
-  react-dom: ^19.2.4
-  '@types/react': ^19.2.0
-  '@types/react-dom': ^19.2.0
-  '@mui/material': ^7.3.7
-  '@mui/icons-material': ^7.3.7
+  react: ^19.2.8
+  react-dom: ^19.2.8
+  '@types/react': ^19.2.18
+  '@types/react-dom': ^19.2.5
+  '@mui/material': ^9.4.0
+  '@mui/icons-material': ^9.4.0
   '@emotion/react': ^11.14.0
   '@emotion/styled': ^11.14.1
-  '@mui/x-date-pickers': ^8.26.0
-  dayjs: ^1.11.19
-  '@tanstack/react-query': ^5.90.20
-  write-excel-file: ^3.0.6
+  '@mui/x-date-pickers': ^9.12.0
+  dayjs: ^1.11.23
+  '@tanstack/react-query': ^5.102.8
+  write-excel-file: ^4.1.1
   '@tanstack/react-table': ^8.21.3
-  '@tanstack/react-virtual': ^3.13.18
-  typescript: ^5.9.3
-  vite: ^7.3.1
+  '@tanstack/react-virtual': ^3.14.10
+  typescript: ^6.0.3
+  vite: ^8.2.2
   vitest: ^4.1.11
-  '@vitejs/plugin-react': ^5.1.2
+  '@vitejs/plugin-react': ^6.1.1
+  oxc-transform-react: ^0.145.0
   '@vitest/browser': ^4.1.11
   '@vitest/browser-playwright': ^4.1.11
   '@vitest/coverage-v8': ^4.1.11
@@ -35,3 +36,9 @@ catalog:
 # allow-list, not a bypass.
 allowBuilds:
   esbuild: true
+
+minimumReleaseAgeExclude:
+  - '@tanstack/query-core@5.102.8'
+  - '@tanstack/react-query@5.102.8'
+  - '@testing-library/react@16.3.3'
+  - '@vitejs/plugin-react@6.1.1'

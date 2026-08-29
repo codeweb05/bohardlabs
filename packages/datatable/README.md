@@ -1,10 +1,6 @@
-# @bohar/datatable
+# @bohardlabs/datatable
 
 A server-driven React data table: TanStack Table for the engine, MUI for the shell.
-
-> **Not published yet.** The name above is a placeholder and `private` is still `true` in
-> `package.json`. Both change when the npm scope is decided (see
-> [`docs/decisions/open-questions.md`](../../docs/decisions/open-questions.md)).
 
 ## What makes it different
 
@@ -20,7 +16,7 @@ twice on mount, and showing page 5 of the previous filter's results.
 ## Install
 
 ```bash
-pnpm add @bohar/datatable
+pnpm add @bohardlabs/datatable
 ```
 
 The package itself has no `dependencies`. Everything it uses is a peer, so your app's copy
@@ -93,8 +89,8 @@ When the browser already holds the whole dataset, hand it over and the table doe
 sorting, filtering, search and paging are all local.
 
 ```tsx
-import {DataTable} from '@bohar/datatable';
-import type {DataTableColumnDef} from '@bohar/datatable';
+import {DataTable} from '@bohardlabs/datatable';
+import type {DataTableColumnDef} from '@bohardlabs/datatable';
 
 interface Order {
   id: string;
@@ -134,7 +130,7 @@ restore, so the first query already uses the persisted page size and no throwawa
 goes out at the default one.
 
 ```tsx
-import {DataTable, useTableServerState} from '@bohar/datatable';
+import {DataTable, useTableServerState} from '@bohardlabs/datatable';
 import {keepPreviousData, useQuery} from '@tanstack/react-query';
 import {useMemo} from 'react';
 
@@ -187,12 +183,12 @@ export function OrdersPage() {
 
 For a page with no data layer of its own. `useServerSidePagination` owns the state, debounces
 the search, builds the params and runs the query. This hook is the only place React Query
-appears, which is why it sits behind `@bohar/datatable/server`: server mode itself does not
+appears, which is why it sits behind `@bohardlabs/datatable/server`: server mode itself does not
 need it, and Route 1 above never imports it.
 
 ```tsx
-import {DataTable} from '@bohar/datatable';
-import {useServerSidePagination} from '@bohar/datatable/server';
+import {DataTable} from '@bohardlabs/datatable';
+import {useServerSidePagination} from '@bohardlabs/datatable/server';
 
 export function OrdersPage() {
   const table = useServerSidePagination<Order>({
@@ -279,6 +275,28 @@ Two pieces of the table would otherwise look imported. Both are props.
 />
 ```
 
+It works the other way too. If the app has no confirmation dialog of its own, the table's is
+exported, so a detail page can use the same one instead of building a near-match:
+
+```tsx
+import {ConfirmDialog} from '@bohardlabs/datatable';
+
+<ConfirmDialog
+  open={isConfirming}
+  onClose={() => setIsConfirming(false)}
+  onConfirm={() => deleteOrder(id)} // may return a promise; the dialog waits on it
+  title="Delete order"
+  message="SW-1000 will be removed. This cannot be undone."
+  confirmLabel="Delete"
+  confirmColor="error"
+/>;
+```
+
+No `DataTable` needs to be anywhere above it. `open` stays the caller's state: the dialog
+disables both buttons while `onConfirm` runs, but closing is the caller's to do. Its props
+are `DataTableConfirmProps`, the same type `slots.confirmDialog` takes, so a wrapper that
+fixes `confirmColor` for the app can be passed straight back in as the slot.
+
 ## Theming
 
 No colour, font or radius is hardcoded. The table reads `primary.main`, `divider`,
@@ -290,10 +308,13 @@ usually those apps' `MuiTableCell` and `MuiTableRow` overrides, not this package
 
 `DataTable` is the product. Its parts (headers, cells, toolbar, pager) are deliberately not
 exported: exporting them would freeze the internal composition into the contract.
+`ConfirmDialog` is the exception, because it is a whole component the table happens to use
+rather than a part of its composition.
 
 | Export                                              | What it is                                       |
 | --------------------------------------------------- | ------------------------------------------------ |
 | `DataTable`                                         | the component                                    |
+| `ConfirmDialog`                                     | the confirmation, usable on its own              |
 | `useTableServerState`, `getInitialServerState`      | server-state seeding for a list page             |
 | `DEFAULT_LABELS`, `DataTableLabels`                 | strings and their type                           |
 | `getTableStateStorageKey`, `DEFAULT_STORAGE_PREFIX` | persistence keys, for migrating an app           |
@@ -301,7 +322,7 @@ exported: exporting them would freeze the internal composition into the contract
 | `DEFAULT_PAGE_SIZE`, `DENSITY_CONFIG`, …            | the defaults, so an app can match them           |
 | `useInlineEdit`                                     | inline row editing; `onSave` is your own write   |
 | `slots`, `dateFormats`                              | swap in the app's confirm dialog and date format |
-| `@bohar/datatable/server`                           | `useServerSidePagination` (needs React Query)    |
+| `@bohardlabs/datatable/server`                           | `useServerSidePagination` (needs React Query)    |
 
 Every prop is documented in `types.ts` with the gotcha attached, and rendered as a prop
 table in Storybook.

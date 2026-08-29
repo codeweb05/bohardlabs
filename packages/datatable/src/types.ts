@@ -405,7 +405,7 @@ export interface BulkAction<TData> {
  * exactly these names, which is what `transformParams` in {@link ServerSideTransformers} is
  * for: map once, in one place, instead of at every call site.
  *
- * Only relevant when using the `@bohar/datatable/server` entry point. Driving the table from
+ * Only relevant when using the `@bohardlabs/datatable/server` entry point. Driving the table from
  * `onServerStateChange` gives you {@link ServerTableState} instead, and you build the params
  * yourself.
  */
@@ -1005,7 +1005,9 @@ export interface DataTableProps<TData extends RowData> extends TableEventHandler
 
 /** DataTable context value */
 /**
- * What the table passes to whatever renders a confirmation.
+ * What the table passes to whatever renders a confirmation, and the props of the exported
+ * `ConfirmDialog`. One type for both: the built-in dialog and a replacement are the same
+ * contract, which is what makes swapping one for the other a substitution.
  *
  * A replacement has to honour three things or bulk actions break: call `onConfirm` on
  * confirm and `onClose` on dismissal, await `onConfirm` (it returns a promise while the

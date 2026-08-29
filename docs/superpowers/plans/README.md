@@ -4,38 +4,9 @@ One plan per unit of work, written so someone with no context for this repo can 
 task by task. A plan lives in `open/` until its last task is checked off, then moves to
 `done/` with its filename unchanged.
 
-## Open
-
-Take them in this order. The only hard dependency is admin-ui before form.
-
-| Order | Plan                                                                       | Package               | Size   | Blocked on                                          |
-| :---: | -------------------------------------------------------------------------- | --------------------- | ------ | ---------------------------------------------------- |
-|   1   | [image-editor](open/2026-08-28-image-editor-package.md)                     | `@bohar/image-editor` | 817 loc, 7 tasks   | nothing                                  |
-|   2   | [admin-ui-kit](open/2026-08-28-admin-ui-kit-package.md)                     | `@bohar/admin-ui`     | ~1000 loc, 9 tasks | nothing                                  |
-|   3   | [form-kit](open/2026-08-28-form-kit-package.md)                             | `@bohar/form`         | 2640 loc, 12 tasks | plan 2 (CancelButton renders its dialog) |
-|   4   | [api-client](open/2026-08-28-api-client-package.md)                         | `@bohar/api-client`   | 1200 loc, 9 tasks  | confirming the backend envelope is shared |
-|   5   | [admin-shell](open/2026-08-28-admin-shell-package.md)                       | `@bohar/admin-shell`  | 1120 loc, 8 tasks  | plan 2                                   |
-
-## In progress
-
-Nothing yet. When you start a plan, move its row here and say who has it.
-
-| Plan | Owner | Started | At task |
-| ---- | ----- | ------- | ------- |
-
-## Done
-
-| Plan | Package | Finished |
-| ---- | ------- | -------- |
-
-The DataTable port predates this board and has no plan document. Its history is in
-[`../../packages/datatable/port.md`](../../packages/datatable/port.md).
-
-## Deferred
-
-Four candidates were surveyed and deliberately not planned. They have proposals rather than
-plans, in [`../../extraction/`](../../extraction/): `sse-client`, `excel-export`,
-`directions-map`, `notifications`. Each says what would change the answer.
+Which plans exist, the order to take them in, what each is blocked on, who has one in
+progress and which are done: all of that is on the [roadmap](../../roadmap.md), section
+"New packages", and nowhere else. This file says how to execute one.
 
 ## Executing one
 
@@ -48,6 +19,19 @@ Each plan opens with the sub-skill to use. Two options, both fine:
 Check off each `- [ ]` as you go. The plans are written to be executed out of order within
 a task's steps only if the step numbering allows it, which it usually does not: they are
 red-green-refactor cycles and the order is the point.
+
+## Starting and finishing
+
+When you start a plan, edit its row on the roadmap to `in progress`, with your name and the
+task you are on, and keep the task number current as you go.
+
+Every plan's last task closes it: the package README, the changeset, the root package
+table, then the file moves to `done/` and the roadmap row changes in the same commit. A
+plan that gets superseded is edited in place or deleted, never left to rot next to its
+replacement.
+
+The DataTable port predates this board and has no plan document. Its history is in
+[`../../packages/datatable/port.md`](../../packages/datatable/port.md).
 
 ## Git
 

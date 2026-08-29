@@ -1,4 +1,4 @@
-# @bohar/admin-ui Implementation Plan
+# @bohardlabs/admin-ui Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -8,17 +8,17 @@
 
 **Tech Stack:** React 19, MUI 7, Vite lib mode, Vitest + jsdom, Storybook 10.
 
-**Spec:** [`docs/extraction/README.md`](../../../extraction/README.md), section "2. `@bohar/admin-ui`"
+**Spec:** [`docs/extraction/README.md`](../../../extraction/README.md), section "2. `@bohardlabs/admin-ui`"
 
 **Source being ported:** `skipwash-latest/skipwash-admin/src/components/`: `ConfirmDialog.tsx`, `UnsavedChangesDialog.tsx`, `DeletionErrorDialog.tsx`, `SignOutDialog.tsx`, `WelcomeDialog.tsx`, `PageHeader/`, `TruncatedTextWithTooltip/`, `ListPagination/`, `Loader.tsx`. Roughly 1000 lines.
 
-**Why this one is worth doing before the form kit:** `CancelButton` in `@bohar/form` renders `UnsavedChangesDialog`. Plan 3 cannot start until this ships.
+**Why this one is worth doing before the form kit:** `CancelButton` in `@bohardlabs/form` renders `UnsavedChangesDialog`. Plan 3 cannot start until this ships.
 
 ## Global Constraints
 
-- Package name `@bohar/admin-ui`, `"private": true`, version `0.0.0`.
+- Package name `@bohardlabs/admin-ui`, `"private": true`, version `0.0.0`.
 - No `@/…` imports. Every one becomes a prop with a default.
-- No hardcoded user-facing string. One `AdminUiLabels` interface for the whole package, one `DEFAULT_LABELS`, one context. A label that interpolates is a function (`successMessage: (count: number) => string`), matching `@bohar/datatable`.
+- No hardcoded user-facing string. One `AdminUiLabels` interface for the whole package, one `DEFAULT_LABELS`, one context. A label that interpolates is a function (`successMessage: (count: number) => string`), matching `@bohardlabs/datatable`.
 - No hardcoded colour. Three of the ported files carry `rgba(...)` literals; every one is replaced with a theme token or `alpha(theme.palette.X, n)`.
 - Never `any`, `@ts-ignore`, `@ts-expect-error`, `as unknown as`.
 - Icons import per-icon (`@mui/icons-material/KeyboardArrowLeft`), never the barrel.
@@ -97,7 +97,7 @@ globalThis.ResizeObserver = MockResizeObserver;
 
 ```json
 {
-  "name": "@bohar/admin-ui",
+  "name": "@bohardlabs/admin-ui",
   "version": "0.0.0",
   "private": true,
   "description": "Dialogs, page headers, pagination and loaders for MUI admin screens",
@@ -215,7 +215,7 @@ describe('AdminUiLabelsProvider', () => {
 
 - [ ] **Step 4: Run it and watch it fail**
 
-Run: `pnpm --filter @bohar/admin-ui test`
+Run: `pnpm --filter @bohardlabs/admin-ui test`
 Expected: FAIL, "Failed to resolve import './index'".
 
 - [ ] **Step 5: Write `labels.ts`**
@@ -230,7 +230,7 @@ One flat interface for the whole package rather than one per component. Nine sma
  * nine providers in a tree is nine chances to forget one.
  *
  * A string that interpolates is a function, so a translator controls word order rather than
- * receiving a fragment to concatenate. This is the same shape `@bohar/datatable` uses.
+ * receiving a fragment to concatenate. This is the same shape `@bohardlabs/datatable` uses.
  */
 export interface AdminUiLabels {
   // Shared dialog actions
@@ -354,7 +354,7 @@ export type {AdminUiLabels} from './i18n';
 
 - [ ] **Step 8: Install, test, build**
 
-Run: `pnpm install && pnpm --filter @bohar/admin-ui test && pnpm --filter @bohar/admin-ui build`
+Run: `pnpm install && pnpm --filter @bohardlabs/admin-ui test && pnpm --filter @bohardlabs/admin-ui build`
 Expected: 4 tests pass, build succeeds.
 
 - [ ] **Step 9: Hand off for commit**
@@ -429,7 +429,7 @@ describe('TruncatedTextWithTooltip', () => {
 
 - [ ] **Step 2: Run and watch it fail**
 
-Run: `pnpm --filter @bohar/admin-ui test TruncatedText`
+Run: `pnpm --filter @bohardlabs/admin-ui test TruncatedText`
 Expected: FAIL, module not found.
 
 - [ ] **Step 3: Port the component**
@@ -474,7 +474,11 @@ export function TruncatedTextWithTooltip({
   const displayText = needsTooltip ? `${text.slice(0, maxLength)}…` : text;
 
   const typography = (
-    <Typography variant={variant} component={component} sx={{...(needsTooltip ? {overflowWrap: 'break-word'} : {}), ...sx}}>
+    <Typography
+      variant={variant}
+      component={component}
+      sx={{...(needsTooltip ? {overflowWrap: 'break-word'} : {}), ...sx}}
+    >
       {displayText}
     </Typography>
   );
@@ -493,7 +497,7 @@ export function TruncatedTextWithTooltip({
 
 - [ ] **Step 4: Run the tests**
 
-Run: `pnpm --filter @bohar/admin-ui test TruncatedText`
+Run: `pnpm --filter @bohardlabs/admin-ui test TruncatedText`
 Expected: PASS, 5 tests.
 
 - [ ] **Step 5: Export it**
@@ -585,7 +589,7 @@ describe('PageHeader', () => {
 
 - [ ] **Step 2: Run and watch it fail**
 
-Run: `pnpm --filter @bohar/admin-ui test PageHeader`
+Run: `pnpm --filter @bohardlabs/admin-ui test PageHeader`
 Expected: FAIL, module not found.
 
 - [ ] **Step 3: Port the component**
@@ -650,7 +654,7 @@ Note that the untruncated title renders as `<Typography variant="h5">`, which MU
 
 - [ ] **Step 4: Run the tests**
 
-Run: `pnpm --filter @bohar/admin-ui test PageHeader`
+Run: `pnpm --filter @bohardlabs/admin-ui test PageHeader`
 Expected: PASS, 5 tests.
 
 - [ ] **Step 5: Export it**
@@ -773,9 +777,12 @@ describe('ConfirmDialog', () => {
   it('disables both buttons while an async onConfirm is in flight', async () => {
     const user = userEvent.setup();
     let release: (() => void) | undefined;
-    const onConfirm = vi.fn(() => new Promise<void>((resolve) => {
-      release = resolve;
-    }));
+    const onConfirm = vi.fn(
+      () =>
+        new Promise<void>((resolve) => {
+          release = resolve;
+        }),
+    );
 
     render(<ConfirmDialog {...BASE} onClose={vi.fn()} onConfirm={onConfirm} />);
     await user.click(screen.getByRole('button', {name: 'Confirm'}));
@@ -818,7 +825,7 @@ The rejection case is the one the app version gets right by accident: `finally` 
 
 - [ ] **Step 3: Run and watch it fail**
 
-Run: `pnpm --filter @bohar/admin-ui test ConfirmDialog`
+Run: `pnpm --filter @bohardlabs/admin-ui test ConfirmDialog`
 Expected: FAIL, module not found.
 
 - [ ] **Step 4: Write ConfirmDialog**
@@ -916,7 +923,7 @@ export function ConfirmDialog({
 
 - [ ] **Step 5: Run the tests**
 
-Run: `pnpm --filter @bohar/admin-ui test ConfirmDialog`
+Run: `pnpm --filter @bohardlabs/admin-ui test ConfirmDialog`
 Expected: PASS, 7 tests.
 
 If "disables both buttons while an async onConfirm is in flight" fails because the confirm button is queried by name and the name is now a spinner, that is the point of asserting on Cancel instead. Do not change the assertion to look for the confirm button by its label.
@@ -961,7 +968,13 @@ describe('UnsavedChangesDialog', () => {
 
   it('takes a per-instance title and message', () => {
     render(
-      <UnsavedChangesDialog open title="Leave this form?" message="Your draft is not saved." onDiscard={vi.fn()} onCancel={vi.fn()} />,
+      <UnsavedChangesDialog
+        open
+        title="Leave this form?"
+        message="Your draft is not saved."
+        onDiscard={vi.fn()}
+        onCancel={vi.fn()}
+      />,
     );
 
     expect(screen.getByText('Leave this form?')).toBeInTheDocument();
@@ -1009,7 +1022,7 @@ export function UnsavedChangesDialog({open, onDiscard, onCancel, title, message}
 
 - [ ] **Step 8: Run the tests and export both**
 
-Run: `pnpm --filter @bohar/admin-ui test dialogs`
+Run: `pnpm --filter @bohardlabs/admin-ui test dialogs`
 Expected: PASS, 11 tests.
 
 Add to `packages/admin-ui/src/index.ts`:
@@ -1119,7 +1132,7 @@ describe('DeletionErrorDialog', () => {
 
 - [ ] **Step 2: Run and watch it fail**
 
-Run: `pnpm --filter @bohar/admin-ui test DeletionError`
+Run: `pnpm --filter @bohardlabs/admin-ui test DeletionError`
 Expected: FAIL, module not found.
 
 - [ ] **Step 3: Write DeletionErrorDialog**
@@ -1281,9 +1294,12 @@ describe('SignOutDialog', () => {
   it('locks the dialog while signing out', async () => {
     const user = userEvent.setup();
     let release: (() => void) | undefined;
-    const onConfirm = vi.fn(() => new Promise<void>((resolve) => {
-      release = resolve;
-    }));
+    const onConfirm = vi.fn(
+      () =>
+        new Promise<void>((resolve) => {
+          release = resolve;
+        }),
+    );
 
     render(<SignOutDialog open onClose={vi.fn()} onConfirm={onConfirm} />);
     await user.click(screen.getByRole('button', {name: 'Sign out'}));
@@ -1375,7 +1391,7 @@ export interface WelcomeDialogProps {
 
 - [ ] **Step 8: Run every dialog test**
 
-Run: `pnpm --filter @bohar/admin-ui test dialogs`
+Run: `pnpm --filter @bohardlabs/admin-ui test dialogs`
 Expected: PASS, 23 tests across five files.
 
 - [ ] **Step 9: Export the three**
@@ -1410,7 +1426,7 @@ feat(admin-ui): deletion, sign-out and welcome dialogs
 - Consumes: `useLabels` from Task 1.
 - Produces: `<ListPagination pageIndex pageSize totalRows onPageIndexChange onPageSizeChange pageSizeOptions? showRowsPerPage? showPageInfo? showFirstLastButtons? sx? />` and `ListPaginationProps`. `pageSizeOptions` defaults to `[12, 24, 48]`.
 
-This is the pager for card grids and lists, not for the table. `@bohar/datatable` has its own, wired to TanStack's pagination state. Overlapping labels are a nuisance but not a reason to couple two packages: a consumer that uses both passes the same strings twice, which is cheaper than either package depending on the other.
+This is the pager for card grids and lists, not for the table. `@bohardlabs/datatable` has its own, wired to TanStack's pagination state. Overlapping labels are a nuisance but not a reason to couple two packages: a consumer that uses both passes the same strings twice, which is cheaper than either package depending on the other.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -1427,7 +1443,12 @@ function setup(overrides: Partial<React.ComponentProps<typeof ListPagination>> =
   const onPageIndexChange = vi.fn();
   const onPageSizeChange = vi.fn();
   render(
-    <ListPagination {...BASE} onPageIndexChange={onPageIndexChange} onPageSizeChange={onPageSizeChange} {...overrides} />,
+    <ListPagination
+      {...BASE}
+      onPageIndexChange={onPageIndexChange}
+      onPageSizeChange={onPageSizeChange}
+      {...overrides}
+    />,
   );
   return {onPageIndexChange, onPageSizeChange};
 }
@@ -1526,7 +1547,7 @@ The "no rows" case is a real bug in the app version: with `totalRows: 0` the pag
 
 - [ ] **Step 2: Run and watch it fail**
 
-Run: `pnpm --filter @bohar/admin-ui test ListPagination`
+Run: `pnpm --filter @bohardlabs/admin-ui test ListPagination`
 Expected: FAIL, module not found.
 
 - [ ] **Step 3: Port the component**
@@ -1540,7 +1561,7 @@ Copy the app file and make four changes:
 
 - [ ] **Step 4: Run the tests**
 
-Run: `pnpm --filter @bohar/admin-ui test ListPagination`
+Run: `pnpm --filter @bohardlabs/admin-ui test ListPagination`
 Expected: PASS, 11 tests.
 
 - [ ] **Step 5: Export it**
@@ -1617,7 +1638,7 @@ describe('BrandedLoader', () => {
 
 - [ ] **Step 2: Run and watch it fail**
 
-Run: `pnpm --filter @bohar/admin-ui test BrandedLoader`
+Run: `pnpm --filter @bohardlabs/admin-ui test BrandedLoader`
 Expected: FAIL, module not found.
 
 - [ ] **Step 3: Write the component**
@@ -1706,7 +1727,7 @@ Two things changed from the app version beyond the de-branding. `zIndex: 9999` b
 
 - [ ] **Step 4: Run the tests**
 
-Run: `pnpm --filter @bohar/admin-ui test BrandedLoader`
+Run: `pnpm --filter @bohardlabs/admin-ui test BrandedLoader`
 Expected: PASS, 5 tests.
 
 - [ ] **Step 5: Export it**
@@ -1744,7 +1765,7 @@ feat(admin-ui): BrandedLoader, de-branded from the app Loader
 In `apps/storybook/package.json`, under `dependencies`:
 
 ```json
-    "@bohar/admin-ui": "workspace:*"
+    "@bohardlabs/admin-ui": "workspace:*"
 ```
 
 Then `pnpm install`. The `stories` glob in `.storybook/main.ts` already covers `../../../packages/*/src/**/*.stories.@(ts|tsx)`.
@@ -1869,7 +1890,7 @@ export const Welcome: Story = {
 
 - [ ] **Step 4: Run the story tests**
 
-Run: `pnpm --filter @bohar/storybook test`
+Run: `pnpm --filter @bohardlabs/storybook test`
 Expected: PASS. Every story also runs axe, because `.storybook/preview.tsx` sets `parameters.a11y.test = 'error'`.
 
 - [ ] **Step 5: Check both themes**
@@ -1891,7 +1912,7 @@ feat(admin-ui): stories, interaction tests, a11y
 - Create: `packages/admin-ui/README.md`
 - Create: `.changeset/<generated-name>.md`
 - Modify: `README.md` (the root package table)
-- Modify: `docs/superpowers/plans/README.md`
+- Modify: `docs/roadmap.md`
 - Move: this file from `docs/superpowers/plans/open/` to `docs/superpowers/plans/done/`
 
 - [ ] **Step 1: Write the package README**
@@ -1911,7 +1932,7 @@ Say the two things a reader will otherwise get wrong:
 
 - [ ] **Step 3: Write the changeset**
 
-Run: `pnpm changeset`, select `@bohar/admin-ui`, choose **minor**, and describe the surface rather than the move:
+Run: `pnpm changeset`, select `@bohardlabs/admin-ui`, choose **minor**, and describe the surface rather than the move:
 
 ```
 Initial release. Nine MUI components for admin screens: ConfirmDialog,
@@ -1932,7 +1953,7 @@ mv docs/superpowers/plans/open/2026-08-28-admin-ui-kit-package.md \
    docs/superpowers/plans/done/2026-08-28-admin-ui-kit-package.md
 ```
 
-In `docs/superpowers/plans/README.md`: move the admin-ui row from Open to Done, fix its link to `done/`, and delete "plan 2" from the form-kit row's Blocked-on column, since it no longer is.
+In `docs/roadmap.md`, section "New packages": set the admin-ui row to `done (today's date)`, fix its link to `done/`, and change the form-kit and admin-shell rows from `blocked` to `ready`, since plan 2 no longer blocks them.
 
 - [ ] **Step 6: Hand off for commit**
 
@@ -1948,4 +1969,4 @@ feat(admin-ui): README, changeset, first release prep
 
 **The other dialogs in the app.** `ForceDeleteDialog`, `ForceDeactivateWarningDialog` and `HolidayFormDialog` all carry domain types (`DeletionMode`, holiday shapes) and stay where they are. `StripeConnectDialogs` is a vendor integration and is not a candidate.
 
-**A shared `Labels` package.** `@bohar/datatable` and `@bohar/admin-ui` both define `totalItems` and `itemsPerPage`, and a consumer using both translates them twice. That is annoying and it is still the right call: a shared labels package would make every string addition in either package a coordinated release of three.
+**A shared `Labels` package.** `@bohardlabs/datatable` and `@bohardlabs/admin-ui` both define `totalItems` and `itemsPerPage`, and a consumer using both translates them twice. That is annoying and it is still the right call: a shared labels package would make every string addition in either package a coordinated release of three.

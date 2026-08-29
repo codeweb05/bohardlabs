@@ -22,7 +22,7 @@ import {DEFAULT_PAGE_SIZE} from '../types';
  * fetching where the rest of the app's fetching lives and does not pull React Query into
  * this package's dependency graph.
  *
- * Exported from `@bohar/datatable/server`, not the root, because it is the only part that
+ * Exported from `@bohardlabs/datatable/server`, not the root, because it is the only part that
  * needs `@tanstack/react-query`.
  *
  * @example

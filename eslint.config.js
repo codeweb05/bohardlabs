@@ -17,7 +17,6 @@
  * Run it before a commit or a push (`pnpm lint:eslint`), not on every keystroke.
  * See docs/repo/tooling.md.
  */
-import react from 'eslint-plugin-react';
 import reactHooks from 'eslint-plugin-react-hooks';
 import sonarjs from 'eslint-plugin-sonarjs';
 import storybook from 'eslint-plugin-storybook';
@@ -41,8 +40,7 @@ export default tseslint.config(
       parser: tseslint.parser,
       parserOptions: {ecmaFeatures: {jsx: true}},
     },
-    plugins: {react, 'react-hooks': reactHooks, sonarjs},
-    settings: {react: {version: 'detect'}},
+    plugins: {'react-hooks': reactHooks, sonarjs},
     rules: {
       ...sonarjs.configs.recommended.rules,
       ...reactHooks.configs.recommended.rules,

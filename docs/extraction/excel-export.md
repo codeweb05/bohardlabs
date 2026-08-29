@@ -1,4 +1,4 @@
-# Proposal: `@bohar/excel-export`
+# Proposal: `@bohardlabs/excel-export`
 
 **Status:** deferred, 2026-08-28. **Source:** `skipwash-admin/src/lib/excel/index.ts`, 67 loc
 plus 109 lines of tests. **Apps using it:** 1 of 4.
@@ -25,7 +25,7 @@ content, formatting dates in the viewer's locale, is done at every call site ins
 once here. A package published in this shape would standardise the boring part and leave the
 part that actually differs between four apps unstandardised.
 
-The place that work belongs is the table. `@bohar/datatable` already knows the columns, the
+The place that work belongs is the table. `@bohardlabs/datatable` already knows the columns, the
 header labels, the accessors, the current filter and sort, and the visible column set. An
 export that lives beside the table has to be handed all of that again by the caller; an
 export that lives inside it has all of it already. The roadmap in
@@ -37,7 +37,7 @@ own README, versioning, changesets and peer matrix.
 ## What would change the answer
 
 - The datatable export feature ships and needs xlsx output. Then this code moves into
-  `@bohar/datatable` as an internal module, `write-excel-file` becomes an optional peer of
+  `@bohardlabs/datatable` as an internal module, `write-excel-file` becomes an optional peer of
   that package so consumers who only export CSV do not pay for it, and this proposal is
   closed rather than promoted.
 - Something other than a table needs xlsx output in two apps. An invoice or a scheduled
@@ -57,4 +57,4 @@ lose in a move.
 
 ## Recommendation
 
-Fold into `@bohar/datatable`'s export feature when that is built. Do not publish separately.
+Fold into `@bohardlabs/datatable`'s export feature when that is built. Do not publish separately.

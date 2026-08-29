@@ -121,7 +121,12 @@ export function FilterPanel<TData extends RowData>({
           <IconButton onClick={() => setOpen(false)} size="small" aria-label={labels.close}>
             <CloseIcon fontSize="small" />
           </IconButton>
-          <Typography variant="subtitle1" fontWeight={600}>
+          <Typography
+            variant="subtitle1"
+            sx={{
+              fontWeight: 600,
+            }}
+          >
             {labels.filters}
           </Typography>
         </Box>
@@ -134,7 +139,12 @@ export function FilterPanel<TData extends RowData>({
 
       {/* Filter fields */}
       {filterableColumns.length === 0 ? (
-        <Typography variant="body2" color="text.secondary">
+        <Typography
+          variant="body2"
+          sx={{
+            color: 'text.secondary',
+          }}
+        >
           {labels.noActiveFilters}
         </Typography>
       ) : (
@@ -145,7 +155,14 @@ export function FilterPanel<TData extends RowData>({
 
             return (
               <Box key={column.id}>
-                <Typography variant="caption" color="text.secondary" sx={{mb: 0.5, display: 'block'}}>
+                <Typography
+                  variant="caption"
+                  sx={{
+                    color: 'text.secondary',
+                    mb: 0.5,
+                    display: 'block',
+                  }}
+                >
                   {label}
                 </Typography>
                 {renderFilter(column)}

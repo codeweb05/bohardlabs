@@ -11,7 +11,7 @@ import type {RowData, UseInlineEditOptions, UseInlineEditReturn} from '../types'
  * not fetch, cache or invalidate anything: `onSave` is your function, and what happens
  * after a successful write (refetch, optimistic patch, toast) is yours to decide in
  * `onSuccess`. That is why this hook has no React Query in it and ships from the main
- * entry point rather than `@bohar/datatable/server`.
+ * entry point rather than `@bohardlabs/datatable/server`.
  *
  * Only changed fields are sent. A save with no changes closes the row without a request.
  * A failed save keeps the row open with the draft intact, so the user can fix and retry.
