@@ -1,0 +1,50 @@
+{
+  "name": "@bohar/root",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.9.0",
+  "engines": {
+    "node": ">=20.19.0"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "typecheck": "turbo run typecheck",
+    "test": "vitest run",
+    "lint": "oxlint",
+    "format": "oxfmt .",
+    "format:check": "oxfmt --check .",
+    "validate": "pnpm lint && pnpm format:check && turbo run typecheck build && pnpm test",
+    "storybook": "pnpm --filter @bohar/storybook dev",
+    "build-storybook": "turbo run build-storybook",
+    "changeset": "changeset",
+    "version-packages": "changeset version && pnpm install --lockfile-only",
+    "release": "turbo run build --filter='./packages/*' && changeset publish",
+    "lint:fix": "oxlint --fix",
+    "lint:types": "oxlint --type-aware",
+    "lint:eslint": "eslint .",
+    "lint:eslint:fix": "eslint . --fix",
+    "validate:ci": "pnpm lint && pnpm lint:eslint && pnpm format:check && turbo run typecheck build && pnpm test",
+    "test:cov": "vitest run --coverage"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^3.0.1",
+    "@storybook/addon-vitest": "^10.5.10",
+    "@types/node": "^26.4.0",
+    "@vitest/browser-playwright": "^4.1.11",
+    "@vitest/coverage-v8": "catalog:",
+    "eslint": "^9.39.2",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-sonarjs": "^4.2.0",
+    "eslint-plugin-storybook": "^10.5.10",
+    "oxfmt": "^0.65.0",
+    "oxlint": "^1.80.0",
+    "oxlint-tsgolint": "^7.0.2001",
+    "storybook": "^10.5.10",
+    "turbo": "^2.10.12",
+    "typescript": "catalog:",
+    "typescript-eslint": "^8.68.0",
+    "vitest": "catalog:"
+  }
+}

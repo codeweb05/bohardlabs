@@ -1,0 +1,183 @@
+import {Meta} from '@storybook/addon-docs/blocks';
+
+<Meta title="Guides/Server-side data" />
+
+# Server-side data
+
+This is the mode the package is built for. Most tables treat server data as an escape hatch
+from a client-side design; this one inverts that.
+
+Open **DataTable → Server Side** for a running version: it is wired to a fake backend that
+really paginates, sorts and filters, so the requests are visible in the interaction log.
+
+## The model
+
+The table owns pagination, sorting, column filters and search. It persists them per
+`tableId` and reports all four at once:
+
+```ts
+interface ServerTableState {
+  pagination: {pageIndex: number; pageSize: number};
+  sorting: {id: string; desc: boolean}[];
+  columnFilters: {id: string; value: unknown}[];
+  globalFilter: string;
+}
+```
+
+`onServerStateChange` fires once on mount with the resolved initial state (persisted values
+if any, otherwise your defaults), then on every change. You turn that into query params.
+
+**Nothing goes back in.** There is no `page` prop, no `onPageChange`, no controlled sorting.
+That asymmetry is deliberate: mirroring the state back is what produces the two failures
+every hand-wired table eventually has.
+
+## Wiring it up
+
+```tsx
+import {DataTable, useTableServerState} from '@bohar/datatable';
+import {keepPreviousData, useQuery} from '@tanstack/react-query';
+import {useMemo} from 'react';
+
+export function OrdersPage() {
+  // Same id as the DataTable below: it is the persistence key for both. This seeds the
+  // page's state from the entry the table will restore, so the first query already uses
+  // the persisted page size.
+  const {serverState, onServerStateChange} = useTableServerState('orders', {
+    pageSize: 25,
+    sorting: [{id: 'placedAt', desc: true}],
+  });
+
+  const params = useMemo(() => {
+    const {pagination, sorting, globalFilter, columnFilters} = serverState;
+    return {
+      page: pagination.pageIndex + 1, // TanStack is 0-indexed, most APIs are 1-indexed
+      limit: pagination.pageSize,
+      search: globalFilter || undefined,
+      status: columnFilters.find((f) => f.id === 'status')?.value,
+      sortBy: sorting[0]?.id,
+      sortOrder: sorting[0]?.desc ? 'desc' : 'asc',
+    };
+  }, [serverState]);
+
+  const {data, isLoading, isFetching, isError, refetch} = useQuery({
+    queryKey: ['orders', params],
+    queryFn: () => fetchOrders(params),
+    placeholderData: keepPreviousData, // keeps the current page visible while the next loads
+  });
+
+  return (
+    <DataTable
+      tableId="orders"
+      columns={columns}
+      data={data?.data ?? []}
+      totalRows={data?.meta?.total ?? 0}
+      manualPagination
+      manualSorting
+      manualFiltering
+      isLoading={isLoading}
+      isFetching={isFetching}
+      isError={isError}
+      onRetry={refetch}
+      onServerStateChange={onServerStateChange}
+      ariaLabel="Orders"
+    />
+  );
+}
+```
+
+### The three manual flags
+
+`manualPagination`, `manualSorting` and `manualFiltering` tell the table not to do that work
+itself. Forget one and it will sort or filter the single page it is holding, on top of what
+the server already did, and the result is rows that quietly disappear.
+
+### `totalRows` is not optional here
+
+`data.length` is one page. Without the real total, the pager reports "1 of 1" and the user
+can never leave page one.
+
+## Why the seed matters
+
+Without `useTableServerState`, this happens on every page load:
+
+1. the page renders and queries at the default page size;
+2. the table mounts, restores a persisted page size of 100, and emits it;
+3. the page queries again, under a different cache key.
+
+Two requests, a wasted one first, and a first paint with no rows, which is also what breaks
+scroll restoration on a back-navigation. `useTableServerState` reads the same persisted entry
+the table will restore, so step 1 already has the right values and step 3 never happens.
+
+If you are not using the hook, gate the query until the first emit arrives:
+
+```tsx
+const [state, setState] = useState<ServerTableState | null>(null);
+const {data} = useQuery({queryKey: ['orders', state], queryFn: ..., enabled: state !== null});
+```
+
+## Page reset is already handled
+
+The table returns to page one in the same commit that changes a filter or the search term.
+Do not add your own reset: an effect that resets the page after the fact fires a request for
+page five of the new filter first, and then a second one for page one.
+
+## The batteries-included route
+
+For a page with no data layer of its own, `useServerSidePagination` owns the state, debounces
+the search, builds the params and runs the query:
+
+```tsx
+import {DataTable} from '@bohar/datatable';
+import {useServerSidePagination} from '@bohar/datatable/server';
+
+const table = useServerSidePagination<Order>({
+  queryKey: ['orders'], // request params are appended to this for you
+  queryFn: (params) => api.get('/orders', {params}).then((r) => r.data),
+  initialPageSize: 25,
+  transformers: {
+    // ServerSideParams is this package's vocabulary. Map it to your API's once, here.
+    transformParams: (p) => ({page: p.page, limit: p.pageSize, search: p.globalFilter}),
+  },
+});
+
+<DataTable
+  columns={columns}
+  data={table.data}
+  totalRows={table.totalRows}
+  manualPagination
+  manualSorting
+  manualFiltering
+  isLoading={table.isLoading}
+  isFetching={table.isFetching}
+  isError={table.isError}
+  onRetry={table.refetch}
+  onServerStateChange={table.onServerStateChange}
+  ariaLabel="Orders"
+/>;
+```
+
+It lives behind `@bohar/datatable/server` so a consumer driving the table from its own API
+hooks never installs React Query.
+
+Prefer the first route when the app already has typed API hooks: fetching stays where the
+rest of the app's fetching lives, and the retry, error and cache policy stay uniform.
+
+## What one page of data cannot tell you
+
+Everything derived from `data` is derived from the current page:
+
+| Thing          | On the server-side path                                              |
+| -------------- | -------------------------------------------------------------------- |
+| Row count      | comes from `totalRows`, not `data.length`                            |
+| Select all     | selects the current page, so a bulk action should say so             |
+| Export         | exports the current page; use `onExport` to fetch the full set       |
+| A footer total | the server has to send it, the table cannot add up rows it never saw |
+
+## Loading states
+
+`isLoading` is the first load, and the table shows its skeleton. `isFetching` is every load
+after it, and the table keeps the current rows and shows a progress line, which is why
+`keepPreviousData` belongs on the query: without it the rows blank out on every page change.
+
+`isError` plus `onRetry` turns the error state into a button. Without `onRetry` it is a
+message and a dead end.

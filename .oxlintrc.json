@@ -1,0 +1,104 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+
+  // The fast pass. This is what the editor runs on every keystroke and what `pnpm lint`
+  // runs, so it holds the rules that catch defects, not the ones that argue about taste.
+  // The slower ESLint pass (`pnpm lint:eslint`, and the commit/push hooks) adds what
+  // oxlint has no equivalent for: sonarjs, react-hooks' full dependency analysis, and
+  // the storybook plugin. See docs/repo/tooling.md.
+  "plugins": ["typescript", "react", "jsx-a11y", "import", "unicorn", "promise", "vitest", "oxc"],
+
+  "categories": {
+    "correctness": "error",
+    "suspicious": "error"
+  },
+
+  "rules": {
+    // The four bypasses. A library's types are its contract, so silencing a mismatch
+    // here ships the mismatch to every consumer.
+    "typescript/no-explicit-any": "error",
+    "typescript/ban-ts-comment": [
+      "error",
+      {"ts-expect-error": false, "ts-ignore": true, "ts-nocheck": true, "ts-check": false}
+    ],
+
+    "typescript/consistent-type-imports": ["error", {"fixStyle": "inline-type-imports"}],
+    "typescript/no-unused-vars": ["error", {"argsIgnorePattern": "^_", "varsIgnorePattern": "^_"}],
+    // Both of these are type-aware: they only run under `pnpm lint:types`.
+    "typescript/no-floating-promises": "error",
+    // An async `onClick` is the normal shape of a React handler; the rule's void-return
+    // check would flag every one of them.
+    "typescript/no-misused-promises": ["error", {"checksVoidReturn": false}],
+
+    // tsgolint turns on a strict set alongside the rules asked for above. These fire
+    // only on the table as it was ported, they are about phrasing rather than defects,
+    // and leaving them on would bury the two rules the type-aware pass exists for.
+    "typescript/no-unsafe-type-assertion": "off",
+    "typescript/no-unnecessary-type-assertion": "off",
+    "typescript/no-unnecessary-type-conversion": "off",
+    "typescript/no-unnecessary-boolean-literal-compare": "off",
+    "typescript/no-unnecessary-type-parameters": "off",
+    "typescript/no-unnecessary-type-arguments": "off",
+    "typescript/consistent-return": "off",
+    "typescript/restrict-template-expressions": "off",
+    "typescript/no-base-to-string": "off",
+    "react/rules-of-hooks": "error",
+    "react/exhaustive-deps": "error",
+
+    // React 19's automatic runtime; nothing imports React to use JSX.
+    "react/react-in-jsx-scope": "off",
+
+    // A React Compiler diagnostic rather than a lint: it reports that the compiler will
+    // skip memoizing a component, which is a performance note, not a defect. Every hit
+    // in this repo is a test harness.
+    "react/incompatible-library": "off",
+
+    // Flags "extra" dependencies as well as missing ones, and every hit here is a
+    // deliberate re-measure (re-check truncation when the value or the column width
+    // changes) or a deliberate unmount-only flush. ESLint's react-hooks rules still run
+    // in the slow pass and catch the genuinely missing ones.
+    "react/exhaustive-effect-dependencies": "off",
+
+    // Both hits sort an array that was just created by `filter`/`map`, so there is
+    // nothing to mutate.
+    "unicorn/no-array-sort": "off",
+
+    // Hoisting a handler out of a component to save an allocation is exactly the work
+    // the React Compiler does, and it costs readability to do by hand.
+    "unicorn/consistent-function-scoping": "off",
+
+    // Fires where a `role` restores list or separator semantics on a MUI component that
+    // renders a `div`. The role is the fix, not the defect.
+    "jsx-a11y/prefer-tag-over-role": "off"
+  },
+
+  "overrides": [
+    {
+      // Test doubles are shaped to the assertion, not to the contract, and a harness
+      // component defined inside a test is the point of the harness.
+      "files": ["**/*.test.{ts,tsx}", "**/test/**"],
+      "rules": {
+        "typescript/no-explicit-any": "off",
+        "typescript/no-unsafe-assignment": "off",
+        "typescript/no-unsafe-member-access": "off",
+        "typescript/no-unsafe-argument": "off",
+        "react/no-unstable-nested-components": "off",
+        "jsx-a11y/control-has-associated-label": "off",
+        "import/no-unassigned-import": "off",
+        "vitest/require-mock-type-parameters": "off"
+      }
+    },
+    {
+      "files": ["**/*.stories.{ts,tsx}", "**/.storybook/**", "**/*.config.{ts,js}"],
+      "rules": {
+        "typescript/no-unsafe-assignment": "off",
+        "typescript/no-unsafe-member-access": "off",
+        // ESLint plugins are CJS with a default export that carries `configs`; reading it
+        // off the default is the documented usage.
+        "import/no-named-as-default-member": "off"
+      }
+    }
+  ],
+
+  "ignorePatterns": ["**/dist/**", "**/storybook-static/**", "**/coverage/**", "**/.turbo/**"]
+}

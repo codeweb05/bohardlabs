@@ -1,0 +1,214 @@
+import {Meta} from '@storybook/addon-docs/blocks';
+
+<Meta title="Guides/Getting started" />
+
+# Getting started
+
+`@bohar/datatable` is a server-driven React table: TanStack Table for the engine, MUI for the
+shell. The table owns pagination, sorting, filtering and search state, persists it, and
+reports it back through one callback. Client-side mode exists, but server mode is the point.
+
+## Install
+
+```bash
+pnpm add @bohar/datatable
+```
+
+The package declares no `dependencies` of its own. Everything it uses is a peer, so your
+app's copy of React and MUI is the only copy in the bundle. Nine packages are required:
+
+```bash
+pnpm add react react-dom @mui/material @mui/icons-material @emotion/react @emotion/styled \
+  @tanstack/react-table @mui/x-date-pickers dayjs
+```
+
+| Peer                                         | Required | Needed for                                        |
+| -------------------------------------------- | -------- | ------------------------------------------------- |
+| `react` ^19, `react-dom` ^19                 | yes      | everything                                        |
+| `@mui/material` ^7, `@mui/icons-material` ^7 | yes      | the shell: table, toolbar, dialogs, icons         |
+| `@emotion/react` ^11, `@emotion/styled` ^11  | yes      | MUI's styling engine                              |
+| `@tanstack/react-table` ^8.21                | yes      | the table engine                                  |
+| `@mui/x-date-pickers` ^8, `dayjs` ^1.11      | yes      | the date filter, imported statically by the panel |
+| `@tanstack/react-query` ^5                   | optional | only `useServerSidePagination`                    |
+| `write-excel-file` ^3                        | optional | only `xlsx` export                                |
+
+Only the last two are marked `optional` in `peerDependenciesMeta`, and only they really are.
+`@mui/x-date-pickers` and `dayjs` read as conditional but the filter panel imports
+`DateFilter` at the top level, so a bundler resolves them whether or not any column uses
+`filterConfig: {type: 'date'}`. The export path is the one that genuinely defers: it reaches
+`write-excel-file` through `await import()`, so nothing loads until someone clicks export.
+
+ESM only.
+
+## Providers
+
+The table renders MUI components and brings no provider of its own, so the host app supplies
+them. This is the whole setup:
+
+```tsx
+import {ThemeProvider, createTheme} from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
+
+const theme = createTheme();
+
+export function App({children}) {
+  return (
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      {children}
+    </ThemeProvider>
+  );
+}
+```
+
+Two more, each only when you use the feature:
+
+```tsx
+// Date filters. Without this, MUI's DatePicker throws for a missing localization context.
+import {LocalizationProvider} from '@mui/x-date-pickers';
+import {AdapterDayjs} from '@mui/x-date-pickers/AdapterDayjs';
+
+<LocalizationProvider dateAdapter={AdapterDayjs}>{children}</LocalizationProvider>;
+```
+
+```tsx
+// Only for useServerSidePagination, the one export that touches React Query. Server mode
+// itself does not: the table reports its state and you fetch with whatever you already use.
+import {QueryClientProvider} from '@tanstack/react-query';
+```
+
+No CSS import, no provider from this package, no global registry. Everything else is a prop.
+
+## Your first table
+
+```tsx
+import {DataTable} from '@bohar/datatable';
+import type {DataTableColumnDef} from '@bohar/datatable';
+
+interface Order {
+  id: string;
+  reference: string;
+  customer: string;
+  total: number;
+  // Required by the RowData constraint: the table reads cells by string key.
+  readonly [key: string]: unknown;
+}
+
+// A module constant, not an inline array. A new array on every render rebuilds the table.
+const columns: DataTableColumnDef<Order>[] = [
+  {id: 'reference', accessorKey: 'reference', header: 'Reference', size: 120},
+  {id: 'customer', accessorKey: 'customer', header: 'Customer'},
+  {
+    id: 'total',
+    accessorKey: 'total',
+    header: 'Total',
+    align: 'right',
+    cell: ({row}) => `$${row.original.total.toFixed(2)}`,
+  },
+];
+
+export function OrdersTable({orders}: {orders: Order[]}) {
+  return <DataTable columns={columns} data={orders} ariaLabel="Orders" />;
+}
+```
+
+That is client-side mode: the browser holds every row, and sorting, filtering, search and
+paging all happen locally. Fine for a fixed list. For anything backed by an API, read
+[Server-side data](?path=/docs/guides-server-side-data--docs) next, which is what the rest of
+this package is shaped around.
+
+## Turning features on
+
+Everything is off by default, because a table that ships with ten toolbars is a table you
+spend your first hour switching off. Add what the page needs:
+
+```tsx
+<DataTable
+  columns={columns}
+  data={orders}
+  tableId="orders" // persists sorting, filters, sizing, density and page size
+  enableFiltering // per-column filters, from each column's filterConfig
+  enableGlobalFilter // the search box
+  enableRowSelection // checkboxes, and bulkActions in the toolbar
+  enableColumnVisibility // the show/hide columns menu
+  enableDensityToggle // compact / comfortable / spacious
+  enableExport // the export menu
+  rowActions={rowActions} // the per-row overflow menu
+  ariaLabel="Orders"
+/>
+```
+
+Each of those has a story: open **DataTable → DataTable** in the sidebar. Every story lists
+only the props it is demonstrating, so the controls panel is the feature's own surface.
+
+## Saving the view
+
+`tableId` is the whole feature. With one, the table writes what the user set up to
+`localStorage` and restores it on the next mount: sorting, column filters, the search,
+column order, sizing, visibility and pinning, density, page size and page index. Writes are
+debounced into one entry 150ms after the last change. Without a `tableId` the table is
+stateless.
+
+Server mode has a second half. Restoring on mount is too late if the page has already fired
+its first query at the default page size, so the page hook seeds itself from the same entry
+with `useTableServerState(tableId)`. See **Server-side data**.
+
+The **Persisted State** story is the one to open: set a filter, reload the frame, watch it
+come back.
+
+## Data out, and not in
+
+`enableExport` puts a menu in the toolbar. It offers CSV alone unless you widen it with
+`exportFormats={['csv', 'xlsx', 'json']}`, because CSV is the only one of the three that
+needs nothing installed:
+
+| Format | How it is written                                                             | Needs                        |
+| ------ | ----------------------------------------------------------------------------- | ---------------------------- |
+| `csv`  | built in the package, downloaded as a blob                                    | nothing                      |
+| `xlsx` | `write-excel-file`, reached through `await import()` when the item is clicked | `write-excel-file` installed |
+| `json` | `JSON.stringify` of the exported rows                                         | nothing                      |
+
+Listing `xlsx` without the peer installed fails at click time rather than at build time,
+which is the cost of it being optional.
+
+Export sends the rows the table currently holds, which in server mode is one page. Exporting
+everything means fetching everything, so `onExport` hands the whole thing to you: it is
+called instead of the built-in writer, with the format and the rows, and you decide whether
+that means a server-side export endpoint.
+
+There is no import. Nothing in the package reads a CSV or a spreadsheet, and the toolbar has
+no upload control. Bringing a file in is an app concern (parsing, column mapping,
+validation, a confirmation step, and the write itself), and it lands in your data layer, not
+in a table that renders whatever it is handed.
+
+## Using the app's own components
+
+Two parts of the table would otherwise look imported, so both are props:
+
+```tsx
+<DataTable
+  // Bulk-action confirmations render through this instead of the built-in dialog. It takes
+  // the same props (`open`, `onClose`, `onConfirm`, `title`, `message`, …), so an app with
+  // its own dialog does not end up showing two that look different.
+  slots={{confirmDialog: AppConfirmDialog}}
+  // The date filter's display format and the format it puts on the wire.
+  dateFormats={{display: 'MM/DD/YYYY', value: 'YYYY-MM-DD'}}
+  columns={columns}
+  data={orders}
+/>
+```
+
+Everything else is theme: the package sets no colour, radius or font of its own. The theme
+picker in the toolbar repaints every story to make that checkable.
+
+## Rules worth knowing before you start
+
+- **`ariaLabel` is not optional in practice.** It is the name a screen reader announces on
+  entering the table, and a page with two tables and no names is unusable.
+- **`columns` and `labels` are compared by identity.** Module constants, or `useMemo`.
+- **`tableId` is a persistence key.** Two tables sharing one share their state, so a detail
+  page's sub-list gets its own id even when it reuses the same columns.
+- **The row type needs an index signature.** `readonly [key: string]: unknown`, which is
+  what `RowData` asks for.
+- **Read data defensively.** `data ?? []`, `meta?.total ?? 0`. A partial response should
+  render an empty table, not throw.

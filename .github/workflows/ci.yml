@@ -1,0 +1,113 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  # A new push supersedes the run in flight for the same ref.
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Lint, typecheck, build, test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # The Storybook suite runs every story in a real Chromium, so the browser has to
+      # exist before the tests do. `--with-deps` pulls the system libraries the runner
+      # image does not ship.
+      - name: Install Playwright Chromium
+        run: pnpm exec playwright install chromium --with-deps
+
+      # oxlint, then ESLint for the rules oxlint has no equivalent for (sonarjs), then
+      # formatting, typecheck, build, and the tests. See docs/tooling.md for why both
+      # linters are here and why the tests run one package at a time.
+      - run: pnpm validate:ci
+
+      - name: Build Storybook
+        run: pnpm build-storybook
+
+      - name: Upload Storybook
+        uses: actions/upload-artifact@v4
+        with:
+          name: storybook-static
+          path: apps/storybook/storybook-static
+          retention-days: 7
+
+  # Publishes the Storybook so a reviewer can click through a branch's components instead
+  # of taking a screenshot's word for it. GitHub Pages needs no third-party account; the
+  # repository's Settings > Pages source has to be set to "GitHub Actions" once.
+  publish-storybook:
+    name: Publish Storybook to Pages
+    needs: validate
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: storybook-static
+          path: storybook-static
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: storybook-static
+
+      - id: deploy
+        uses: actions/deploy-pages@v4
+
+  # Visual regression. This job is a no-op until someone creates a Chromatic project and
+  # adds CHROMATIC_PROJECT_TOKEN to the repository secrets: the step below skips itself
+  # rather than failing, so the rest of CI does not depend on a third-party account.
+  # Locally, `pnpm dlx chromatic --project-token=<token>` does the same thing.
+  visual-tests:
+    name: Visual tests (Chromatic)
+    needs: validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          # Chromatic diffs against the baseline on the branch's ancestors, so it needs the
+          # history rather than the single shallow commit checkout gives by default.
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Publish to Chromatic
+        if: env.CHROMATIC_PROJECT_TOKEN != ''
+        env:
+          CHROMATIC_PROJECT_TOKEN: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+        uses: chromaui/action@latest
+        with:
+          projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+          workingDir: apps/storybook
+          buildScriptName: build-storybook
+          onlyChanged: true # TurboSnap: only re-shoot stories the diff can reach
+          exitZeroOnChanges: true # a visual change is a review comment, not a red build

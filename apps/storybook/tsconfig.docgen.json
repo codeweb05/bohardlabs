@@ -1,0 +1,14 @@
+{
+  // Read only by react-docgen-typescript, for its compiler options. This app's own
+  // tsconfig covers this app, not the package sources the stories import, and a parser
+  // pointed at that one produces prop tables with the optional props missing.
+  //
+  // The files it parses come from `reactDocgenTypescriptOptions.include` in
+  // `.storybook/main.ts`, globbed against the Vite root (this directory), not from the
+  // `include` below. Both have to reach the packages or docgen silently no-ops.
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true
+  },
+  "include": ["../../packages/*/src/**/*.ts", "../../packages/*/src/**/*.tsx"]
+}

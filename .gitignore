@@ -1,0 +1,15 @@
+node_modules/
+dist/
+storybook-static/
+coverage/
+.turbo/
+*.tsbuildinfo
+.DS_Store
+*.local
+.env
+.env.*
+!.env.example
+debug-storybook.log
+
+# Playwright MCP scratch output (page snapshots, console logs, downloads)
+.playwright-mcp/

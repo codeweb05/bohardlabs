@@ -1,0 +1,88 @@
+import {Meta} from '@storybook/addon-docs/blocks';
+
+<Meta title="Guides/Theming" />
+
+# Theming
+
+## Why the table looks different in your app
+
+Short answer: it does not. Your theme does.
+
+The package hardcodes no colour, no font, no radius and no cell padding. Headers, borders,
+hover states, the toolbar, the chips and the pager all read tokens from the active MUI theme:
+`primary.main`, `divider`, `text.secondary`, `action.hover`, `shape.borderRadius`,
+`typography.fontFamily`.
+
+That means a table dropped into an app with heavy MUI overrides looks like that app, and the
+same table in a Storybook running stock `createTheme()` looks like stock MUI. Same component,
+same props, different host.
+
+The usual sources of the difference, in order of how much they change:
+
+| Theme override                     | What moves                                                |
+| ---------------------------------- | --------------------------------------------------------- |
+| `MuiTableCell`                     | row height, cell padding, body font size                  |
+| `MuiTableCell.styleOverrides.head` | uppercase headers, letter spacing, tint, the bottom rule  |
+| `MuiTableRow`                      | hover and striping                                        |
+| `typography.fontFamily`            | every string in the table                                 |
+| `shape.borderRadius`               | the container, the toolbar controls, the chips            |
+| `palette.primary`                  | sort arrows, active filter chips, selection, the bulk bar |
+
+Use the **Branded** entry in the theme toolbar above to see it: it is a plain `createTheme`
+call with those overrides and nothing else, and every story repaints under it.
+
+## Matching a host app
+
+Do it in the theme, not in props. A theme override applies to every table in the app at once,
+and to the MUI components around it, so the page stays consistent:
+
+```tsx
+const theme = createTheme({
+  palette: {primary: {main: '#00695f'}},
+  shape: {borderRadius: 8},
+  components: {
+    MuiTableCell: {
+      styleOverrides: {
+        root: {padding: '12px 16px', fontSize: '0.8125rem'},
+        head: {
+          fontSize: '0.7rem',
+          letterSpacing: '0.06em',
+          textTransform: 'uppercase',
+          borderBottom: '2px solid',
+        },
+      },
+    },
+  },
+});
+```
+
+## Per-table escapes
+
+For the one table that has to differ:
+
+- **`containerSx`** styles the wrapper, and takes the MUI `sx` shorthand, so it can reach the
+  parts inside through selectors.
+- **`getRowSx(row)`** styles a row from its data, which is how a status colour or a
+  struck-through cancelled row is done. It is a function of the record, so it stays correct
+  when the rows change.
+- **`density`** and `enableDensityToggle` change row height, padding and font size together,
+  so a compact table stays readable rather than only shorter.
+- **`headerCase`** decides whether headers are capitalised (the default) or printed as
+  written. Set it to `none` for acronyms and product names.
+- **`cell`** on a column renders anything. That is where a chip, an avatar or a link goes.
+
+What is not there on purpose: a `classNames` prop, a colour prop, a style token API. Each one
+would be a second, weaker theme sitting next to the real one.
+
+## Dark mode
+
+Nothing to do. The table reads the palette, so a theme with `mode: 'dark'` is enough. Toggle
+it in the toolbar to check your own cell renderers: a hardcoded `#fff` in a custom `cell` is
+the usual thing that breaks, and it will be in your code rather than in the table.
+
+## Accessibility and colour
+
+The a11y addon runs on every story here with `test: 'error'`, so a contrast regression fails
+the build rather than showing up in a panel. If you tint headers or rows, keep body text at
+4.5:1 against its own background. MUI's filled palette chips are the common failure at small
+sizes, which is why the stories use outlined ones.

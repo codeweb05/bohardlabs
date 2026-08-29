@@ -1,0 +1,83 @@
+import {Meta} from '@storybook/addon-docs/blocks';
+
+<Meta title="Introduction" />
+
+# lib
+
+The showcase for every UI package in this repo.
+
+Stories live next to the source they document, inside `packages/*/src/`. This app only
+aggregates them, so a story imports its component the same way a consumer's editor would.
+
+## Start here
+
+- **[Guides → Getting started](?path=/docs/guides-getting-started--docs)** — install, peer
+  dependencies, providers, and a first table.
+- **[Guides → Server-side data](?path=/docs/guides-server-side-data--docs)** — the mode the
+  table is built for.
+- **[Guides → Theming](?path=/docs/guides-theming--docs)** — why the same table looks
+  different in two apps, and how to match a host app.
+- **[DataTable](?path=/docs/datatable-datatable--docs)** — every feature as a story, with the
+  full prop table.
+
+## Stories are the tests
+
+Every story here runs as a real test in a real Chromium, through
+`@storybook/addon-vitest`:
+
+- a `play` function is an interaction test. Run them with
+  `pnpm --filter @bohar/storybook test`.
+- the a11y addon is set to `test: 'error'`, so an axe violation fails the run rather than
+  quietly colouring a panel.
+
+One story file is the demo, the interaction test, and the accessibility check. A story with
+no `play` asserts nothing and will drift from the component it claims to document.
+
+Each story also narrows its own controls to the props it is demonstrating. `DataTable` takes
+77 of them, and a panel that lists all 77 on every story says nothing about which ones that
+story is about. The complete list is on the component's docs page.
+
+## What the table does not do
+
+Two things people look for and do not find, on purpose:
+
+- **No import.** There is an export menu (CSV, and Excel and JSON when you widen
+  `exportFormats`), but nothing reads a file in. Parsing, column mapping, validation and the
+  write belong to the app's data layer, not to a component that renders what it is handed.
+- **No i18n runtime and no data fetching.** The table takes translated strings through
+  `labels` and takes rows through `data`. Both are the app's, and the guides show the wiring.
+
+## Themes
+
+The toolbar's theme picker repaints every story under a different `createTheme` call. Seven
+are set up:
+
+| Theme                 | What it is there to show                                     |
+| --------------------- | ------------------------------------------------------------ |
+| Light, Dark           | stock MUI, no app tokens at all                              |
+| Branded, Branded dark | a host app's palette, radii and component overrides          |
+| High contrast         | heavy borders and pure black on white, the accessibility end |
+| Sharp and dense       | square corners, small type, tight spacing                    |
+| Soft and spacious     | round corners, wide spacing, muted surfaces                  |
+
+The stock two carry no app tokens on purpose: a component that only looks right under one
+product's palette is not ready to publish, and that shows up here. The rest are the opposite
+demonstration, and together they are the answer to why this table looks different here than
+in the app it came from. The package hardcodes no colour, radius or font; every one of these
+is `createTheme` alone, with the stories untouched.
+
+Two things that usually resist theming are props instead. `slots.confirmDialog` replaces the
+bulk-action confirmation with the app's own dialog, so a project with an existing one does
+not end up with two that look different, and `dateFormats` sets what the date filter shows
+and what it sends.
+
+## Viewports
+
+The device list in the toolbar resizes the preview. It matters for `DataTable`, which drops
+its table markup for a card list below `mobileBreakpoint`; the **MobileCards** story pins
+itself to a phone.
+
+## What is here so far
+
+`DataTable`, ported out of `skipwash-admin` and packaged as `@bohar/datatable`. The port is
+tracked in `docs/datatable-port.md`, and what is still open is in `docs/open-questions.md`.
