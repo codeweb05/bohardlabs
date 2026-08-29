@@ -13,3 +13,7 @@ debug-storybook.log
 
 # Playwright MCP scratch output (page snapshots, console logs, downloads)
 .playwright-mcp/
+
+# jscpd console reporter is the gate; ignore any HTML dump if someone runs it locally
+reports/
+

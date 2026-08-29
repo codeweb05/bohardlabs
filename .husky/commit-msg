@@ -1,0 +1,13 @@
+#!/usr/bin/env sh
+
+# Skip during rebase.
+if [ -d ".git/rebase-merge" ] || [ -d ".git/rebase-apply" ]; then
+  exit 0
+fi
+
+# Skip merge commits.
+if [ -f ".git/MERGE_HEAD" ]; then
+  exit 0
+fi
+
+pnpm exec commitlint --edit "$1"

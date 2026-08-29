@@ -3,7 +3,7 @@
 
   // The fast pass. This is what the editor runs on every keystroke and what `pnpm lint`
   // runs, so it holds the rules that catch defects, not the ones that argue about taste.
-  // The slower ESLint pass (`pnpm lint:eslint`, and the commit/push hooks) adds what
+  // The slower ESLint pass (`pnpm lint:eslint`, lint-staged, and the push hook) adds what
   // oxlint has no equivalent for: sonarjs, react-hooks' full dependency analysis, and
   // the storybook plugin. See docs/repo/tooling.md.
   "plugins": ["typescript", "react", "jsx-a11y", "import", "unicorn", "promise", "vitest", "oxc"],

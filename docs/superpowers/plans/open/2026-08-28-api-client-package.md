@@ -832,7 +832,7 @@ covers most of these cases, and the ones it covers are the bugs that produced th
 | `API_ENDPOINTS.AUTH.*`                                                                                    | `config.endpoints`, defaulting to the `/v1/auth/*` paths        |
 | `localStorage` directly                                                                                   | the `TokenStorage` from Task 3                                  |
 | `globalThis.dispatchEvent(new CustomEvent('auth:unauthorized'))`                                          | `config.onUnauthorized?.()`                                     |
-| `REFRESH_LOCK_NAME = 'skipwash-token-refresh'`                                                            | `config.lockName`, default `'bohardlabs-token-refresh'`              |
+| `REFRESH_LOCK_NAME = 'skipwash-token-refresh'`                                                            | `config.lockName`, default `'bohardlabs-token-refresh'`         |
 | no teardown                                                                                               | `dispose()`, clearing the timer                                 |
 
 `dispose()` is new and not optional. A module singleton lives as long as the page; an

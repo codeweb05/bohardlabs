@@ -1,0 +1,18 @@
+#!/usr/bin/env sh
+
+# Skip during rebase; only the final commit is checked.
+if [ -d ".git/rebase-merge" ] || [ -d ".git/rebase-apply" ]; then
+  exit 0
+fi
+
+pnpm exec lint-staged || exit 1
+
+staged=$(git diff --cached --name-only --diff-filter=ACMR || true)
+
+if echo "$staged" | grep -qE '^packages/datatable/.*\.(ts|tsx)$|^packages/datatable/tsconfig'; then
+  pnpm --filter @bohardlabs/datatable typecheck || exit 1
+fi
+
+if echo "$staged" | grep -qE '^apps/storybook/.*\.(ts|tsx)$|^apps/storybook/tsconfig'; then
+  pnpm --filter @bohardlabs/storybook typecheck || exit 1
+fi

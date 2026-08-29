@@ -11,9 +11,10 @@
 | `visual-tests`      | PRs and `main`   | Chromatic, and skips itself when no project token is configured |
 
 `validate:ci` is oxlint, then ESLint for the rules oxlint has no equivalent for, then the
-formatter check, then `turbo run typecheck build`, then the tests. See
-[`tooling.md`](./tooling.md) for why both linters are there, and why the tests run one
-package at a time.
+formatter check, then jscpd, then `turbo run typecheck build`, then the tests. The same
+lint, format and duplication steps run locally on push, so a formatter or ESLint miss
+should not wait for GitHub. See [`tooling.md`](./tooling.md) for why both linters are
+there, why the tests run one package at a time, and what the commit/push hooks cover.
 
 Two things the workflow does that are easy to miss:
 

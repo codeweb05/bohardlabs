@@ -1,138 +1,12 @@
 import Box from '@mui/material/Box';
 import CssBaseline from '@mui/material/CssBaseline';
-import {ThemeProvider, createTheme, type Theme} from '@mui/material/styles';
+import {ThemeProvider} from '@mui/material/styles';
 import Typography from '@mui/material/Typography';
 import type {Preview} from '@storybook/react-vite';
 import {INITIAL_VIEWPORTS} from 'storybook/viewport';
 
-// The table hardcodes no colour, font or radius, which is a claim worth being able to
-// check rather than read. Each preset below moves a different axis of a host app's theme,
-// and every story repaints under all of them: palette mode, brand colour, component
-// overrides, corner radius, density of the type scale, contrast.
-//
-// This is also the answer to the question people keep asking, which is why the table looks
-// different here than in the app it came from. Nothing in the package changed. The app
-// overrides `MuiTableCell` and `MuiTableRow` and sets its own shape tokens, and the table
-// inherits all of it.
-
-/** Stock MUI. The baseline a consumer gets before they theme anything. */
-const lightTheme = createTheme({palette: {mode: 'light'}});
-const darkTheme = createTheme({palette: {mode: 'dark'}});
-
-/** A host app with a brand colour, a type scale and table component overrides. */
-const brandedTheme = createTheme({
-  palette: {
-    mode: 'light',
-    primary: {main: '#00695f'},
-    background: {default: '#f7f9f9', paper: '#ffffff'},
-  },
-  shape: {borderRadius: 8},
-  typography: {fontFamily: '"Work Sans", "Segoe UI", system-ui, sans-serif'},
-  components: {
-    MuiTableCell: {
-      styleOverrides: {
-        root: {padding: '12px 16px', fontSize: '0.8125rem'},
-        head: {
-          fontSize: '0.7rem',
-          letterSpacing: '0.06em',
-          textTransform: 'uppercase',
-          color: '#0f3b36',
-          backgroundColor: '#eef4f3',
-          borderBottom: '2px solid #cfe0dd',
-        },
-      },
-    },
-    MuiTableRow: {
-      styleOverrides: {root: {'&:hover': {backgroundColor: '#f2f7f6'}}},
-    },
-  },
-});
-
-/** The same brand after dark mode. Overrides that assumed a light page show up here. */
-const brandedDarkTheme = createTheme({
-  palette: {
-    mode: 'dark',
-    primary: {main: '#4db6ac'},
-    background: {default: '#101817', paper: '#16211f'},
-  },
-  shape: {borderRadius: 8},
-  typography: {fontFamily: '"Work Sans", "Segoe UI", system-ui, sans-serif'},
-  components: {
-    MuiTableCell: {
-      styleOverrides: {
-        root: {padding: '12px 16px', fontSize: '0.8125rem'},
-        head: {
-          fontSize: '0.7rem',
-          letterSpacing: '0.06em',
-          textTransform: 'uppercase',
-          color: '#b2dfdb',
-          backgroundColor: '#1c2b29',
-          borderBottom: '2px solid #2f4542',
-        },
-      },
-    },
-    MuiTableRow: {
-      styleOverrides: {root: {'&:hover': {backgroundColor: '#1b2725'}}},
-    },
-  },
-});
-
-/**
- * Maximum contrast, square corners, visible borders. The a11y addon runs against whichever
- * theme is active, so this is where a contrast failure that stock MUI's palette hides
- * (`primary.main` on a tint, at 13px) stops being a failure.
- */
-const highContrastTheme = createTheme({
-  palette: {
-    mode: 'light',
-    primary: {main: '#00308f'},
-    text: {primary: '#000000', secondary: '#1a1a1a'},
-    divider: '#000000',
-    background: {default: '#ffffff', paper: '#ffffff'},
-  },
-  shape: {borderRadius: 0},
-  components: {
-    MuiTableCell: {styleOverrides: {root: {borderBottom: '1px solid #000000'}}},
-  },
-});
-
-/** Sharp and dense: no radius, small type, tight rows. What an ops console usually wants. */
-const denseTheme = createTheme({
-  palette: {mode: 'light', primary: {main: '#37474f'}},
-  shape: {borderRadius: 0},
-  typography: {fontSize: 12, fontFamily: '"IBM Plex Sans", "Segoe UI", system-ui, sans-serif'},
-  components: {
-    MuiTableCell: {styleOverrides: {root: {padding: '4px 10px', fontSize: '0.75rem'}}},
-  },
-});
-
-/** The other extreme: large radius, roomy rows, bigger type. */
-const softTheme = createTheme({
-  palette: {
-    mode: 'light',
-    primary: {main: '#6d4aff'},
-    background: {default: '#faf9ff', paper: '#ffffff'},
-  },
-  shape: {borderRadius: 16},
-  typography: {fontSize: 15, fontFamily: '"Nunito", "Segoe UI", system-ui, sans-serif'},
-  components: {
-    MuiTableCell: {styleOverrides: {root: {padding: '16px 20px', borderBottom: '1px solid #efeaff'}}},
-    MuiTableRow: {styleOverrides: {root: {'&:hover': {backgroundColor: '#f5f1ff'}}}},
-  },
-});
-
-/** One list, so the toolbar and the decorator can never disagree about what exists. */
-const THEME_PRESETS = [
-  {id: 'light', title: 'Light (stock MUI)', theme: lightTheme},
-  {id: 'dark', title: 'Dark (stock MUI)', theme: darkTheme},
-  {id: 'branded', title: 'Branded (host app overrides)', theme: brandedTheme},
-  {id: 'brandedDark', title: 'Branded dark', theme: brandedDarkTheme},
-  {id: 'highContrast', title: 'High contrast', theme: highContrastTheme},
-  {id: 'dense', title: 'Sharp and dense', theme: denseTheme},
-  {id: 'soft', title: 'Soft and spacious', theme: softTheme},
-] as const;
-
-const THEMES: Record<string, Theme> = Object.fromEntries(THEME_PRESETS.map((preset) => [preset.id, preset.theme]));
+import {StorySource} from './StorySource';
+import {DEFAULT_THEME, THEME_PRESETS, THEMES} from './themes';
 
 /**
  * Renders the small subset of Markdown that story descriptions actually use: paragraphs,
@@ -254,12 +128,19 @@ const preview: Preview = {
       // The same string the docs page renders, read back out of the story's parameters.
       // Nothing to keep in sync: the JSDoc over the story is still the only source.
       const note: unknown = context.parameters.docs?.description?.story;
+      // The fallback only. `StorySource` prefers the JSX string `jsxDecorator` puts on the
+      // channel, which is what the docs page shows; this is what `csf-plugin` wrote at build
+      // time, and it is the story object rather than a component call.
+      const source: unknown = context.parameters.docs?.source?.originalSource;
+      // The docs page renders both of these itself, above and below each embedded story.
+      const isCanvas = context.viewMode !== 'docs';
 
       return (
-        <ThemeProvider theme={THEMES[String(context.globals.theme)] ?? lightTheme}>
+        <ThemeProvider theme={THEMES[String(context.globals.theme)] ?? DEFAULT_THEME}>
           <CssBaseline />
-          {context.viewMode !== 'docs' && typeof note === 'string' && <StoryNote text={note} />}
+          {isCanvas && typeof note === 'string' && <StoryNote text={note} />}
           <Story />
+          {isCanvas && typeof source === 'string' && <StorySource storyId={context.id} originalSource={source} />}
         </ThemeProvider>
       );
     },

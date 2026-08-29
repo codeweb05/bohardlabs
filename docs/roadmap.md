@@ -28,14 +28,14 @@ Status words, used the same way in every table below:
 
 ## Where things stand
 
-| Workstream                                       | Status                                      | Next step                                       |
-| ------------------------------------------------ | ------------------------------------------- | ----------------------------------------------- |
-| [1. Publishing](#1-publishing)                   | first package publishing                    | `@bohardlabs/datatable`                         |
-| [2. `@bohardlabs/datatable`](#2-bohardlabsdatatable)       | ported, hardened, on MUI 9; 3 features done | `noUncheckedIndexedAccess`, then feature item 1 |
-| [3. New packages](#3-new-packages)               | 5 plans written, 0 started                  | start plan 1, image-editor                      |
-| [4. Deferred candidates](#4-deferred-candidates) | 4 deferred                                  | nothing until a trigger fires                   |
-| [5. Repo and tooling](#5-repo-and-tooling)       | 3 upgrades deferred                         | the monthly `pnpm outdated -r`                  |
-| [6. Decisions](#6-decisions)                     | 9 made, 2 open                              | answer B before plan 4 starts                   |
+| Workstream                                           | Status                                      | Next step                                       |
+| ---------------------------------------------------- | ------------------------------------------- | ----------------------------------------------- |
+| [1. Publishing](#1-publishing)                       | first package publishing                    | `@bohardlabs/datatable`                         |
+| [2. `@bohardlabs/datatable`](#2-bohardlabsdatatable) | ported, hardened, on MUI 9; 3 features done | `noUncheckedIndexedAccess`, then feature item 1 |
+| [3. New packages](#3-new-packages)                   | 5 plans written, 0 started                  | start plan 1, image-editor                      |
+| [4. Deferred candidates](#4-deferred-candidates)     | 4 deferred                                  | nothing until a trigger fires                   |
+| [5. Repo and tooling](#5-repo-and-tooling)           | hooks, jscpd; 3 upgrades deferred           | the monthly `pnpm outdated -r`                  |
+| [6. Decisions](#6-decisions)                         | 9 made, 2 open                              | answer B before plan 4 starts                   |
 
 ## 1. Publishing
 
@@ -43,12 +43,12 @@ Status words, used the same way in every table below:
 private until they are genuinely ready; flipping that flag is the decision to support the
 thing forever.
 
-| Step                                                      | Status               | Detail                                       |
-| --------------------------------------------------------- | -------------------- | -------------------------------------------- |
-| Pick the npm scope                                        | done (2026-08-29)    | [decision 0008](decisions/0008-npm-scope.md) |
+| Step                                                           | Status            | Detail                                       |
+| -------------------------------------------------------------- | ----------------- | -------------------------------------------- |
+| Pick the npm scope                                             | done (2026-08-29) | [decision 0008](decisions/0008-npm-scope.md) |
 | Create the `bohardlabs` org on npm, add the publishing account | done (2026-08-29) | decision 0008                                |
 | Remove `"private": true` from `@bohardlabs/datatable`          | done (2026-08-29) |                                              |
-| First `pnpm release`                                      | in progress          | [`repo/ci.md`](repo/ci.md)                   |
+| First `pnpm release`                                           | in progress       | [`repo/ci.md`](repo/ci.md)                   |
 
 Each new package from section 3 joins this queue once its plan closes: the last task of
 every plan writes the README and the changeset, and the package stays private until the
@@ -93,8 +93,8 @@ Five packages, each with a plan written to be executed task by task. The argumen
 is in [`extraction/README.md`](extraction/README.md); a plan assumes the argument is
 settled. Take them in this order. The only hard dependency is admin-ui before form.
 
-| Order | Plan                                                                      | Package               | Size      | Tasks | Status  | Blocked on                                                                                                                              |
-| :---: | ------------------------------------------------------------------------- | --------------------- | --------- | :---: | ------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| Order | Plan                                                                      | Package                    | Size      | Tasks | Status  | Blocked on                                                                                                                              |
+| :---: | ------------------------------------------------------------------------- | -------------------------- | --------- | :---: | ------- | --------------------------------------------------------------------------------------------------------------------------------------- |
 |   1   | [image-editor](superpowers/plans/open/2026-08-28-image-editor-package.md) | `@bohardlabs/image-editor` | 817 loc   |  0/7  | ready   | nothing                                                                                                                                 |
 |   2   | [admin-ui-kit](superpowers/plans/open/2026-08-28-admin-ui-kit-package.md) | `@bohardlabs/admin-ui`     | ~1000 loc |  0/9  | ready   | nothing                                                                                                                                 |
 |   3   | [form-kit](superpowers/plans/open/2026-08-28-form-kit-package.md)         | `@bohardlabs/form`         | 2640 loc  | 0/12  | blocked | plan 2 (`CancelButton` renders its dialog)                                                                                              |
@@ -122,12 +122,20 @@ consider. Nobody has asked for that yet.
 
 The monthly routine and the ledger of upgrades deliberately not taken are in
 [`repo/dependency-upgrades.md`](repo/dependency-upgrades.md). Last reviewed 2026-08-29.
+Husky, lint-staged, commitlint and jscpd landed 2026-08-29; the split is in
+[`repo/tooling.md`](repo/tooling.md).
 
-| Upgrade                                | Status   | Clears when                                                     |
-| -------------------------------------- | -------- | --------------------------------------------------------------- |
-| TypeScript 7 (on 6.0.3)                | deferred | typescript-eslint supports TS 7.1; then a one-line catalog bump |
-| `@tanstack/react-table` 9 (on 8.21.3)  | deferred | someone writes the plan; semver-major for `@bohardlabs/datatable`    |
-| `oxc-transform-react` 0.147 (on 0.145) | deferred | `@vitejs/plugin-react` widens its peer; bump the two together   |
+| Upgrade                                | Status   | Clears when                                                       |
+| -------------------------------------- | -------- | ----------------------------------------------------------------- |
+| TypeScript 7 (on 6.0.3)                | deferred | typescript-eslint supports TS 7.1; then a one-line catalog bump   |
+| `@tanstack/react-table` 9 (on 8.21.3)  | deferred | someone writes the plan; semver-major for `@bohardlabs/datatable` |
+| `oxc-transform-react` 0.147 (on 0.145) | deferred | `@vitejs/plugin-react` widens its peer; bump the two together     |
+
+The repo's own Claude Code setup landed on 2026-08-29 and is in `.claude/`: five skills
+holding the situational rules `CLAUDE.md` points at (`library-boundaries`,
+`component-authoring`, `storybook-stories`, `testing-and-validation`, `shipping-a-change`),
+two read-only review agents (`lib-reviewer`, `api-surface-auditor`), and a permissions file
+that denies every writing git command. `CLAUDE.md` indexes all of it.
 
 Nothing else is open on the tooling side. [`repo/tooling.md`](repo/tooling.md) and
 [`repo/ci.md`](repo/ci.md) describe what exists and why.

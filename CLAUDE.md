@@ -40,6 +40,9 @@ Practical consequences:
 │   ├── packages/      # per-package history and roadmap
 │   ├── extraction/    # what else is worth pulling out of the apps, and why
 │   └── superpowers/   # implementation plans, one per unit of work
+├── .claude/                   # skills, agents and permissions for this repo
+│   ├── skills/                # the situational rules, one folder per topic
+│   └── agents/                # review passes to hand a change to
 ├── pnpm-workspace.yaml        # workspace globs + the shared version catalog
 ├── turbo.json                 # task graph
 ├── .oxlintrc.json             # the fast lint pass (editor + `pnpm lint`)
@@ -61,8 +64,9 @@ Run from the root; Turborepo fans out and caches.
 | `pnpm lint:types`  | oxlint's type-aware rules (floating promises, and friends)  |
 | `pnpm lint:eslint` | The slow pass: sonarjs, storybook, react-hooks v7           |
 | `pnpm format`      | oxfmt                                                       |
-| `pnpm validate`    | lint + format:check + typecheck + test + build. Pre-PR gate |
-| `pnpm validate:ci` | `validate` plus the ESLint pass. For commit/push and CI     |
+| `pnpm jscpd`       | Copy-paste detection across `packages/`                     |
+| `pnpm validate`    | lint + format:check + jscpd + typecheck + test + build      |
+| `pnpm validate:ci` | `validate` plus the ESLint pass. Pre-push and CI            |
 | `pnpm storybook`   | Showcase on <http://localhost:6006>                         |
 | `pnpm changeset`   | Record a version bump + changelog entry for a change        |
 | `pnpm release`     | Build, then `changeset publish`                             |
@@ -78,10 +82,11 @@ one of them: one flat config at the root covers everything, so `pnpm lint` is al
 whole workspace.
 
 Linting is split in two on purpose. oxlint is the day-to-day pass and what the editor runs
-on every keystroke; ESLint holds only what oxlint has no equivalent for and runs at the
-commit/push boundary. `docs/repo/tooling.md` has the reasoning, including why the repo uses both
-pnpm workspaces and Turborepo, and Turborepo rather than Nx. Do not add a rule to ESLint
-that oxlint already covers, and do not turn `eslint.enable` back on in the editor.
+on every keystroke; ESLint holds only what oxlint has no equivalent for and runs on the
+files you commit, then again on the whole tree at push and in CI. `docs/repo/tooling.md`
+has the reasoning, including why the repo uses both pnpm workspaces and Turborepo, and
+Turborepo rather than Nx. Do not add a rule to ESLint that oxlint already covers, and do
+not turn `eslint.enable` back on in the editor.
 
 ## Versioning and release
 
@@ -136,6 +141,44 @@ nothing and will drift.
 The preview renders under **plain MUI light and dark themes**, switchable from the
 toolbar. That is deliberate: a component that only looks right under one app's palette is
 not ready to publish, and this is where that shows up first.
+
+## Skills and agents
+
+The rules below are the short version, and they load on every message. The long version lives
+in `.claude/skills/`, one folder per topic, loaded only when that topic comes up. Read the
+skill before doing the thing; it has the reasoning, the examples and a checklist, and this
+file has only the rule.
+
+| Skill                    | Read it before                                                              |
+| ------------------------ | --------------------------------------------------------------------------- |
+| `library-boundaries`     | Touching a dependency, a peer range, the catalog, or a package's `index.ts` |
+| `component-authoring`    | Writing or editing a component, a hook, or anything with styling in it      |
+| `storybook-stories`      | Adding or editing a story or an MDX guide                                   |
+| `testing-and-validation` | Writing a test, debugging a failing one, or clearing the pre-PR gate        |
+| `shipping-a-change`      | Finishing a unit of work: changesets, docs, the roadmap, the decision log   |
+
+Two agents in `.claude/agents/` are review passes, not authors. Both are read-only.
+
+| Agent                 | Hand it                                                                            |
+| --------------------- | ---------------------------------------------------------------------------------- |
+| `lib-reviewer`        | A finished change, before handover. Reviews it as a consumer's install             |
+| `api-surface-auditor` | A change to `index.ts`, a prop, a default or a peer range. Reports the semver bump |
+
+## How to work here
+
+- **Say what you assumed.** If a request has two readings, name both and pick one out loud
+  rather than silently. If something is genuinely unclear, ask instead of guessing.
+- **Smallest thing that works.** No abstraction for one call site, no option nobody asked
+  for, no error handling for a state that cannot happen. Published API is the most expensive
+  code in the repo to add and the hardest to remove.
+- **Surgical diffs.** Every changed line should trace to the request. Do not reformat, rename
+  or improve adjacent code on the way past; if you spot something unrelated, say so and leave
+  it. Clean up only the orphans your own change created.
+- **Verify, do not assert.** "Add validation" becomes "write the failing test, then make it
+  pass". Run the command and report what it printed. A claim that something passes, without
+  the output, is a claim.
+- **Match the surrounding code**, including its comment density and its naming, even where
+  you would have done it differently.
 
 ## Hard rules
 

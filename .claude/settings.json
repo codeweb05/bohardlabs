@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(pnpm lint:*)",
+      "Bash(pnpm format:*)",
+      "Bash(pnpm typecheck:*)",
+      "Bash(pnpm test:*)",
+      "Bash(pnpm test:cov:*)",
+      "Bash(pnpm build:*)",
+      "Bash(pnpm validate:*)",
+      "Bash(pnpm storybook:*)",
+      "Bash(pnpm --filter *)",
+      "Bash(pnpm exec oxlint:*)",
+      "Bash(pnpm exec oxfmt:*)",
+      "Bash(pnpm exec tsc:*)",
+      "Bash(pnpm exec vitest:*)",
+      "Bash(pnpm exec turbo:*)",
+      "Bash(pnpm outdated:*)",
+      "Bash(pnpm why:*)",
+      "Bash(pnpm list:*)",
+      "Bash(git status)",
+      "Bash(git status:*)",
+      "Bash(git diff)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git show:*)"
+    ],
+    "deny": [
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git checkout:*)",
+      "Bash(git switch:*)",
+      "Bash(git restore:*)",
+      "Bash(git stash:*)",
+      "Bash(git reset:*)",
+      "Bash(git rebase:*)",
+      "Bash(git merge:*)",
+      "Bash(git clean:*)",
+      "Bash(pnpm publish:*)",
+      "Bash(npm publish:*)",
+      "Bash(pnpm release:*)",
+      "Bash(pnpm version-packages:*)",
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./**/.npmrc)"
+    ]
+  }
+}

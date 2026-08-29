@@ -19,17 +19,40 @@ same props, different host.
 
 The usual sources of the difference, in order of how much they change:
 
-| Theme override                     | What moves                                                |
-| ---------------------------------- | --------------------------------------------------------- |
-| `MuiTableCell`                     | row height, cell padding, body font size                  |
-| `MuiTableCell.styleOverrides.head` | uppercase headers, letter spacing, tint, the bottom rule  |
-| `MuiTableRow`                      | hover and striping                                        |
-| `typography.fontFamily`            | every string in the table                                 |
-| `shape.borderRadius`               | the container, the toolbar controls, the chips            |
-| `palette.primary`                  | sort arrows, active filter chips, selection, the bulk bar |
+| Theme override                       | What moves                                                     |
+| ------------------------------------ | -------------------------------------------------------------- |
+| `palette.primary`                    | sort arrows, active filter chips, selection, the bulk bar      |
+| `palette.divider`                    | the container's border, and every cell rule                    |
+| `palette.action.hover` / `.selected` | row hover, a checked row, a row being edited, the detail panel |
+| `palette.background.paper`           | the table's own surface, and the sticky header behind it       |
+| `typography.fontFamily`              | every string in the table                                      |
+| `shape.borderRadius`                 | the container, the toolbar controls, the chips                 |
+| `MuiTableCell.styleOverrides.head`   | the header's tint, colour, font, letter spacing and rule       |
+| `MuiTableCell.styleOverrides.root`   | the cell rule, its weight and its style, and the body font     |
+| `MuiButton`, `MuiIconButton`         | every control in the toolbar, the bulk bar and the pager       |
+| `MuiOutlinedInput`                   | the search field and every filter input                        |
+| `MuiChip`                            | the active-filter chips and anything a `cell` renders as one   |
+| `MuiPaper` (`elevation8`)            | the column popover, the filter panel and the row action menu   |
 
-Use the **Branded** entry in the theme toolbar above to see it: it is a plain `createTheme`
-call with those overrides and nothing else, and every story repaints under it.
+Pick any preset other than the two stock ones in the theme toolbar above to see it. The six
+are each a plain `createTheme` call, and the difference between them is not only the palette:
+Tokyo Night is square and monospaced with hard 1px rules, Catppuccin Latte has no row rules
+at all and puts everything on a soft shadow, Solarized Light is serif on warm paper with
+dashed hairlines, High contrast is 2px black on white. Every story repaints under all of
+them, and the package's source does not change.
+
+### What a theme cannot move
+
+Four things look like theme levers and are not. Row height, cell padding and body font size
+come from `density`; header capitalisation comes from `headerCase`. The table sets all four
+through its own `sx`, and `sx` wins over `styleOverrides`, so a theme that sets `padding` or
+`textTransform` on `MuiTableCell` changes nothing and reads like a bug when someone later
+tries to work out why. Set them with the props: the **Density scale** and **Header casing**
+stories show every value of each.
+
+Where the table scrolls is also a prop rather than a theme choice. Without `maxHeight` the
+table has no height of its own and the page scrolls; with it, the table scrolls and
+`stickyHeader` has something to stick to. The **Scroll containment** story has both.
 
 ## Matching a host app
 
@@ -38,17 +61,20 @@ and to the MUI components around it, so the page stays consistent:
 
 ```tsx
 const theme = createTheme({
-  palette: {primary: {main: '#00695f'}},
+  palette: {
+    primary: {main: '#00695f'},
+    divider: '#cfe0dd',
+    action: {hover: 'rgba(0, 105, 95, 0.08)', selected: 'rgba(0, 105, 95, 0.16)'},
+  },
   shape: {borderRadius: 8},
   components: {
     MuiTableCell: {
       styleOverrides: {
-        root: {padding: '12px 16px', fontSize: '0.8125rem'},
         head: {
-          fontSize: '0.7rem',
+          backgroundColor: '#eef4f3',
+          color: '#0f3b36',
           letterSpacing: '0.06em',
-          textTransform: 'uppercase',
-          borderBottom: '2px solid',
+          borderBottom: '2px solid #cfe0dd',
         },
       },
     },
@@ -76,9 +102,10 @@ would be a second, weaker theme sitting next to the real one.
 
 ## Dark mode
 
-Nothing to do. The table reads the palette, so a theme with `mode: 'dark'` is enough. Toggle
-it in the toolbar to check your own cell renderers: a hardcoded `#fff` in a custom `cell` is
-the usual thing that breaks, and it will be in your code rather than in the table.
+Nothing to do. The table reads the palette, so a theme with `mode: 'dark'` is enough. Switch
+to Nord, Dracula or Tokyo Night in the toolbar to check your own cell renderers: a hardcoded
+`#fff` in a custom `cell` is the usual thing that breaks, and it will be in your code rather
+than in the table. Dracula is the fastest at finding one, being the most saturated.
 
 ## Accessibility and colour
 

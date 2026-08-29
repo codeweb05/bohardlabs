@@ -40,8 +40,8 @@ CLI. `AI/site` is Docusaurus. `skipwash-latest/skipwash-apps` is static HTML.
 Ranked by value, which here means duplicated volume divided by extraction cost, with a
 tiebreak for anything that unblocks another item.
 
-| #   | Package               | Source                                             |   LOC | Apps | Plan                                                                 |
-| --- | --------------------- | -------------------------------------------------- | ----: | :--: | -------------------------------------------------------------------- |
+| #   | Package                    | Source                                             |   LOC | Apps | Plan                                                                 |
+| --- | -------------------------- | -------------------------------------------------- | ----: | :--: | -------------------------------------------------------------------- |
 | 1   | `@bohardlabs/image-editor` | `components/ImageEditor/`                          |   817 |  4   | [plan](../superpowers/plans/open/2026-08-28-image-editor-package.md) |
 | 2   | `@bohardlabs/admin-ui`     | dialogs, `PageHeader`, `Loader`, truncation, pager | ~1000 |  4   | [plan](../superpowers/plans/open/2026-08-28-admin-ui-kit-package.md) |
 | 3   | `@bohardlabs/form`         | `components/form/` + `hooks/form.tsx`              |  2640 |  4   | [plan](../superpowers/plans/open/2026-08-28-form-kit-package.md)     |

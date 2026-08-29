@@ -4,14 +4,21 @@ import ToggleButton from '@mui/material/ToggleButton';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import Typography from '@mui/material/Typography';
 import type {Meta, StoryObj} from '@storybook/react-vite';
-import {useEffect, useState} from 'react';
+import {useEffect, useState, type ReactNode} from 'react';
 import {expect, fn, userEvent, waitFor, within} from 'storybook/test';
 
 import {DataTable} from './DataTable';
 import type {DataTableLabels} from './i18n';
 import {getTableStateStorageKey} from './storage/storageKey';
 import {makeOrders, ORDERS, STATUS_OPTIONS, type Order} from './stories/fixtures';
-import type {BulkAction, DataTableColumnDef, DataTableProps, RowAction, ServerTableState} from './types';
+import {
+  DENSITY_CONFIG,
+  type BulkAction,
+  type DataTableColumnDef,
+  type DataTableProps,
+  type RowAction,
+  type ServerTableState,
+} from './types';
 
 const STATUS_LABEL: Record<Order['status'], string> = {
   pending: 'Pending',
@@ -535,6 +542,174 @@ export const PersistedState: Story = {
 export const CompactDensity: Story = {
   parameters: showcase('density', 'enableDensityToggle'),
   args: {density: 'compact', enableDensityToggle: true},
+};
+
+/**
+ * Where the scrolling happens is a layout decision, and it is one prop.
+ *
+ * By default the table has no height of its own: it grows to fit its rows and the **page**
+ * scrolls, which is what you want on a detail page where the table sits under other content.
+ * Setting `maxHeight` caps the scroll container instead, so the **table** scrolls and
+ * everything around it stays put, which is what you want when the table is the page.
+ * `stickyHeader` only means anything in the second mode, since it needs a scroll container
+ * to stick to.
+ *
+ * Clear `maxHeight` in the controls to watch it switch back.
+ */
+export const ScrollContainment: Story = {
+  parameters: showcase('maxHeight', 'stickyHeader', 'enablePagination'),
+  args: {
+    data: makeOrders(40),
+    maxHeight: 360,
+    stickyHeader: true,
+    enablePagination: false,
+  },
+  play: async ({canvasElement}) => {
+    const canvas = within(canvasElement);
+    const scroller = canvasElement.querySelector('.MuiTableContainer-root');
+
+    // A capped container that is not actually overflowing would demonstrate nothing, so the
+    // story asserts the setup before asserting the behaviour.
+    await expect(scroller).toBeInstanceOf(HTMLElement);
+    if (!(scroller instanceof HTMLElement)) return;
+    await expect(scroller.scrollHeight).toBeGreaterThan(scroller.clientHeight);
+
+    const header = canvas.getByRole('columnheader', {name: /reference/i});
+    const headerTop = header.getBoundingClientRect().top;
+
+    scroller.scrollTop = 200;
+    await waitFor(() => expect(scroller.scrollTop).toBeGreaterThan(0));
+
+    // The point of `stickyHeader`: the body moved, the header did not.
+    await waitFor(() => expect(header.getBoundingClientRect().top).toBeCloseTo(headerTop, 0));
+  },
+};
+
+// Three rows and three columns for the galleries below. A variation is easier to read
+// against a short table, and the point is the difference between the panels rather than the
+// data in any one of them.
+const SAMPLE = ORDERS.slice(0, 3);
+const SAMPLE_COLUMNS: DataTableColumnDef<Order>[] = [
+  {id: 'reference', accessorKey: 'reference', header: 'Reference'},
+  {id: 'customer', accessorKey: 'customer', header: 'Customer'},
+  {
+    id: 'total',
+    accessorKey: 'total',
+    header: 'Total',
+    align: 'right',
+    cell: ({row}) => `$${row.original.total.toFixed(2)}`,
+  },
+];
+
+/**
+ * Renders one labelled panel per value of a prop, so the difference is visible in one
+ * screen rather than by flipping a control and remembering the last one.
+ */
+function Gallery<TValue extends string>({
+  caption,
+  values,
+  render,
+}: {
+  readonly caption: (value: TValue) => string;
+  readonly values: readonly TValue[];
+  readonly render: (value: TValue) => ReactNode;
+}) {
+  return (
+    <Box sx={{display: 'grid', gap: 3}}>
+      {values.map((value) => (
+        <Box key={value}>
+          <Typography variant="overline" sx={{color: 'text.secondary'}}>
+            {caption(value)}
+          </Typography>
+          {render(value)}
+        </Box>
+      ))}
+    </Box>
+  );
+}
+
+/**
+ * All three densities at once. Row height, cell padding and font size move together, so a
+ * compact table stays readable rather than only shorter: 36px, 52px and 64px rows, at
+ * 0.75rem, 0.8125rem and 0.875rem.
+ *
+ * These come from the `density` prop rather than from the theme. A consumer's `createTheme`
+ * cannot move them, because the table sets all four through `sx`, and `sx` outranks a
+ * theme's `styleOverrides`. Pick the one that suits the page and let the theme do the rest.
+ */
+export const DensityScale: Story = {
+  parameters: showcase(),
+  render: (args) => (
+    <Gallery
+      values={['spacious', 'comfortable', 'compact'] as const}
+      caption={(density) => `density="${density}", ${DENSITY_CONFIG[density].rowHeight}px rows`}
+      render={(density) => (
+        <DataTable {...args} density={density} ariaLabel={`Orders, ${density}`} showToolbar={false} />
+      )}
+    />
+  ),
+  args: {data: SAMPLE, columns: SAMPLE_COLUMNS, enablePagination: false},
+  play: async ({canvasElement}) => {
+    const canvas = within(canvasElement);
+    const [spacious, comfortable, compact] = ['spacious', 'comfortable', 'compact'].map((density) =>
+      canvas.getByRole('table', {name: `Orders, ${density}`}),
+    );
+
+    // Not "three tables rendered": each step of the scale is actually shorter than the last.
+    await expect(spacious?.getBoundingClientRect().height).toBeGreaterThan(
+      comfortable?.getBoundingClientRect().height ?? 0,
+    );
+    await expect(comfortable?.getBoundingClientRect().height).toBeGreaterThan(
+      compact?.getBoundingClientRect().height ?? 0,
+    );
+  },
+};
+
+/**
+ * The four values of `headerCase`, against headers written as `SW reference`, `customer`
+ * and `USD total`.
+ *
+ * `capitalize` is the default and it is the wrong answer whenever a header is already an
+ * acronym or a product name: it turns `USD total` into `Usd Total`. `none` prints the
+ * string as written, which is what a column whose header was already decided should use.
+ * The casing is CSS, so the accessible name and the exported header keep the original text
+ * either way.
+ */
+export const HeaderCasing: Story = {
+  parameters: showcase(),
+  render: (args) => (
+    <Gallery
+      values={['capitalize', 'uppercase', 'lowercase', 'none'] as const}
+      caption={(headerCase) => `headerCase="${headerCase}"${headerCase === 'capitalize' ? ' (default)' : ''}`}
+      render={(headerCase) => (
+        <DataTable {...args} headerCase={headerCase} ariaLabel={`Orders, ${headerCase}`} showToolbar={false} />
+      )}
+    />
+  ),
+  args: {
+    data: SAMPLE,
+    density: 'compact',
+    enablePagination: false,
+    columns: [
+      {id: 'reference', accessorKey: 'reference', header: 'SW reference'},
+      {id: 'customer', accessorKey: 'customer', header: 'customer'},
+      {id: 'total', accessorKey: 'total', header: 'USD total', align: 'right'},
+    ],
+  },
+  play: async ({canvasElement}) => {
+    const canvas = within(canvasElement);
+
+    // `text-transform` paints; it does not rewrite the DOM. So every variant still exposes
+    // the header the column declared, which is what a screen reader and the CSV export read.
+    for (const headerCase of ['capitalize', 'uppercase', 'lowercase', 'none']) {
+      const table = canvas.getByRole('table', {name: `Orders, ${headerCase}`});
+      await expect(within(table).getByRole('columnheader', {name: 'SW reference'})).toBeInTheDocument();
+    }
+
+    const verbatim = canvas.getByRole('table', {name: 'Orders, none'});
+    const header = within(verbatim).getByRole('columnheader', {name: 'SW reference'});
+    await expect(getComputedStyle(header).textTransform).toBe('none');
+  },
 };
 
 /**

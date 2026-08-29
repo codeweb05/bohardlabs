@@ -86,10 +86,28 @@ a six-second one.
 
 ## Commit and push
 
-There is no husky config and no CI workflow yet. When they land, they run `pnpm validate:ci`
-(the ESLint pass included). That is the whole point of the split: the slow, thorough pass
-happens once, at the boundary where slowness is invisible, and the fast one happens
-continuously, where it is not.
+The split is the same one the editor already uses: oxlint on every keystroke, ESLint only
+when you are about to share the code. Turning ESLint on in the editor would put a six-second
+pass on every save; leaving it only in CI would mean copying logs out of GitHub to fix a
+warning you could have seen locally. The hooks sit in between.
+
+| When           | What runs                                                                                         | Why                                                                                          |
+| -------------- | ------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| Typing         | oxlint, via the oxc extension                                                                     | Half a second. Defects, not taste.                                                           |
+| Save           | oxfmt, including markdown and MDX                                                                 | The last CI failure was four unformatted docs files the editor never touched.                |
+| Commit         | lint-staged: oxlint + ESLint + oxfmt on **staged files only**, then `tsc` if those files are TS   | ESLint on two files is about a second. You see sonarjs and react-hooks v7 before the commit. |
+| Commit message | commitlint, conventional types, no required scope, no JIRA                                        | `feat:`, `fix:`, `docs:`, `chore:`, `refactor:`, `test:`, `ci:`, `revert:`.                  |
+| Push           | `pnpm lint`, `format:check`, `lint:eslint` (whole tree), `jscpd`, `typecheck`, related unit tests | Same lint/format/duplication gate as CI, without launching Chromium for stories.             |
+| CI             | `pnpm validate:ci`                                                                                | The backstop, including Storybook tests in a real browser.                                   |
+
+`pnpm lint:eslint` is still there for an on-demand whole-tree run. Do not set `"eslint.enable": true`.
+
+jscpd scans `packages/` and ignores tests and stories. The current tree is under the 5%
+threshold; a new clone that pushes it over fails the push and CI. Reports stay in the
+console, they are not committed.
+
+Husky is installed by `pnpm install` (`prepare`). Skip a hook with `--no-verify` only if you
+already know CI will be red.
 
 ## Why tests are one Vitest run and not a Turbo task
 

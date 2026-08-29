@@ -1,0 +1,43 @@
+#!/usr/bin/env sh
+
+# Skip during rebase.
+if [ -d ".git/rebase-merge" ] || [ -d ".git/rebase-apply" ]; then
+  exit 0
+fi
+
+# The same lint/format/duplication gate CI runs, minus Chromium stories. ESLint lives
+# here rather than in the editor: six seconds once per push, not on every keystroke.
+echo "lint, format, eslint, jscpd..."
+pnpm lint || exit 1
+pnpm format:check || exit 1
+pnpm lint:eslint || exit 1
+pnpm jscpd || exit 1
+
+echo "typecheck..."
+pnpm typecheck || exit 1
+
+branch=$(git branch --show-current)
+upstream="origin/$branch"
+base=""
+if git rev-parse --verify "$upstream" >/dev/null 2>&1; then
+  base="$upstream"
+elif git rev-parse --verify "origin/main" >/dev/null 2>&1; then
+  base="origin/main"
+elif git rev-parse --verify "main" >/dev/null 2>&1; then
+  base="main"
+fi
+
+if [ -z "$base" ]; then
+  echo "No base ref; skipping related tests."
+  exit 0
+fi
+
+changed=$(git diff --name-only "$base...HEAD" 2>/dev/null | grep -E '\.(ts|tsx)$' || true)
+if [ -z "$changed" ]; then
+  echo "No TypeScript changes against $base; skipping tests."
+  exit 0
+fi
+
+# Unit tests only. Storybook Chromium stays in CI; it is too slow for a push hook.
+echo "datatable tests related to changes against $base..."
+pnpm exec vitest run --project @bohardlabs/datatable --changed="$base" --passWithNoTests --bail=1

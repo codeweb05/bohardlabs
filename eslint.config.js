@@ -14,7 +14,8 @@
  *   - react-hooks v7's deeper analysis (refs read during render, state set in an effect,
  *     libraries the React Compiler cannot memoize)
  *
- * Run it before a commit or a push (`pnpm lint:eslint`), not on every keystroke.
+ * Run it on the files you commit (lint-staged), then on the whole tree at push and in
+ * CI (`pnpm lint:eslint`). Not on every keystroke.
  * See docs/repo/tooling.md.
  */
 import reactHooks from 'eslint-plugin-react-hooks';

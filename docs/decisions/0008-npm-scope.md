@@ -5,7 +5,7 @@
 ## Context
 
 0007 locked the company spelling as Bohard and the npm scope as `@bohard/*`. The
-`bohard` org could not be created: that name is already an npm *user* (publisher of
+`bohard` org could not be created: that name is already an npm _user_ (publisher of
 `html-pdf-lite`), and org names share that namespace. The org `bohardlabs` was registered
 instead. The company name stays Bohard; the published scope is the org that actually exists.
 

@@ -49,22 +49,43 @@ Two things people look for and do not find, on purpose:
 
 ## Themes
 
-The toolbar's theme picker repaints every story under a different `createTheme` call. Seven
+The toolbar's theme picker repaints every story under a different `createTheme` call. Eight
 are set up:
 
-| Theme                 | What it is there to show                                     |
-| --------------------- | ------------------------------------------------------------ |
-| Light, Dark           | stock MUI, no app tokens at all                              |
-| Branded, Branded dark | a host app's palette, radii and component overrides          |
-| High contrast         | heavy borders and pure black on white, the accessibility end |
-| Sharp and dense       | square corners, small type, tight spacing                    |
-| Soft and spacious     | round corners, wide spacing, muted surfaces                  |
+| Theme            | The design, not just the palette                                                 |
+| ---------------- | -------------------------------------------------------------------------------- |
+| Light, Dark      | stock MUI, no app tokens at all                                                  |
+| Nord             | arctic and flat: soft radius, hairline rules, nothing floats on a shadow         |
+| Dracula          | loud: pill controls, 2px outlines, uppercase buttons, a glow under every overlay |
+| Tokyo Night      | a terminal: square corners, monospace throughout, hard rules, no shadow anywhere |
+| Solarized Light  | printed matter: warm paper, serif headers, dashed hairlines, near-square corners |
+| Catppuccin Latte | a design system: no row rules at all, 14px radius, everything on a soft shadow   |
+| High contrast    | the accessibility end: square, 2px outlines, 3px header rule, uppercase and bold |
 
 The stock two carry no app tokens on purpose: a component that only looks right under one
-product's palette is not ready to publish, and that shows up here. The rest are the opposite
-demonstration, and together they are the answer to why this table looks different here than
-in the app it came from. The package hardcodes no colour, radius or font; every one of these
-is `createTheme` alone, with the stories untouched.
+product's palette is not ready to publish, and that shows up first against a bare baseline.
+
+The other six change shape, not only hue. Colour alone makes six themes that differ in one
+axis and prove very little; radius, rule weight, outline weight, whether a menu floats or
+sits inside a border, and whether a button shouts in uppercase are the properties most likely
+to be wrong in a component that was only ever built against one app. Each of the six is a
+plain `createTheme` call and nothing else. The package's source does not change, the stories
+do not change, and no colour, radius or font is hardcoded anywhere in it.
+
+What a theme reaches, and what it does not, is in
+**[Guides → Theming](?path=/docs/guides-theming--docs)**. The short version: palette, divider,
+hover, radius, font and the header's treatment are the theme's; row height, cell padding, body
+font size and header case are the `density` and `headerCase` props.
+
+## Every story carries its own code
+
+Under each story in the canvas is a **Show code** / **Copy** bar, holding the same JSX the
+docs page shows: the component call with the args currently set in the Controls panel, not
+the story object and not its `play` function. Change a control and the snippet follows.
+
+It stays collapsed until asked for. An open code block under every story would double the
+height of the canvas, and its text would sit inside the same root the `play` functions and
+the axe pass read, where it can only add noise.
 
 Two things that usually resist theming are props instead. `slots.confirmDialog` replaces the
 bulk-action confirmation with the app's own dialog, so a project with an existing one does

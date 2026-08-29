@@ -132,8 +132,10 @@ export const Running: Story = {
  * it, and the two combine.
  */
 export const Pending: Story = {
-  args: {open: true, isLoading: true, confirmLabel: 'Delete', confirmColor: 'error'},
+  args: {isLoading: true, confirmLabel: 'Delete', confirmColor: 'error'},
   play: async () => {
+    await userEvent.click(screen.getByRole('button', {name: 'Delete order'}));
+
     await screen.findByRole('dialog');
 
     await expect(screen.getByRole('button', {name: 'Cancel'})).toBeDisabled();
