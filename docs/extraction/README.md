@@ -1,5 +1,11 @@
 # Extraction survey
 
+> **Premise changed 2026-09-29.** The skipwash apps will not adopt these packages;
+> [decision 0008](../decisions/0008-target-consumers.md) says who they are for instead. The
+> survey below still holds as a map of what exists and what each component has to handle.
+> The form package's argument now lives in
+> [its spec](../superpowers/specs/2026-09-29-form-package-design.md).
+
 **Date:** 2026-08-28. **Scope surveyed:** every JS/TS frontend under `~/saurabh`.
 
 DataTable was the first thing pulled out of skipwash-admin. This document is the answer to
@@ -44,7 +50,7 @@ tiebreak for anything that unblocks another item.
 | --- | ----------------------- | -------------------------------------------------- | ----: | :--: | -------------------------------------------------------------------- |
 | 1   | `@vt-labs/image-editor` | `components/ImageEditor/`                          |   817 |  4   | [plan](../superpowers/plans/open/2026-08-28-image-editor-package.md) |
 | 2   | `@vt-labs/admin-ui`     | dialogs, `PageHeader`, `Loader`, truncation, pager | ~1000 |  4   | [plan](../superpowers/plans/open/2026-08-28-admin-ui-kit-package.md) |
-| 3   | `@vt-labs/form`         | `components/form/` + `hooks/form.tsx`              |  2640 |  4   | [plan](../superpowers/plans/open/2026-08-28-form-kit-package.md)     |
+| 3   | `@vt-labs/form`         | `components/form/` + `hooks/form.tsx`              |  2640 |  4   | [plan](../superpowers/plans/open/2026-09-29-form-package.md)         |
 | 4   | `@vt-labs/api-client`   | `lib/axios`, `lib/auth`, `lib/react-query`, perms  |  1200 | 2-4  | [plan](../superpowers/plans/open/2026-08-28-api-client-package.md)   |
 | 5   | `@vt-labs/admin-shell`  | `components/layouts/` + sidebar context            |  1120 |  4   | [plan](../superpowers/plans/open/2026-08-28-admin-shell-package.md)  |
 

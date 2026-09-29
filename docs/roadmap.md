@@ -5,7 +5,7 @@ status and points at the detail. A reader who wants to know what is done, what i
 worked on, what is next and what is blocked reads this and follows a link, instead of
 opening five files and reconciling them.
 
-**Reviewed:** 2026-08-29.
+**Reviewed:** 2026-09-29.
 
 ## The rule
 
@@ -70,7 +70,6 @@ one a demo, an interaction test and an axe check.
 | Turn on `noUncheckedIndexedAccess`                                  | ready, in its own change                   | [decision 0004](decisions/0004-no-unchecked-indexed-access.md)                               |
 | Default palette contrast                                            | open                                       | [open question A](decisions/open-questions.md#a-the-default-palettes-contrast)               |
 | Lint findings left in the ported code (refs read in render, others) | done, ESLint findings now fail as errors   | port.md, "Left alone"                                                                        |
-| skipwash-admin switches to the package and deletes its copy         | blocked on the first release               | port.md, "What is left"                                                                      |
 | `@tanstack/react-table` 9                                           | deferred: semver-major, needs its own plan | [`repo/dependency-upgrades.md`](repo/dependency-upgrades.md#tanstackreact-table-923-on-8213) |
 
 ### Feature backlog
@@ -92,13 +91,16 @@ Its suggested sequence starts with item 1, preferences-only persistence, because
 
 Five packages, each with a plan written to be executed task by task. The argument for each
 is in [`extraction/README.md`](extraction/README.md); a plan assumes the argument is
-settled. Take them in this order. The only hard dependency is admin-ui before form.
+settled. Take them in this order. Since [decision 0008](decisions/0008-target-consumers.md)
+they are designed for promptiva and later projects rather than ported for the skipwash
+apps, so each plan is rewritten as a design when it is picked up; form is the first, and
+no longer depends on admin-ui.
 
 | Order | Plan                                                                      | Package                 | Size      | Tasks | Status  | Blocked on                                                                                                                              |
 | :---: | ------------------------------------------------------------------------- | ----------------------- | --------- | :---: | ------- | --------------------------------------------------------------------------------------------------------------------------------------- |
 |   1   | [image-editor](superpowers/plans/open/2026-08-28-image-editor-package.md) | `@vt-labs/image-editor` | 817 loc   |  0/7  | ready   | nothing                                                                                                                                 |
 |   2   | [admin-ui-kit](superpowers/plans/open/2026-08-28-admin-ui-kit-package.md) | `@vt-labs/admin-ui`     | ~1000 loc |  0/9  | ready   | nothing                                                                                                                                 |
-|   3   | [form-kit](superpowers/plans/open/2026-08-28-form-kit-package.md)         | `@vt-labs/form`         | 2640 loc  | 0/12  | blocked | plan 2 (`CancelButton` renders its dialog)                                                                                              |
+|   3   | [form](superpowers/plans/open/2026-09-29-form-package.md)                 | `@vt-labs/form`         | redesign  | 0/14  | ready   | plan review ([spec](superpowers/specs/2026-09-29-form-package-design.md))                                                               |
 |   4   | [api-client](superpowers/plans/open/2026-08-28-api-client-package.md)     | `@vt-labs/api-client`   | 1200 loc  |  0/9  | blocked | [open question B](decisions/open-questions.md#b-do-skipwash-api-and-smarthip-backend-share-the-response-envelope), a check, not a build |
 |   5   | [admin-shell](superpowers/plans/open/2026-08-28-admin-shell-package.md)   | `@vt-labs/admin-shell`  | 1120 loc  |  0/8  | blocked | plan 2                                                                                                                                  |
 

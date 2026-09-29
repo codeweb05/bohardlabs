@@ -13,6 +13,7 @@ what is next, or what is blocked.
 | `repo/`                   | How this repo works: tooling, CI, publishing, dependency upgrades     | Setting up, wondering why two linters, or why a dep is pinned |
 | `packages/`               | Per-package history and feature backlog, one folder per package       | Working inside a package                                      |
 | `extraction/`             | What else in the app repos is worth pulling out, and what is not      | Deciding what to build next                                   |
+| `superpowers/specs/`      | Designs agreed before a plan is written                               | Wondering what a package is meant to be, and why              |
 | `superpowers/plans/open/` | Plans not started, or in progress                                     | Picking up the next piece of work                             |
 | `superpowers/plans/done/` | Plans whose work has shipped                                          | Wondering how or why something was built                      |
 
@@ -26,9 +27,9 @@ what is next, or what is blocked.
 
 **Decisions**
 
-- [`decisions/README.md`](decisions/README.md): the log. Seven so far: npm scope, ESM-only,
+- [`decisions/README.md`](decisions/README.md): the log. Nine so far: npm scope, ESM-only,
   the React Compiler, `noUncheckedIndexedAccess`, where the DataTable backlog lives, MUI
-  versioning, the MIT license.
+  versioning, the MIT license, who the packages are for, subpath entries for optional peers.
 - [`decisions/open-questions.md`](decisions/open-questions.md): the ones not made yet. Do
   not guess an answer to something parked here.
 

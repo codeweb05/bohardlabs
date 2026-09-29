@@ -30,6 +30,10 @@ The api-client plan encodes a backend contract: the `{success, data, message}` e
 the flat-body fallback, the `x-tenant-id` header, the `ErrorCode` mapping and the refresh
 endpoint's shape. It assumes both backends agree on all five. Nobody has checked.
 
+**Revisit:** [decision 0008](0008-target-consumers.md) means neither skipwash-family
+backend is a planned consumer any more. The session and api-client spec decides whether
+this question still matters or closes.
+
 **Resolves by:** reading the two backends and recording the answer in section 4 of
 [`../extraction/README.md`](../extraction/README.md). **Blocks:**
 [the api-client plan](../superpowers/plans/open/2026-08-28-api-client-package.md) as
