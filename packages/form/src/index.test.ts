@@ -14,7 +14,17 @@ import * as maps from './maps';
 import * as phone from './phone';
 import * as pickers from './pickers';
 
-const ROOT_API = ['DEFAULT_FORM_LABELS', 'FormConfigProvider', 'createAppForm', 'useFieldContext', 'useFormContext'];
+const ROOT_API = [
+  'DEFAULT_FORM_LABELS',
+  'FieldShell',
+  'FormConfigProvider',
+  'TextArea',
+  'TextField',
+  'createAppForm',
+  'useFieldBinding',
+  'useFieldContext',
+  'useFormContext',
+];
 const PICKERS_API: string[] = [];
 const PHONE_API: string[] = [];
 const MAPS_API: string[] = [];
