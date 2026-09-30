@@ -21,8 +21,8 @@ Updated as each task lands. "Done" means reviewed, fixed and committed on `main`
 | 3    | `PasswordField`, `NumberField`               | done    | 18c8b9f, bcbcae8 |
 | 4    | Server errors, form buttons, invalid focus   | done    | 363e69c          |
 | 5    | `CheckboxField`, `SwitchField`               | done    | d53edc4          |
-| 6    | `SelectField`, `RadioGroupField`             | working |                  |
-| 7    | `SearchableSelectField`, `MultiSelectField`  | to do   |                  |
+| 6    | `SelectField`, `RadioGroupField`             | done    | d66380e, ef31bc7 |
+| 7    | `SearchableSelectField`, `MultiSelectField`  | working |                  |
 | 8    | `AsyncAutocompleteField`                     | to do   |                  |
 | 9    | `DurationField`, `lazyField`                 | to do   |                  |
 | 10   | `/pickers` (re-planned for x-date-pickers 9) | to do   |                  |
@@ -33,7 +33,8 @@ Updated as each task lands. "Done" means reviewed, fixed and committed on `main`
 | end  | Final whole-branch review and fixes          | to do   |                  |
 
 Two Task 4 test gaps (a consumer `onSubmitInvalid` replacing the default; cancel on a dirty
-form with no `confirm`) are held for the final review's fix round.
+form with no `confirm`) and one Task 6 edge case (an `Option` whose value is `''` reads as
+empty in `SelectField`) are held for the final review's fix round.
 
 ## Global Constraints
 
