@@ -81,6 +81,16 @@ describe('CancelButton', () => {
     expect(onCancel).toHaveBeenCalledTimes(1);
   });
 
+  it('cancels a dirty form at once when there is no confirm', async () => {
+    const user = userEvent.setup();
+    const onCancel = vi.fn();
+    render(<Editor onCancel={onCancel} />);
+
+    await user.type(screen.getByLabelText('Name'), 'Ada');
+    await user.click(screen.getByRole('button', {name: 'Cancel'}));
+    expect(onCancel).toHaveBeenCalledTimes(1);
+  });
+
   it('asks before throwing away edits, and respects a no', async () => {
     const user = userEvent.setup();
     const onCancel = vi.fn();
