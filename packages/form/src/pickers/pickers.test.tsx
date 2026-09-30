@@ -131,6 +131,29 @@ describe.each(ADAPTERS)('pickers under %s', (_name, Adapter) => {
       expect(await submitted(user)).toBe('"2026-01-25"');
     });
 
+    it('drops a rejected draft on reset, so a later wider maxDate stores nothing', async () => {
+      const user = userEvent.setup();
+      const formRef = createRef<AnyFormApi>();
+      const {rerender} = renderPicker(<DateField label="Start" maxDate="2026-01-20" />, {defaultValue: null, formRef});
+      const group = screen.getByRole('group', {name: 'Start'});
+      await user.click(firstSection(group));
+      await user.keyboard('01252026');
+      expect(group).toHaveAttribute('aria-invalid', 'true');
+
+      act(() => formRef.current?.reset());
+      expect(hiddenInput(group)).toHaveValue('');
+
+      rerender(
+        <LocalizationProvider dateAdapter={Adapter}>
+          <FieldHarness defaultValue={null} formRef={formRef}>
+            <DateField label="Start" maxDate="2026-01-31" />
+          </FieldHarness>
+        </LocalizationProvider>,
+      );
+      expect(formRef.current?.state.isDirty).toBe(false);
+      expect(await submitted(user)).toBe('null');
+    });
+
     it('does not store the year a user is still typing', async () => {
       const user = userEvent.setup();
       renderPicker(<DateField label="Start" />, {defaultValue: null});
@@ -209,6 +232,21 @@ describe.each(ADAPTERS)('pickers under %s', (_name, Adapter) => {
       await user.keyboard('01302026');
       expect(start).not.toHaveAttribute('aria-invalid', 'true');
       expect(await submitted(user)).toBe('{"start":"2026-01-25","end":"2026-01-30"}');
+    });
+
+    it('does not carry a rejected end into a record loaded by reset', async () => {
+      const user = userEvent.setup();
+      const formRef = createRef<AnyFormApi>();
+      renderPicker(<DateRangeField label="Stay" />, {defaultValue: {start: '2026-01-20', end: null}, formRef});
+      const end = within(screen.getByRole('group', {name: 'Stay'})).getByRole('group', {name: 'End'});
+      await user.click(firstSection(end));
+      await user.keyboard('01102026');
+      expect(end).toHaveAttribute('aria-invalid', 'true');
+
+      act(() => formRef.current?.reset({value: {start: '2026-01-05', end: null}}));
+      expect(hiddenInput(end)).toHaveValue('');
+      expect(formRef.current?.state.isDirty).toBe(false);
+      expect(await submitted(user)).toBe('{"start":"2026-01-05","end":null}');
     });
 
     it('holds the end to the start the user just picked', async () => {
