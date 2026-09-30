@@ -51,10 +51,10 @@ export function resolveFeatures(features: ImageEditorFeatures | undefined): Reso
   const horizontal = flip?.horizontal ?? true;
   const vertical = flip?.vertical ?? true;
 
-  const straighten = options(f.straighten, false);
+  const straighten = options(f.straighten, true);
   const range = Math.min(90, Math.max(1, straighten?.range ?? 45));
 
-  const adjust = options(f.adjust, false);
+  const adjust = options(f.adjust, true);
   const tools = {
     brightness: adjust?.brightness ?? true,
     contrast: adjust?.contrast ?? true,
@@ -64,12 +64,12 @@ export function resolveFeatures(features: ImageEditorFeatures | undefined): Reso
 
   return {
     crop: {enabled: crop !== null, ratios, shape},
-    zoom: zoom ? {min: zoomMin, max: zoomMax, slider: zoom.slider ?? false} : false,
+    zoom: zoom ? {min: zoomMin, max: zoomMax, slider: zoom.slider ?? true} : false,
     rotate: f.rotate ?? true,
     flip: flip && (horizontal || vertical) ? {horizontal, vertical} : false,
-    replace: f.replace ?? false,
+    replace: f.replace ?? true,
     straighten: straighten ? {range} : false,
     adjust: adjust && Object.values(tools).some(Boolean) ? tools : false,
-    history: f.history ?? false,
+    history: f.history ?? true,
   };
 }

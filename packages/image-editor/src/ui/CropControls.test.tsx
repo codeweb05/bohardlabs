@@ -29,11 +29,16 @@ function setup(given: ImageEditorFeatures = {}, rotated = false) {
 }
 
 describe('CropControls', () => {
-  it('shows ratio, rotate and flip by default, and no sliders', () => {
+  it('shows ratio, rotate, flip and both sliders by default', () => {
     setup();
     expect(screen.getByRole('group', {name: L.ratio})).toBeInTheDocument();
     expect(screen.getByRole('button', {name: L.rotateLeft})).toBeInTheDocument();
     expect(screen.getByRole('button', {name: L.flipVertical})).toBeInTheDocument();
+    expect(screen.getAllByRole('slider')).toHaveLength(2);
+  });
+
+  it('has no sliders when straighten and the zoom slider are off', () => {
+    setup({straighten: false, zoom: {slider: false}});
     expect(screen.queryByRole('slider')).not.toBeInTheDocument();
   });
 

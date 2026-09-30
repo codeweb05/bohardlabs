@@ -65,7 +65,7 @@ const meta = {
         component: [
           'A dialog that crops, rotates, flips and adjusts one image and hands back a `File` that',
           'fits your upload rules. Give it a `File`, a `Blob` or a URL as `source`, or `null` for',
-          'the built-in picker. Tools are switched on one by one through `features`.',
+          'the built-in picker. Every tool is on by default; switch off what you do not need through `features`.',
         ].join(' '),
       },
     },
@@ -106,7 +106,7 @@ async function applyEdits(dialog: HTMLElement, onApply: ImageEditorProps['onAppl
   return result;
 }
 
-/** The defaults: crop with four ratios, zoom, rotate and flip. Apply returns the cropped file. */
+/** The defaults, every tool on. Apply with nothing changed returns the whole picture. */
 export const Basic: Story = {
   play: async ({args, canvasElement}) => {
     const dialog = await openEditor(canvasElement);
@@ -162,14 +162,11 @@ export const RoundJpeg: Story = {
 };
 
 /**
- * Every tool at once: ratios, the zoom slider, straighten, the Adjust tab with presets, undo
- * and redo, Reset and Replace. Most apps want a handful of these; this is the ceiling.
+ * Every tool, which is what no `features` gives you: ratios, the zoom slider, straighten, the
+ * Adjust tab with presets, undo and redo, Reset and Replace.
  */
 export const Everything: Story = {
   parameters: showcase('features'),
-  args: {
-    features: {zoom: {slider: true}, straighten: true, adjust: true, history: true, replace: true},
-  },
   play: async ({canvasElement}) => {
     const dialog = await openEditor(canvasElement);
     const ui = within(dialog);
@@ -187,6 +184,26 @@ export const Everything: Story = {
     await userEvent.click(reset);
     await expect(ui.getByRole('button', {name: 'Original'})).toHaveAttribute('aria-pressed', 'true');
     await expect(reset).toBeDisabled();
+  },
+};
+
+/**
+ * The same editor trimmed to crop, zoom, rotate and flip. Each tool you pass as `false` takes
+ * its controls with it.
+ */
+export const Minimal: Story = {
+  parameters: showcase('features'),
+  args: {
+    features: {zoom: {slider: false}, straighten: false, adjust: false, history: false, replace: false},
+  },
+  play: async ({canvasElement}) => {
+    const dialog = await openEditor(canvasElement);
+    const ui = within(dialog);
+    await expect(ui.getByRole('button', {name: 'Rotate right'})).toBeInTheDocument();
+    await expect(ui.queryByRole('slider')).not.toBeInTheDocument();
+    await expect(ui.queryByRole('tab')).not.toBeInTheDocument();
+    await expect(ui.queryByRole('button', {name: 'Undo'})).not.toBeInTheDocument();
+    await expect(ui.queryByRole('button', {name: 'Replace image'})).not.toBeInTheDocument();
   },
 };
 
@@ -256,7 +273,7 @@ export const Straighten: Story = {
  */
 export const Adjust: Story = {
   parameters: showcase('features'),
-  args: {features: {adjust: true}, output: {type: 'image/png'}},
+  args: {output: {type: 'image/png'}},
   play: async ({args, canvasElement}) => {
     const dialog = await openEditor(canvasElement);
     const ui = within(dialog);
@@ -278,7 +295,6 @@ export const Adjust: Story = {
  */
 export const History: Story = {
   parameters: showcase('features'),
-  args: {features: {history: true}},
   play: async ({args, canvasElement}) => {
     const dialog = await openEditor(canvasElement);
     const ui = within(dialog);
@@ -304,12 +320,11 @@ export const History: Story = {
 };
 
 /**
- * `source={null}` opens on a drop zone. With `features.replace` the user can swap the picture
+ * `source={null}` opens on a drop zone. The Replace button lets the user swap the picture
  * later; the new one starts with a clean history.
  */
 export const PickerAndReplace: Story = {
   parameters: showcase('source', 'features', 'input'),
-  args: {features: {replace: true}},
   render: (args) => <EditPhoto {...args} picker />,
   play: async ({args, canvasElement}) => {
     await userEvent.click(within(canvasElement).getByRole('button', {name: 'Edit photo'}));

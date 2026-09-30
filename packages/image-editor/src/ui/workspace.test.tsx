@@ -75,7 +75,7 @@ function orientation() {
 
 describe('the tabs', () => {
   it('are absent without adjustments', async () => {
-    await setup();
+    await setup({adjust: false});
     expect(screen.queryByRole('tab')).not.toBeInTheDocument();
   });
 
@@ -99,8 +99,8 @@ describe('the tabs', () => {
 });
 
 describe('history', () => {
-  it('has no undo or redo buttons unless history is on', async () => {
-    await setup();
+  it('has no undo or redo buttons when history is off', async () => {
+    await setup({history: false});
     expect(screen.queryByRole('button', {name: L.undo})).not.toBeInTheDocument();
   });
 

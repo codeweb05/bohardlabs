@@ -19,16 +19,16 @@ describe('parseRatio', () => {
 });
 
 describe('resolveFeatures', () => {
-  it('turns on crop, zoom, rotate and flip by default and nothing else', () => {
+  it('turns every tool on by default', () => {
     expect(resolveFeatures(undefined)).toEqual({
       crop: {enabled: true, ratios: DEFAULT_RATIOS, shape: 'rect'},
-      zoom: {min: 1, max: 3, slider: false},
+      zoom: {min: 1, max: 3, slider: true},
       rotate: true,
       flip: {horizontal: true, vertical: true},
-      replace: false,
-      straighten: false,
-      adjust: false,
-      history: false,
+      replace: true,
+      straighten: {range: 45},
+      adjust: {brightness: true, contrast: true, saturation: true, presets: true},
+      history: true,
     });
   });
 
@@ -54,8 +54,8 @@ describe('resolveFeatures', () => {
   });
 
   it('keeps zoom limits sane', () => {
-    expect(resolveFeatures({zoom: {min: 0.2, max: 0.5}}).zoom).toEqual({min: 1, max: 1, slider: false});
-    expect(resolveFeatures({zoom: {max: 5, slider: true}}).zoom).toEqual({min: 1, max: 5, slider: true});
+    expect(resolveFeatures({zoom: {min: 0.2, max: 0.5}}).zoom).toEqual({min: 1, max: 1, slider: true});
+    expect(resolveFeatures({zoom: {max: 5, slider: false}}).zoom).toEqual({min: 1, max: 5, slider: false});
     expect(resolveFeatures({zoom: false}).zoom).toBe(false);
   });
 

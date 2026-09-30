@@ -9,13 +9,12 @@ export type OutputType = 'image/jpeg' | 'image/png' | 'image/webp';
 
 /**
  * Which tools the editor shows. Every entry is `boolean | options`: `false` removes the
- * tool and its controls, `true` uses its defaults. Crop, zoom, rotate and flip are on by
- * default; the rest are off until asked for.
+ * tool and its controls, `true` uses its defaults. Every tool is on by default.
  */
 export interface ImageEditorFeatures {
   /** The first ratio is the starting one. `shape: 'circle'` locks the ratio to 1:1. */
   crop?: boolean | {ratios?: CropRatio[]; shape?: CropShape};
-  /** Zoom 1 is the largest crop of the current shape. `slider` adds a visible control. */
+  /** Zoom 1 is the largest crop of the current shape. `slider: false` hides its visible control. */
   zoom?: boolean | {min?: number; max?: number; slider?: boolean};
   /** 90° steps. */
   rotate?: boolean;

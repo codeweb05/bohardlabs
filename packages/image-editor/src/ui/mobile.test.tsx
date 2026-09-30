@@ -97,7 +97,7 @@ describe('the mobile layout', () => {
   });
 
   it('leaves out the tools that are off', async () => {
-    const {toolbar} = await setup({rotate: false, flip: {vertical: false}});
+    const {toolbar} = await setup({rotate: false, flip: {vertical: false}, history: false});
     expect(within(toolbar).queryByRole('button', {name: L.undo})).not.toBeInTheDocument();
     expect(within(toolbar).queryByRole('button', {name: L.rotateRight})).not.toBeInTheDocument();
     expect(within(toolbar).queryByRole('button', {name: L.flipVertical})).not.toBeInTheDocument();

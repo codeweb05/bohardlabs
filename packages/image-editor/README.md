@@ -4,9 +4,9 @@ A MUI dialog that crops, rotates, flips, straightens and adjusts one image, then
 `File` that already fits your upload rules. It is for apps on React 19 and MUI 9 that take
 avatars, cover photos or product shots and would rather not ship a server-side resize step.
 
-Crop, zoom, rotate and flip are on by default. Straighten, brightness, contrast, saturation,
-presets, undo and redo, and a Replace button stay hidden until you turn them on, so a simple
-avatar picker stays simple. Below the `sm` breakpoint the dialog goes full screen, with the
+Every tool is on by default: crop, zoom, rotate, flip, straighten, brightness, contrast,
+saturation, presets, undo and redo, and a Replace button. Pass `false` for the ones you do not
+want, so an avatar picker can be as small as crop and zoom. Below the `sm` breakpoint the dialog goes full screen, with the
 quick tools in a floating pill over the image.
 
 > **Status: private.** Not published yet. The API may change before the first release.
@@ -36,7 +36,7 @@ export function AvatarEditor({file, onDone}: {readonly file: File | null; readon
         await uploadAvatar(avatar);
         onDone();
       }}
-      features={{crop: {shape: 'circle'}}}
+      features={{crop: {shape: 'circle'}, straighten: false, adjust: false}}
       output={{type: 'image/png', maxWidth: 256, maxHeight: 256}}
     />
   );
@@ -55,13 +55,13 @@ Every entry in `features` is `boolean | options`. `false` removes the tool and i
 | Feature      | Default | Options                                                                                                       |
 | ------------ | :-----: | ------------------------------------------------------------------------------------------------------------- |
 | `crop`       |   on    | `ratios` (`'free'`, `'1:1'`, `'4:3'`, `'16:9'` or a number; the first is the starting one), `shape: 'circle'` |
-| `zoom`       |   on    | `min`, `max` (1 is the largest crop), `slider` for a visible control                                          |
+| `zoom`       |   on    | `min`, `max` (1 is the largest crop), `slider: false` to hide the visible control                             |
 | `rotate`     |   on    | 90° steps                                                                                                     |
 | `flip`       |   on    | `horizontal`, `vertical`                                                                                      |
-| `straighten` |   off   | `range` in degrees, default 45                                                                                |
-| `adjust`     |   off   | `brightness`, `contrast`, `saturation`, `presets`; turns on an Adjust tab                                     |
-| `history`    |   off   | Undo and Redo buttons, and Ctrl/Cmd+Z                                                                         |
-| `replace`    |   off   | A Replace image button that opens the picker                                                                  |
+| `straighten` |   on    | `range` in degrees, default 45                                                                                |
+| `adjust`     |   on    | `brightness`, `contrast`, `saturation`, `presets`; turns on an Adjust tab                                     |
+| `history`    |   on    | Undo and Redo buttons, and Ctrl/Cmd+Z                                                                         |
+| `replace`    |   on    | A Replace image button that opens the picker                                                                  |
 
 Adjustments need `CanvasRenderingContext2D.filter`. Where a browser lacks it, the Adjust tab
 does not appear.
@@ -90,7 +90,7 @@ produced, which can differ from `output.type` where a browser cannot encode WebP
 
 The image area is focusable. Arrows move the crop (Alt for a finer step), Shift+arrows resize
 it, `+` and `-` zoom, `r` and `R` rotate, and Ctrl/Cmd+Z and Ctrl/Cmd+Shift+Z undo and redo
-when history is on. Each change is announced in a polite live region.
+unless history is off. Each change is announced in a polite live region.
 
 ## Labels
 
