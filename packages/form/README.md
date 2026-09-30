@@ -195,12 +195,9 @@ provider once, at module level or in `useMemo`:
 
 ```tsx
 import Stack from '@mui/material/Stack';
-import {createAppForm, lazyField, SubmitButton} from '@vt-labs/form';
-import {createGooglePlacesProvider, EMPTY_ADDRESS} from '@vt-labs/form/maps';
+import {createAppForm, SubmitButton} from '@vt-labs/form';
+import {AddressField, createGooglePlacesProvider, EMPTY_ADDRESS, LocationSearchField} from '@vt-labs/form/maps';
 import type {Place} from '@vt-labs/form/maps';
-
-const LocationSearchField = lazyField(() => import('@vt-labs/form/maps').then((m) => m.LocationSearchField));
-const AddressField = lazyField(() => import('@vt-labs/form/maps').then((m) => m.AddressField));
 
 const {useAppForm} = createAppForm({
   fieldComponents: {LocationSearchField, AddressField},
@@ -226,6 +223,11 @@ export function PickupForm() {
   );
 }
 ```
+
+Importing the provider or `EMPTY_ADDRESS` from `@vt-labs/form/maps` loads that entry, so the
+fields are imported directly here. `lazyField` would save nothing. It keeps the maps code out of
+the initial load only when that load imports nothing from `@vt-labs/form/maps` statically, for
+example when the form above is itself a route loaded with `import()`.
 
 Google bills autocomplete by session: the keystrokes of one search and the pick that ends it
 are one charge. A new provider on every render starts a new session each time and drops the
