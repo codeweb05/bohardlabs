@@ -1,5 +1,5 @@
 import {useStore} from '@tanstack/react-form';
-import {useRef, useState} from 'react';
+import {useEffect, useRef, useState} from 'react';
 
 import {useFormConfig} from '../config/FormConfigContext.js';
 import {useFieldContext} from '../context.js';
@@ -32,6 +32,13 @@ export function usePlaceSearch(provider: PlacesProvider, {onResolved, onCleared}
   const isTouched = useStore(field.store, (state) => state.meta.isTouched);
   const session = usePlacesSession(provider);
   const latestPick = useRef(0);
+  // Unmounting counts as a newer pick, so a lookup that answers afterwards writes nothing.
+  useEffect(
+    () => () => {
+      latestPick.current += 1;
+    },
+    [],
+  );
   // The value the failed lookup left in place. The error is about that value only.
   const [failedAt, setFailedAt] = useState<{readonly value: unknown} | null>(null);
 

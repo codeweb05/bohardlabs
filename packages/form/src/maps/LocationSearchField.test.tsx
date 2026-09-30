@@ -168,6 +168,34 @@ describe('LocationSearchField', () => {
     expect(screen.getByLabelText('Submitted value')).toHaveTextContent('"id":"pune"');
   });
 
+  it('writes nothing when a lookup answers after the field unmounts', async () => {
+    const user = userEvent.setup();
+    const formRef = createRef<AnyFormApi>();
+    const {provider} = createFakePlaces([PUNE]);
+    let answer: () => void = () => {};
+    const slow: PlacesProvider = {
+      ...provider,
+      resolve: (id, options) =>
+        new Promise((resolve, reject) => {
+          answer = () => {
+            provider.resolve(id, options).then(resolve, reject);
+          };
+        }),
+    };
+    const field = (shown: boolean) => (
+      <FieldHarness defaultValue={null} formRef={formRef}>
+        {shown ? <LocationSearchField label="Pickup" provider={slow} debounceMs={0} /> : null}
+      </FieldHarness>
+    );
+    const {rerender} = render(field(true));
+    await pickPlace(user, 'pune', 'FC Road, Pune');
+
+    rerender(field(false));
+    await act(async () => answer());
+
+    expect(formRef.current?.state.values).toEqual({value: null});
+  });
+
   it('keeps what the user is typing when the field re-renders', async () => {
     const user = userEvent.setup();
     const {provider} = createFakePlaces([BERLIN, PUNE]);
