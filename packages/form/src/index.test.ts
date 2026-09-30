@@ -18,6 +18,8 @@ const ROOT_API = [
   'DEFAULT_FORM_LABELS',
   'FieldShell',
   'FormConfigProvider',
+  'NumberField',
+  'PasswordField',
   'TextArea',
   'TextField',
   'createAppForm',
