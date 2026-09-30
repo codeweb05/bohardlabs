@@ -14,23 +14,23 @@
 
 Updated as each task lands. "Done" means reviewed, fixed and committed on `main`.
 
-| Task | What                                         | Status    | Commits          |
-| ---- | -------------------------------------------- | --------- | ---------------- |
-| 1    | Scaffold, config provider, `createAppForm`   | done      | 84b36a2          |
-| 2    | Field contract, `TextField`, `TextArea`      | done      | 18aade7, 21a524a |
-| 3    | `PasswordField`, `NumberField`               | done      | 18c8b9f, bcbcae8 |
-| 4    | Server errors, form buttons, invalid focus   | done      | 363e69c          |
-| 5    | `CheckboxField`, `SwitchField`               | in review | d53edc4          |
-| 6    | `SelectField`, `RadioGroupField`             | to do     |                  |
-| 7    | `SearchableSelectField`, `MultiSelectField`  | to do     |                  |
-| 8    | `AsyncAutocompleteField`                     | to do     |                  |
-| 9    | `DurationField`, `lazyField`                 | to do     |                  |
-| 10   | `/pickers` (re-planned for x-date-pickers 9) | to do     |                  |
-| 11   | `/phone`                                     | to do     |                  |
-| 12   | `/maps`                                      | to do     |                  |
-| 13   | Prove the leanness                           | to do     |                  |
-| 14   | Document and close                           | to do     |                  |
-| end  | Final whole-branch review and fixes          | to do     |                  |
+| Task | What                                         | Status  | Commits          |
+| ---- | -------------------------------------------- | ------- | ---------------- |
+| 1    | Scaffold, config provider, `createAppForm`   | done    | 84b36a2          |
+| 2    | Field contract, `TextField`, `TextArea`      | done    | 18aade7, 21a524a |
+| 3    | `PasswordField`, `NumberField`               | done    | 18c8b9f, bcbcae8 |
+| 4    | Server errors, form buttons, invalid focus   | done    | 363e69c          |
+| 5    | `CheckboxField`, `SwitchField`               | done    | d53edc4          |
+| 6    | `SelectField`, `RadioGroupField`             | working |                  |
+| 7    | `SearchableSelectField`, `MultiSelectField`  | to do   |                  |
+| 8    | `AsyncAutocompleteField`                     | to do   |                  |
+| 9    | `DurationField`, `lazyField`                 | to do   |                  |
+| 10   | `/pickers` (re-planned for x-date-pickers 9) | to do   |                  |
+| 11   | `/phone`                                     | to do   |                  |
+| 12   | `/maps`                                      | to do   |                  |
+| 13   | Prove the leanness                           | to do   |                  |
+| 14   | Document and close                           | to do   |                  |
+| end  | Final whole-branch review and fixes          | to do   |                  |
 
 Two Task 4 test gaps (a consumer `onSubmitInvalid` replacing the default; cancel on a dirty
 form with no `confirm`) are held for the final review's fix round.
