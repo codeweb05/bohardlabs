@@ -1,8 +1,8 @@
 # `@vt-labs/form` design
 
-**Date:** 2026-09-29. **Status:** approved; amended while planning (see
+**Date:** 2026-09-29. **Status:** implemented, 2026-09-30; amended while planning (see
 [Amendments while planning](#amendments-while-planning)). **Plan:**
-[2026-09-29 form package](../plans/open/2026-09-29-form-package.md). **Replaces:** the form
+[2026-09-29 form package](../plans/done/2026-09-29-form-package.md). **Replaces:** the form
 section of [`../../extraction/README.md`](../../extraction/README.md) as the argument for
 this package, and the 2026-08-28 form-kit plan (deleted) as the way to build it.
 

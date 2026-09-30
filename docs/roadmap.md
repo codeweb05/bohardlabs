@@ -30,9 +30,9 @@ Status words, used the same way in every table below:
 
 | Workstream                                       | Status                                      | Next step                                       |
 | ------------------------------------------------ | ------------------------------------------- | ----------------------------------------------- |
-| [1. Publishing](#1-publishing)                   | `@vt-labs/datatable` 0.1.0 ready            | first release                                   |
+| [1. Publishing](#1-publishing)                   | datatable 0.1.0 and form 0.1.0-next.0 ready | first releases                                  |
 | [2. `@vt-labs/datatable`](#2-vt-labsdatatable)   | ported, hardened, on MUI 9; 3 features done | `noUncheckedIndexedAccess`, then feature item 1 |
-| [3. New packages](#3-new-packages)               | 5 plans written, 0 started                  | start plan 1, image-editor                      |
+| [3. New packages](#3-new-packages)               | 5 plans written, form (plan 3) done         | start plan 1, image-editor                      |
 | [4. Deferred candidates](#4-deferred-candidates) | 4 deferred                                  | nothing until a trigger fires                   |
 | [5. Repo and tooling](#5-repo-and-tooling)       | hooks, jscpd; 3 upgrades deferred           | the monthly `pnpm outdated -r`                  |
 | [6. Decisions](#6-decisions)                     | 9 made, 2 open                              | answer B before plan 4 starts                   |
@@ -43,13 +43,15 @@ Status words, used the same way in every table below:
 private until they are genuinely ready; flipping that flag is the decision to support the
 thing forever.
 
-| Step                                                        | Status            | Detail                                         |
-| ----------------------------------------------------------- | ----------------- | ---------------------------------------------- |
-| Pick the npm scope                                          | done (2026-08-28) | [decision 0001](decisions/0001-npm-scope.md)   |
-| Pick the license                                            | done (2026-09-28) | [decision 0007](decisions/0007-mit-license.md) |
-| Remove `"private": true` from `@vt-labs/datatable`          | done (2026-08-29) |                                                |
-| Create the `vt-labs` org on npm, add the publishing account | done (2026-09-29) | decision 0001                                  |
-| First `pnpm release`: `@vt-labs/datatable@0.1.0`            | open              | after the org exists                           |
+| Step                                                              | Status            | Detail                                                  |
+| ----------------------------------------------------------------- | ----------------- | ------------------------------------------------------- |
+| Pick the npm scope                                                | done (2026-08-28) | [decision 0001](decisions/0001-npm-scope.md)            |
+| Pick the license                                                  | done (2026-09-28) | [decision 0007](decisions/0007-mit-license.md)          |
+| Remove `"private": true` from `@vt-labs/datatable`                | done (2026-08-29) |                                                         |
+| Create the `vt-labs` org on npm, add the publishing account       | done (2026-09-29) | decision 0001                                           |
+| First `pnpm release`: `@vt-labs/datatable@0.1.0`                  | open              | after the org exists                                    |
+| First `pnpm release` of `@vt-labs/form`: `0.1.0-next.0` on `next` | open              | staged in pre mode; needs the owner's npm one-time code |
+| `@vt-labs/form@0.1.0`: `changeset pre exit`, then release         | open              | on the owner's word, after the prerelease               |
 
 Each new package from section 3 joins this queue once its plan closes: the last task of
 every plan writes the README and the changeset, and the package stays private until it is
@@ -96,13 +98,13 @@ they are designed for promptiva and later projects rather than ported for the sk
 apps, so each plan is rewritten as a design when it is picked up; form is the first, and
 no longer depends on admin-ui.
 
-| Order | Plan                                                                      | Package                 | Size      | Tasks | Status  | Blocked on                                                                                                                              |
-| :---: | ------------------------------------------------------------------------- | ----------------------- | --------- | :---: | ------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-|   1   | [image-editor](superpowers/plans/open/2026-08-28-image-editor-package.md) | `@vt-labs/image-editor` | 817 loc   |  0/7  | ready   | nothing                                                                                                                                 |
-|   2   | [admin-ui-kit](superpowers/plans/open/2026-08-28-admin-ui-kit-package.md) | `@vt-labs/admin-ui`     | ~1000 loc |  0/9  | ready   | nothing                                                                                                                                 |
-|   3   | [form](superpowers/plans/open/2026-09-29-form-package.md)                 | `@vt-labs/form`         | redesign  | 13/14 | active  | 0.1.0-next.0 prerelease on `next`; the final review before 0.1.0 ([spec](superpowers/specs/2026-09-29-form-package-design.md))          |
-|   4   | [api-client](superpowers/plans/open/2026-08-28-api-client-package.md)     | `@vt-labs/api-client`   | 1200 loc  |  0/9  | blocked | [open question B](decisions/open-questions.md#b-do-skipwash-api-and-smarthip-backend-share-the-response-envelope), a check, not a build |
-|   5   | [admin-shell](superpowers/plans/open/2026-08-28-admin-shell-package.md)   | `@vt-labs/admin-shell`  | 1120 loc  |  0/8  | blocked | plan 2                                                                                                                                  |
+| Order | Plan                                                                      | Package                 | Size      | Tasks | Status            | Blocked on                                                                                                                              |
+| :---: | ------------------------------------------------------------------------- | ----------------------- | --------- | :---: | ----------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+|   1   | [image-editor](superpowers/plans/open/2026-08-28-image-editor-package.md) | `@vt-labs/image-editor` | 817 loc   |  0/7  | ready             | nothing                                                                                                                                 |
+|   2   | [admin-ui-kit](superpowers/plans/open/2026-08-28-admin-ui-kit-package.md) | `@vt-labs/admin-ui`     | ~1000 loc |  0/9  | ready             | nothing                                                                                                                                 |
+|   3   | [form](superpowers/plans/done/2026-09-29-form-package.md)                 | `@vt-labs/form`         | redesign  | 14/14 | done (2026-09-30) | nothing ([spec](superpowers/specs/2026-09-29-form-package-design.md))                                                                   |
+|   4   | [api-client](superpowers/plans/open/2026-08-28-api-client-package.md)     | `@vt-labs/api-client`   | 1200 loc  |  0/9  | blocked           | [open question B](decisions/open-questions.md#b-do-skipwash-api-and-smarthip-backend-share-the-response-envelope), a check, not a build |
+|   5   | [admin-shell](superpowers/plans/open/2026-08-28-admin-shell-package.md)   | `@vt-labs/admin-shell`  | 1120 loc  |  0/8  | blocked           | plan 2                                                                                                                                  |
 
 When a plan starts, its status becomes `in progress (owner, task N)`. When its last task
 is checked off, the file moves to `superpowers/plans/done/`, the link here follows it, and

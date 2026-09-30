@@ -50,7 +50,7 @@ tiebreak for anything that unblocks another item.
 | --- | ----------------------- | -------------------------------------------------- | ----: | :--: | -------------------------------------------------------------------- |
 | 1   | `@vt-labs/image-editor` | `components/ImageEditor/`                          |   817 |  4   | [plan](../superpowers/plans/open/2026-08-28-image-editor-package.md) |
 | 2   | `@vt-labs/admin-ui`     | dialogs, `PageHeader`, `Loader`, truncation, pager | ~1000 |  4   | [plan](../superpowers/plans/open/2026-08-28-admin-ui-kit-package.md) |
-| 3   | `@vt-labs/form`         | `components/form/` + `hooks/form.tsx`              |  2640 |  4   | [plan](../superpowers/plans/open/2026-09-29-form-package.md)         |
+| 3   | `@vt-labs/form`         | `components/form/` + `hooks/form.tsx`              |  2640 |  4   | [plan](../superpowers/plans/done/2026-09-29-form-package.md)         |
 | 4   | `@vt-labs/api-client`   | `lib/axios`, `lib/auth`, `lib/react-query`, perms  |  1200 | 2-4  | [plan](../superpowers/plans/open/2026-08-28-api-client-package.md)   |
 | 5   | `@vt-labs/admin-shell`  | `components/layouts/` + sidebar context            |  1120 |  4   | [plan](../superpowers/plans/open/2026-08-28-admin-shell-package.md)  |
 

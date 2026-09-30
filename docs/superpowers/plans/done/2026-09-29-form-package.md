@@ -14,23 +14,23 @@
 
 Updated as each task lands. "Done" means reviewed, fixed and committed on `main`.
 
-| Task | What                                         | Status  | Commits          |
-| ---- | -------------------------------------------- | ------- | ---------------- |
-| 1    | Scaffold, config provider, `createAppForm`   | done    | 84b36a2          |
-| 2    | Field contract, `TextField`, `TextArea`      | done    | 18aade7, 21a524a |
-| 3    | `PasswordField`, `NumberField`               | done    | 18c8b9f, bcbcae8 |
-| 4    | Server errors, form buttons, invalid focus   | done    | 363e69c          |
-| 5    | `CheckboxField`, `SwitchField`               | done    | d53edc4          |
-| 6    | `SelectField`, `RadioGroupField`             | done    | d66380e, ef31bc7 |
-| 7    | `SearchableSelectField`, `MultiSelectField`  | done    | af62ae6, d261259 |
-| 8    | `AsyncAutocompleteField`                     | done    | a2f7777, 8bc60ed |
-| 9    | `DurationField`, `lazyField`                 | done    | de3b7ea, aa776c4 |
-| 10   | `/pickers` (re-planned for x-date-pickers 9) | done    | a9167ee, 9241f2c |
-| 11   | `/phone`                                     | done    | f3534c0          |
-| 12   | `/maps`                                      | done    | 6d23bd8, cdfd098 |
-| 13   | Prove the leanness                           | done    | 75d76db          |
-| 14   | Document and close                           | working |                  |
-| end  | Final whole-branch review and fixes          | to do   |                  |
+| Task | What                                         | Status | Commits                   |
+| ---- | -------------------------------------------- | ------ | ------------------------- |
+| 1    | Scaffold, config provider, `createAppForm`   | done   | 84b36a2                   |
+| 2    | Field contract, `TextField`, `TextArea`      | done   | 18aade7, 21a524a          |
+| 3    | `PasswordField`, `NumberField`               | done   | 18c8b9f, bcbcae8          |
+| 4    | Server errors, form buttons, invalid focus   | done   | 363e69c                   |
+| 5    | `CheckboxField`, `SwitchField`               | done   | d53edc4                   |
+| 6    | `SelectField`, `RadioGroupField`             | done   | d66380e, ef31bc7          |
+| 7    | `SearchableSelectField`, `MultiSelectField`  | done   | af62ae6, d261259          |
+| 8    | `AsyncAutocompleteField`                     | done   | a2f7777, 8bc60ed          |
+| 9    | `DurationField`, `lazyField`                 | done   | de3b7ea, aa776c4          |
+| 10   | `/pickers` (re-planned for x-date-pickers 9) | done   | a9167ee, 9241f2c          |
+| 11   | `/phone`                                     | done   | f3534c0                   |
+| 12   | `/maps`                                      | done   | 6d23bd8, cdfd098          |
+| 13   | Prove the leanness                           | done   | 75d76db                   |
+| 14   | Document and close                           | done   | 8c1230e, 9db299f, 659a2a1 |
+| end  | Final whole-branch review and fixes          | done   | 9e244e8..5b49743          |
 
 Two Task 4 test gaps (a consumer `onSubmitInvalid` replacing the default; cancel on a dirty
 form with no `confirm`) and one Task 6 edge case (an `Option` whose value is `''` reads as
@@ -113,7 +113,7 @@ Tests sit next to the file they test (`fields/TextField.test.tsx`).
 - Produces: `createAppForm({fieldComponents, formComponents})` returning `{useAppForm, withForm, withFieldGroup, useTypedAppFormContext}` (whatever `createFormHook` returns, with `useAppForm` wrapped).
 - Produces: `FormLabels`, `DEFAULT_FORM_LABELS` from `src/config/labels.ts`; `FormConfigProvider`, `useFormConfig(): {labels: FormLabels; formatError: FormatError}`, `type FormatError = (issue: StandardSchemaV1Issue) => string` from `src/config/FormConfigContext.tsx`.
 
-- [ ] **Step 1: Add the new shared versions to the catalog**
+- [x] **Step 1: Add the new shared versions to the catalog**
 
 In `pnpm-workspace.yaml`, add these lines to the `catalog:` block, after `'@tanstack/react-virtual'`:
 
@@ -125,7 +125,7 @@ zod: ^4.6.5
 '@types/google.maps': ^3.66.4
 ```
 
-- [ ] **Step 2: Write the package manifest and configs**
+- [x] **Step 2: Write the package manifest and configs**
 
 `packages/form/package.json`:
 
@@ -286,12 +286,12 @@ export default defineConfig({
 
 The datatable runs the React Compiler because its render counts depend on it. Nothing here does, so the plain plugin is enough.
 
-- [ ] **Step 3: Install**
+- [x] **Step 3: Install**
 
 Run: `pnpm install`
 Expected: completes, and `packages/form/node_modules/@tanstack/react-form` exists. If pnpm refuses a version as younger than `minimumReleaseAge`, add `'<name>@<version>'` to `minimumReleaseAgeExclude` in `pnpm-workspace.yaml` the way the existing entries are written, and rerun.
 
-- [ ] **Step 4: Write the test setup**
+- [x] **Step 4: Write the test setup**
 
 `packages/form/src/test/setup.ts`:
 
@@ -330,7 +330,7 @@ class MockResizeObserver implements ResizeObserver {
 globalThis.ResizeObserver = MockResizeObserver;
 ```
 
-- [ ] **Step 5: Write the failing tests**
+- [x] **Step 5: Write the failing tests**
 
 `packages/form/src/index.test.ts`:
 
@@ -463,12 +463,12 @@ describe('createAppForm', () => {
 });
 ```
 
-- [ ] **Step 6: Run the tests to see them fail**
+- [x] **Step 6: Run the tests to see them fail**
 
 Run: `pnpm vitest run --project @vt-labs/form`
 Expected: FAIL. `./index`, `./config/labels` and `./createAppForm` cannot be resolved.
 
-- [ ] **Step 7: Write the implementation**
+- [x] **Step 7: Write the implementation**
 
 `packages/form/src/context.ts`:
 
@@ -646,17 +646,17 @@ export {createAppForm} from './createAppForm';
 export {};
 ```
 
-- [ ] **Step 8: Run the tests to see them pass**
+- [x] **Step 8: Run the tests to see them pass**
 
 Run: `pnpm vitest run --project @vt-labs/form`
 Expected: PASS, 6 tests.
 
-- [ ] **Step 9: Typecheck and build**
+- [x] **Step 9: Typecheck and build**
 
 Run: `pnpm --filter @vt-labs/form typecheck && pnpm --filter @vt-labs/form build && ls packages/form/dist`
 Expected: no type errors; `dist/` has `index.js`, `pickers.js`, `phone.js`, `maps.js` and a `.d.ts` beside each.
 
-- [ ] **Step 10: Handoff**
+- [x] **Step 10: Handoff**
 
 Do not run git. Tell the user the files touched in this task and suggest:
 `feat(form): scaffold @vt-labs/form with config provider and createAppForm`
@@ -720,7 +720,7 @@ Do not run git. Tell the user the files touched in this task and suggest:
 - Produces, in `src/core/FieldShell.tsx`: `FieldShell({binding, label, description, required, tooltip, disabled, as = 'label', children})`, where `as` is `'label' | 'fieldset' | 'bare'`.
 - Produces, in `src/test/FieldHarness.tsx`: `FieldHarness({defaultValue, validate?, onSubmit?, formRef?, children})`. It renders one field named `value`, a "Submit" button, and an `<output aria-label="Submitted value">`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/form/src/core/issues.test.ts`:
 
@@ -878,12 +878,12 @@ describe('TextArea', () => {
 });
 ```
 
-- [ ] **Step 2: Run the tests to see them fail**
+- [x] **Step 2: Run the tests to see them fail**
 
 Run: `pnpm vitest run --project @vt-labs/form src/core src/fields`
 Expected: FAIL, modules not found.
 
-- [ ] **Step 3: Write the core**
+- [x] **Step 3: Write the core**
 
 `packages/form/src/core/types.ts`:
 
@@ -1249,7 +1249,7 @@ export function FieldShell({
 
 `'​'` is a zero-width space. It gives the empty helper row one line of height without putting text on screen.
 
-- [ ] **Step 4: Write the fields and the harness**
+- [x] **Step 4: Write the fields and the harness**
 
 `packages/form/src/fields/TextField.tsx`:
 
@@ -1460,7 +1460,7 @@ export const Area: Story = {
 };
 ```
 
-- [ ] **Step 5: Export and pin**
+- [x] **Step 5: Export and pin**
 
 Add to `src/index.ts`:
 
@@ -1492,17 +1492,17 @@ const ROOT_API = [
 ];
 ```
 
-- [ ] **Step 6: Run the tests to see them pass**
+- [x] **Step 6: Run the tests to see them pass**
 
 Run: `pnpm vitest run --project @vt-labs/form`
 Expected: PASS. If `toHaveAccessibleDescription` fails because MUI's `InputBase` writes its own `aria-describedby` over the one in `slotProps.htmlInput`, read the rendered attribute with `screen.debug()`. Then pass `aria-describedby` through `slotProps.input` instead; the test stays as written.
 
-- [ ] **Step 7: Run the story**
+- [x] **Step 7: Run the story**
 
 Run: `pnpm vitest run --project storybook packages/form`
 Expected: PASS for `Form/Text fields` (Default, Area) with no axe violations.
 
-- [ ] **Step 8: Handoff**
+- [x] **Step 8: Handoff**
 
 Do not run git. Suggested message: `feat(form): add the field contract, TextField and TextArea`
 
@@ -1523,7 +1523,7 @@ Do not run git. Suggested message: `feat(form): add the field contract, TextFiel
 
 `NumberField` takes no `min`, `max` or `step`. They do nothing on a text input, and range rules belong to the schema, where the error message lives. It is a text input rather than `type="number"` because a number input accepts `e`, silently drops a comma under an English locale, and changes value on scroll.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/form/src/fields/PasswordField.test.tsx`:
 
@@ -1675,12 +1675,12 @@ describe('NumberField', () => {
 });
 ```
 
-- [ ] **Step 2: Run the tests to see them fail**
+- [x] **Step 2: Run the tests to see them fail**
 
 Run: `pnpm vitest run --project @vt-labs/form src/fields/PasswordField src/fields/NumberField`
 Expected: FAIL, modules not found.
 
-- [ ] **Step 3: Write `PasswordField`**
+- [x] **Step 3: Write `PasswordField`**
 
 `packages/form/src/fields/PasswordField.tsx`:
 
@@ -1761,7 +1761,7 @@ export function PasswordField({
 }
 ```
 
-- [ ] **Step 4: Write `NumberField`**
+- [x] **Step 4: Write `NumberField`**
 
 `packages/form/src/fields/NumberField.tsx`:
 
@@ -1854,7 +1854,7 @@ export function NumberField({
 
 `user.type(input, '1a2.e3')` fires one change per key; a key that would make the text invalid is dropped by the `accepted` test, so the input ends at `123`.
 
-- [ ] **Step 5: Export and pin**
+- [x] **Step 5: Export and pin**
 
 Add to `src/index.ts`:
 
@@ -1867,7 +1867,7 @@ export type {PasswordFieldProps} from './fields/PasswordField';
 
 Add `'NumberField'` and `'PasswordField'` to `ROOT_API` in `src/index.test.ts`, keeping the list alphabetical.
 
-- [ ] **Step 6: Write the story**
+- [x] **Step 6: Write the story**
 
 `packages/form/src/stories/PasswordAndNumber.stories.tsx`:
 
@@ -1921,12 +1921,12 @@ export const Number: Story = {
 };
 ```
 
-- [ ] **Step 7: Run the tests and the stories**
+- [x] **Step 7: Run the tests and the stories**
 
 Run: `pnpm vitest run --project @vt-labs/form && pnpm vitest run --project storybook packages/form`
 Expected: PASS.
 
-- [ ] **Step 8: Handoff**
+- [x] **Step 8: Handoff**
 
 Do not run git. Suggested message: `feat(form): add PasswordField and NumberField`
 
@@ -1961,7 +1961,7 @@ What TanStack Form 1.33 does with the `onServer` slot, checked against form-core
 - A form-level `onServer` error set through `setErrorMap` **is** cleared on any field change and on submit.
 - `form.getFieldInfo(name).instance` is null when no field is mounted at `name`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/form/src/serverErrors.test.tsx`:
 
@@ -2198,12 +2198,12 @@ describe('CancelButton', () => {
 });
 ```
 
-- [ ] **Step 2: Run the tests to see them fail**
+- [x] **Step 2: Run the tests to see them fail**
 
 Run: `pnpm vitest run --project @vt-labs/form src/serverErrors src/focusFirstInvalid src/form`
 Expected: FAIL. `applyServerErrors`, `FormError`, `SubmitButton` and `CancelButton` do not exist, and the focus test times out because nothing moves focus.
 
-- [ ] **Step 3: Write `applyServerErrors`**
+- [x] **Step 3: Write `applyServerErrors`**
 
 Append to `packages/form/src/serverErrors.ts`:
 
@@ -2244,7 +2244,7 @@ export function applyServerErrors(form: AnyFormApi, errors: ServerErrors): void 
 
 Merge the two `import type` lines from `@tanstack/react-form` at the top of the file into one.
 
-- [ ] **Step 4: Write `focusFirstInvalid` and wire it into `createAppForm`**
+- [x] **Step 4: Write `focusFirstInvalid` and wire it into `createAppForm`**
 
 `packages/form/src/focusFirstInvalid.ts`:
 
@@ -2312,7 +2312,7 @@ export function createAppForm<
 }
 ```
 
-- [ ] **Step 5: Write the form components**
+- [x] **Step 5: Write the form components**
 
 `packages/form/src/form/SubmitButton.tsx`:
 
@@ -2418,7 +2418,7 @@ export function FormError() {
 }
 ```
 
-- [ ] **Step 6: Export and pin**
+- [x] **Step 6: Export and pin**
 
 Add to `src/index.ts`:
 
@@ -2434,12 +2434,12 @@ export type {ServerErrors} from './serverErrors';
 
 Add `'CancelButton'`, `'FormError'`, `'SubmitButton'` and `'applyServerErrors'` to `ROOT_API`, alphabetical (upper case sorts before lower case, matching `Array.prototype.sort`).
 
-- [ ] **Step 7: Run the tests to see them pass**
+- [x] **Step 7: Run the tests to see them pass**
 
 Run: `pnpm vitest run --project @vt-labs/form`
 Expected: PASS. If `setErrorMap` or `getFieldInfo` rejects a plain `string` key under `AnyFormApi`, the fix is in the parameter type of `applyServerErrors`, never a cast: check what `AnyFormApi['getFieldInfo']` accepts with `tsc` and say which type you used in the handoff.
 
-- [ ] **Step 8: Write the story**
+- [x] **Step 8: Write the story**
 
 `packages/form/src/stories/FormActions.stories.tsx`:
 
@@ -2522,12 +2522,12 @@ export const Default: Story = {
 };
 ```
 
-- [ ] **Step 9: Run the stories**
+- [x] **Step 9: Run the stories**
 
 Run: `pnpm vitest run --project storybook packages/form`
 Expected: PASS.
 
-- [ ] **Step 10: Handoff**
+- [x] **Step 10: Handoff**
 
 Do not run git. Suggested message: `feat(form): add server errors, form buttons and focus on invalid submit`
 
@@ -2548,7 +2548,7 @@ Do not run git. Suggested message: `feat(form): add server errors, form buttons 
 
 The two differ only in the MUI control, so both are thin wrappers over one internal `ToggleField`. Two copies would trip jscpd.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/form/src/fields/ToggleField.test.tsx`:
 
@@ -2607,12 +2607,12 @@ describe.each([
 
 If MUI's `Switch` input reports role `checkbox` rather than `switch` in jsdom, the fix is `role: 'switch'` on the input in `ToggleField`'s `slotProps.input` for the switch variant, not a change to the test.
 
-- [ ] **Step 2: Run the tests to see them fail**
+- [x] **Step 2: Run the tests to see them fail**
 
 Run: `pnpm vitest run --project @vt-labs/form src/fields/ToggleField`
 Expected: FAIL, modules not found.
 
-- [ ] **Step 3: Write the fields**
+- [x] **Step 3: Write the fields**
 
 `packages/form/src/fields/ToggleField.tsx`:
 
@@ -2707,12 +2707,12 @@ export function SwitchField(props: Readonly<SwitchFieldProps>) {
 }
 ```
 
-- [ ] **Step 4: Run the tests to see them pass**
+- [x] **Step 4: Run the tests to see them pass**
 
 Run: `pnpm vitest run --project @vt-labs/form src/fields/ToggleField`
 Expected: PASS, 6 tests.
 
-- [ ] **Step 5: Export, pin, and write the story**
+- [x] **Step 5: Export, pin, and write the story**
 
 Add to `src/index.ts`:
 
@@ -2776,12 +2776,12 @@ export const Switch: Story = {
 };
 ```
 
-- [ ] **Step 6: Run everything for the package**
+- [x] **Step 6: Run everything for the package**
 
 Run: `pnpm vitest run --project @vt-labs/form && pnpm vitest run --project storybook packages/form`
 Expected: PASS.
 
-- [ ] **Step 7: Handoff**
+- [x] **Step 7: Handoff**
 
 Do not run git. Suggested message: `feat(form): add CheckboxField and SwitchField`
 
@@ -2809,7 +2809,7 @@ Do not run git. Suggested message: `feat(form): add CheckboxField and SwitchFiel
 
 DOM attributes turn every value into a string, so `findOption` matches on `String(option.value)` and hands back the option, which keeps a numeric value numeric in the form.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/form/src/fields/SelectField.test.tsx`:
 
@@ -2936,12 +2936,12 @@ describe('RadioGroupField', () => {
 });
 ```
 
-- [ ] **Step 2: Run the tests to see them fail**
+- [x] **Step 2: Run the tests to see them fail**
 
 Run: `pnpm vitest run --project @vt-labs/form src/fields/SelectField src/fields/RadioGroupField`
 Expected: FAIL, modules not found.
 
-- [ ] **Step 3: Write the lookup and the fields**
+- [x] **Step 3: Write the lookup and the fields**
 
 `packages/form/src/fields/optionLookup.ts`:
 
@@ -3120,12 +3120,12 @@ export function RadioGroupField<V extends string | number>({
 }
 ```
 
-- [ ] **Step 4: Run the tests to see them pass**
+- [x] **Step 4: Run the tests to see them pass**
 
 Run: `pnpm vitest run --project @vt-labs/form src/fields/SelectField src/fields/RadioGroupField`
 Expected: PASS.
 
-- [ ] **Step 5: Export, pin, and write the story**
+- [x] **Step 5: Export, pin, and write the story**
 
 Add to `src/index.ts`:
 
@@ -3197,12 +3197,12 @@ export const Radio: Story = {
 
 If `component: SelectField<string>` is rejected by the TypeScript version in the catalog, use `component: SelectField` and type `meta` with `satisfies Meta<typeof SelectField>`.
 
-- [ ] **Step 6: Run everything for the package**
+- [x] **Step 6: Run everything for the package**
 
 Run: `pnpm vitest run --project @vt-labs/form && pnpm vitest run --project storybook packages/form`
 Expected: PASS.
 
-- [ ] **Step 7: Handoff**
+- [x] **Step 7: Handoff**
 
 Do not run git. Suggested message: `feat(form): add SelectField and RadioGroupField`
 
@@ -3228,7 +3228,7 @@ Do not run git. Suggested message: `feat(form): add SelectField and RadioGroupFi
 
 MUI 9's `renderInput` params carry `slotProps.{input, htmlInput, inputLabel}`; MUI 7 carried `InputProps` and `inputProps`. That runtime difference is why the package peers on `@mui/material ^9` only. Every Autocomplete here merges its own attributes into `params.slotProps.htmlInput` and never replaces it, because that object carries Autocomplete's own `onBlur`, `ref` and combobox attributes.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/form/src/fields/SearchableSelectField.test.tsx`:
 
@@ -3355,12 +3355,12 @@ describe('MultiSelectField', () => {
 });
 ```
 
-- [ ] **Step 2: Run the tests to see them fail**
+- [x] **Step 2: Run the tests to see them fail**
 
 Run: `pnpm vitest run --project @vt-labs/form src/fields/SearchableSelectField src/fields/MultiSelectField`
 Expected: FAIL, modules not found.
 
-- [ ] **Step 3: Write the shared text helper**
+- [x] **Step 3: Write the shared text helper**
 
 `packages/form/src/core/autocompleteText.ts`:
 
@@ -3379,7 +3379,7 @@ export function autocompleteText(labels: FormLabels) {
 }
 ```
 
-- [ ] **Step 4: Write `SearchableSelectField`**
+- [x] **Step 4: Write `SearchableSelectField`**
 
 `packages/form/src/fields/SearchableSelectField.tsx`:
 
@@ -3450,7 +3450,7 @@ export function SearchableSelectField<V extends string | number>({
 }
 ```
 
-- [ ] **Step 5: Write `MultiSelectField`**
+- [x] **Step 5: Write `MultiSelectField`**
 
 `packages/form/src/fields/MultiSelectField.tsx`:
 
@@ -3594,12 +3594,12 @@ function SearchableMulti<V extends string | number>({
 }
 ```
 
-- [ ] **Step 6: Run the tests to see them pass**
+- [x] **Step 6: Run the tests to see them pass**
 
 Run: `pnpm vitest run --project @vt-labs/form src/fields/SearchableSelectField src/fields/MultiSelectField`
 Expected: PASS.
 
-- [ ] **Step 7: Export, pin, and write the story**
+- [x] **Step 7: Export, pin, and write the story**
 
 Add to `src/index.ts`:
 
@@ -3670,12 +3670,12 @@ export const Multi: Story = {
 };
 ```
 
-- [ ] **Step 8: Run everything for the package and jscpd**
+- [x] **Step 8: Run everything for the package and jscpd**
 
 Run: `pnpm vitest run --project @vt-labs/form && pnpm vitest run --project storybook packages/form && pnpm jscpd`
 Expected: PASS, and jscpd reports no clone in `packages/form/src`. If it flags the two `renderInput` blocks, move them into one internal `renderAutocompleteInput(params, binding, {autoFocus, placeholder})` in `src/core/autocompleteText.ts` and call it from both.
 
-- [ ] **Step 9: Handoff**
+- [x] **Step 9: Handoff**
 
 Do not run git. Suggested message: `feat(form): add SearchableSelectField and MultiSelectField`
 
@@ -3705,7 +3705,7 @@ Do not run git. Suggested message: `feat(form): add SearchableSelectField and Mu
 
 The form holds the item itself (`T`, not its id), so an edit screen shows the saved item's label before any search runs. The current value is merged into the loaded options so MUI does not warn that the value matches no option.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/form/src/fields/useAsyncOptions.test.tsx`:
 
@@ -3865,12 +3865,12 @@ describe('AsyncAutocompleteField', () => {
 });
 ```
 
-- [ ] **Step 2: Run the tests to see them fail**
+- [x] **Step 2: Run the tests to see them fail**
 
 Run: `pnpm vitest run --project @vt-labs/form src/fields/useAsyncOptions src/fields/AsyncAutocompleteField`
 Expected: FAIL, modules not found.
 
-- [ ] **Step 3: Write `useAsyncOptions`**
+- [x] **Step 3: Write `useAsyncOptions`**
 
 `packages/form/src/fields/useAsyncOptions.ts`:
 
@@ -3940,7 +3940,7 @@ export function useAsyncOptions<T>(
 
 If oxlint's type-aware pass reports the `.then(...)` call as a floating promise, prefix it with `void`.
 
-- [ ] **Step 4: Write the input and the field**
+- [x] **Step 4: Write the input and the field**
 
 `packages/form/src/fields/AsyncAutocompleteInput.tsx`:
 
@@ -4092,12 +4092,12 @@ export function AsyncAutocompleteField<T>({
 
 No `expect` is passed: `T` is the consumer's type and there is nothing generic to check it against.
 
-- [ ] **Step 5: Run the tests to see them pass**
+- [x] **Step 5: Run the tests to see them pass**
 
 Run: `pnpm vitest run --project @vt-labs/form src/fields/useAsyncOptions src/fields/AsyncAutocompleteField`
 Expected: PASS.
 
-- [ ] **Step 6: Export, pin, and write the story**
+- [x] **Step 6: Export, pin, and write the story**
 
 Add to `src/index.ts`:
 
@@ -4179,12 +4179,12 @@ export const Default: Story = {
 };
 ```
 
-- [ ] **Step 7: Run everything for the package**
+- [x] **Step 7: Run everything for the package**
 
 Run: `pnpm vitest run --project @vt-labs/form && pnpm vitest run --project storybook packages/form`
 Expected: PASS.
 
-- [ ] **Step 8: Handoff**
+- [x] **Step 8: Handoff**
 
 Do not run git. Suggested message: `feat(form): add AsyncAutocompleteField`
 
@@ -4208,7 +4208,7 @@ Do not run git. Suggested message: `feat(form): add AsyncAutocompleteField`
   function lazyField<P extends object>(load: () => Promise<ComponentType<P>>, fallback?: ReactNode): ComponentType<P>
   ```
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/form/src/fields/DurationField.test.tsx`:
 
@@ -4318,12 +4318,12 @@ describe('lazyField', () => {
 });
 ```
 
-- [ ] **Step 2: Run the tests to see them fail**
+- [x] **Step 2: Run the tests to see them fail**
 
 Run: `pnpm vitest run --project @vt-labs/form src/fields/DurationField src/lazyField`
 Expected: FAIL, modules not found.
 
-- [ ] **Step 3: Write `DurationField`**
+- [x] **Step 3: Write `DurationField`**
 
 `packages/form/src/fields/DurationField.tsx`:
 
@@ -4422,7 +4422,7 @@ export function DurationField({
 }
 ```
 
-- [ ] **Step 4: Write `lazyField`**
+- [x] **Step 4: Write `lazyField`**
 
 `packages/form/src/lazyField.tsx`:
 
@@ -4460,12 +4460,12 @@ export function lazyField<P extends object>(
 
 If `<Lazy {...props} />` fails to typecheck because `P` is not known to satisfy `IntrinsicAttributes & P`, change the constraint to `P extends object & JSX.IntrinsicAttributes`; this exact signature typechecked in a scratch project against React 19 types during planning.
 
-- [ ] **Step 5: Run the tests to see them pass**
+- [x] **Step 5: Run the tests to see them pass**
 
 Run: `pnpm vitest run --project @vt-labs/form src/fields/DurationField src/lazyField`
 Expected: PASS.
 
-- [ ] **Step 6: Export, pin, and write the story**
+- [x] **Step 6: Export, pin, and write the story**
 
 Add to `src/index.ts`:
 
@@ -4515,12 +4515,12 @@ export const Default: Story = {
 };
 ```
 
-- [ ] **Step 7: Run everything for the package**
+- [x] **Step 7: Run everything for the package**
 
 Run: `pnpm vitest run --project @vt-labs/form && pnpm vitest run --project storybook packages/form`
 Expected: PASS.
 
-- [ ] **Step 8: Handoff**
+- [x] **Step 8: Handoff**
 
 Do not run git. Suggested message: `feat(form): add DurationField and lazyField`
 
@@ -4562,7 +4562,7 @@ Rules for this entry:
 - Every picker keeps a local draft of the adapter value. A half-typed date is an invalid adapter date: the draft keeps it on screen and the form gets `null`. An outside change of the form value replaces the draft.
 - `enableAccessibleFieldDOMStructure={false}` on every picker, so the field is one `<input>` that the package's `<label for>`, `aria-describedby` and `data-form-id` can point at. The newer structure renders a group of spinbuttons with a hidden input, which breaks that contract. If MUI X 9 has removed the prop, stop and tell the user; do not work around it inside this task.
 
-- [ ] **Step 1: Write the failing conversion tests**
+- [x] **Step 1: Write the failing conversion tests**
 
 `packages/form/src/pickers/dateStrings.test.ts`:
 
@@ -4620,7 +4620,7 @@ describe.each([
 
 The test runs in the machine's timezone. To prove the day does not move west of Greenwich, run this file once with `TZ=America/Los_Angeles` in Step 6.
 
-- [ ] **Step 2: Write the failing field tests**
+- [x] **Step 2: Write the failing field tests**
 
 `packages/form/src/pickers/pickers.test.tsx`:
 
@@ -4742,12 +4742,12 @@ describe.each([
 
 The displayed format is the adapter's default US locale in both adapters (`MM/DD/YYYY`, and `hh:mm aa` unless `ampm={false}`). If one adapter renders the empty placeholder differently from `04/DD/YYYY` (dayjs and date-fns both use `MM/DD/YYYY` section placeholders by default), assert with `toHaveValue(expect.stringMatching(/^04\//))` instead.
 
-- [ ] **Step 3: Run the tests to see them fail**
+- [x] **Step 3: Run the tests to see them fail**
 
 Run: `pnpm vitest run --project @vt-labs/form src/pickers`
 Expected: FAIL, modules not found.
 
-- [ ] **Step 4: Write the conversions and the draft hook**
+- [x] **Step 4: Write the conversions and the draft hook**
 
 `packages/form/src/pickers/dateStrings.ts`:
 
@@ -4861,7 +4861,7 @@ export function usePickerDraft(
 
 If `usePickerAdapter` is exported from `@mui/x-date-pickers/hooks` under a different path in MUI X 9, find it with `grep -rn "export.*usePickerAdapter" node_modules/@mui/x-date-pickers/*/index.d.ts` from `packages/form` and import it from there.
 
-- [ ] **Step 5: Write the three fields**
+- [x] **Step 5: Write the three fields**
 
 `packages/form/src/pickers/DateField.tsx`:
 
@@ -5172,7 +5172,7 @@ export type {TimePickerFieldProps} from './pickers/TimePickerField';
 
 In `src/index.test.ts`: `const PICKERS_API = ['DateField', 'DateRangeField', 'TimePickerField'];`
 
-- [ ] **Step 6: Run the tests to see them pass, then west of Greenwich**
+- [x] **Step 6: Run the tests to see them pass, then west of Greenwich**
 
 Run: `pnpm vitest run --project @vt-labs/form src/pickers src/index.test.ts`
 Expected: PASS.
@@ -5180,7 +5180,7 @@ Expected: PASS.
 Run: `TZ=America/Los_Angeles pnpm vitest run --project @vt-labs/form src/pickers`
 Expected: PASS. A failure here showing `03/08/2026` is the UTC parse this task exists to avoid.
 
-- [ ] **Step 7: Write the story**
+- [x] **Step 7: Write the story**
 
 The Storybook preview mounts no `LocalizationProvider`, so the story wraps its own. It uses date-fns because that is what promptiva runs.
 
@@ -5252,12 +5252,12 @@ export const TimeAndRange: Story = {
 
 `export const Date` shadows the global `Date` inside this module. Nothing in the file uses the global, but if oxlint's `no-shadow-restricted-names` or a similar rule objects, rename the story to `SingleDate`.
 
-- [ ] **Step 8: Run the stories**
+- [x] **Step 8: Run the stories**
 
 Run: `pnpm vitest run --project storybook packages/form`
 Expected: PASS.
 
-- [ ] **Step 9: Handoff**
+- [x] **Step 9: Handoff**
 
 Do not run git. Suggested message: `feat(form): add the pickers entry with DateField, TimePickerField and DateRangeField`
 
@@ -5283,7 +5283,7 @@ The form holds E.164 (`'+4930123456'`) or `null`. The input shows the formatted 
 
 The package exports no phone validator. `matchIsValidTel` from `mui-tel-input` loads libphonenumber's metadata, and a consumer who only wants "looks like a number" should not pay for that. The README shows the schema line for those who do.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `packages/form/src/phone/PhoneField.test.tsx`:
 
@@ -5368,12 +5368,12 @@ describe('PhoneField', () => {
 });
 ```
 
-- [ ] **Step 2: Run the tests to see them fail**
+- [x] **Step 2: Run the tests to see them fail**
 
 Run: `pnpm vitest run --project @vt-labs/form src/phone`
 Expected: FAIL, module not found.
 
-- [ ] **Step 3: Write `PhoneField`**
+- [x] **Step 3: Write `PhoneField`**
 
 `packages/form/src/phone/PhoneField.tsx`:
 
@@ -5465,12 +5465,12 @@ export function PhoneField({
 - If `FlagIconButtonProps` is not a prop in `node_modules/mui-tel-input/dist/index.d.ts`, look for the flag button in its `slotProps` type and pass the aria-label there.
 - If `info.numberValue` is a non-null `'+49'` for an input holding only the calling code, the second test fails. Store `null` when `info.nationalNumber` is empty instead.
 
-- [ ] **Step 4: Run the tests to see them pass**
+- [x] **Step 4: Run the tests to see them pass**
 
 Run: `pnpm vitest run --project @vt-labs/form src/phone`
 Expected: PASS.
 
-- [ ] **Step 5: Export, pin, and write the story**
+- [x] **Step 5: Export, pin, and write the story**
 
 `src/phone.ts`:
 
@@ -5521,12 +5521,12 @@ export const Default: Story = {
 };
 ```
 
-- [ ] **Step 6: Run everything for the package**
+- [x] **Step 6: Run everything for the package**
 
 Run: `pnpm vitest run --project @vt-labs/form && pnpm vitest run --project storybook packages/form`
 Expected: PASS.
 
-- [ ] **Step 7: Handoff**
+- [x] **Step 7: Handoff**
 
 Do not run git. Suggested message: `feat(form): add the phone entry with PhoneField`
 
@@ -5569,7 +5569,7 @@ Rules for this entry:
 - Billing: Google charges per autocomplete session, and a session ends at the Place Details call. `usePlacesSession` starts a session with the first keystroke and ends it after `resolve`, so a search-and-pick is one session however many keystrokes it took.
 - A session is an opaque `object` to the fields. The spec said `unknown`; `object` lets the Google provider pass it on without a cast, and a fake can return `{}`.
 
-- [ ] **Step 1: Write the types**
+- [x] **Step 1: Write the types**
 
 `packages/form/src/maps/types.ts`:
 
@@ -5624,7 +5624,7 @@ export interface PlacesProvider {
 
 `types.ts` holds `EMPTY_ADDRESS`, a value, and the root coverage config excludes `**/types.ts`. That is fine: a constant has no branch to cover.
 
-- [ ] **Step 2: Write the failing Google adapter tests**
+- [x] **Step 2: Write the failing Google adapter tests**
 
 `packages/form/src/maps/googlePlaces.test.ts`:
 
@@ -5736,12 +5736,12 @@ describe('createGooglePlacesProvider', () => {
 
 The line-one format (`'1 Unter den Linden'`, number first) is the US and UK order. German addresses put the number after the street. The provider returns Google's parts in one fixed order and the user edits the line if it reads wrong; per-country formatting is not in this package.
 
-- [ ] **Step 3: Run the tests to see them fail**
+- [x] **Step 3: Run the tests to see them fail**
 
 Run: `pnpm vitest run --project @vt-labs/form src/maps/googlePlaces`
 Expected: FAIL, module not found.
 
-- [ ] **Step 4: Write the Google adapter and its type test**
+- [x] **Step 4: Write the Google adapter and its type test**
 
 `packages/form/src/maps/googlePlaces.ts`:
 
@@ -5881,12 +5881,12 @@ declare const library: google.maps.PlacesLibrary;
 export const fits: GooglePlaces = library;
 ```
 
-- [ ] **Step 5: Run the adapter tests and the typecheck**
+- [x] **Step 5: Run the adapter tests and the typecheck**
 
 Run: `pnpm vitest run --project @vt-labs/form src/maps/googlePlaces && pnpm --filter @vt-labs/form typecheck`
 Expected: PASS, and typecheck exits 0. If the type test fails, read the error: it names the member of `PlacesLibrary` that does not fit. Loosen `GooglePlaces` to what Google's type actually says (for example `readonly` arrays, or a `null` the real type allows).
 
-- [ ] **Step 6: Write the fake provider and the failing field tests**
+- [x] **Step 6: Write the fake provider and the failing field tests**
 
 `packages/form/src/test/fakePlaces.ts`:
 
@@ -6085,12 +6085,12 @@ describe('AddressField', () => {
 
 The labels in these tests (`Search for an address`, `Address line 1`, `City`, `State or region`, `Postal code`) are the English defaults from `DEFAULT_FORM_LABELS` (Task 1). If a default there reads differently, the test follows the default, not the other way round.
 
-- [ ] **Step 7: Run the field tests to see them fail**
+- [x] **Step 7: Run the field tests to see them fail**
 
 Run: `pnpm vitest run --project @vt-labs/form src/maps`
 Expected: the adapter tests PASS; the two field test files FAIL, modules not found.
 
-- [ ] **Step 8: Write the session hook and the two fields**
+- [x] **Step 8: Write the session hook and the two fields**
 
 `packages/form/src/maps/usePlacesSession.ts`:
 
@@ -6344,12 +6344,12 @@ Two things to check while this goes green:
 - `useFieldContext<Address>()` returns the field API with the form's types erased. If `useField({form: parent.form, name: ...})` does not typecheck against it, look at the parameter type `useField` declares in `node_modules/@tanstack/react-form/dist/esm/useField.d.ts` and type `parent` as what it wants. Do not cast. If no honest type fits, stop and report; the fallback is rendering the parts through `form.AppField` from `useFormContext()`, which is a design change the user should see.
 - The search box's accessible name comes from `aria-label` on its input, and the fieldset's legend names the group. If axe reports the search input as having two names, drop the `aria-label` and render a visually hidden `<label htmlFor>` with `labels.searchAddress` instead.
 
-- [ ] **Step 9: Run the maps tests to see them pass**
+- [x] **Step 9: Run the maps tests to see them pass**
 
 Run: `pnpm vitest run --project @vt-labs/form src/maps`
 Expected: PASS.
 
-- [ ] **Step 10: Export and pin**
+- [x] **Step 10: Export and pin**
 
 `src/maps.ts`:
 
@@ -6366,7 +6366,7 @@ export type {Address, Place, PlaceSuggestion, PlacesProvider, ResolvedPlace} fro
 
 In `src/index.test.ts`: `const MAPS_API = ['AddressField', 'EMPTY_ADDRESS', 'LocationSearchField', 'createGooglePlacesProvider'];`
 
-- [ ] **Step 11: Write the story**
+- [x] **Step 11: Write the story**
 
 The story runs on the fake provider, so it needs no API key and makes no request.
 
@@ -6418,12 +6418,12 @@ export const Default: Story = {
 };
 ```
 
-- [ ] **Step 12: Run everything for the package**
+- [x] **Step 12: Run everything for the package**
 
 Run: `pnpm vitest run --project @vt-labs/form && pnpm vitest run --project storybook packages/form && pnpm --filter @vt-labs/form typecheck`
 Expected: PASS, typecheck exits 0.
 
-- [ ] **Step 13: Handoff**
+- [x] **Step 13: Handoff**
 
 Do not run git. Suggested message: `feat(form): add the maps entry with LocationSearchField, AddressField and a Google Places provider`
 
@@ -6450,7 +6450,7 @@ Four checks, each catching a different way the package can end up heavy in someo
 | size-limit          | Our own code growing past its budget, per entry, peers excluded                                                                                                                    |
 | publint and attw    | `exports` and `types` that resolve wrong for a consumer's bundler or `tsc`                                                                                                         |
 
-- [ ] **Step 1: Write the graph check**
+- [x] **Step 1: Write the graph check**
 
 `packages/form/scripts/check-graph.mjs`:
 
@@ -6545,7 +6545,7 @@ if (failures.length > 0) {
 console.log('check-graph: every entry reaches only its own peers');
 ```
 
-- [ ] **Step 2: Prove the graph check can fail**
+- [x] **Step 2: Prove the graph check can fail**
 
 Run: `pnpm --filter @vt-labs/form build && node packages/form/scripts/check-graph.mjs`
 Expected: `check-graph: every entry reaches only its own peers`.
@@ -6553,7 +6553,7 @@ Expected: `check-graph: every entry reaches only its own peers`.
 Then, temporarily, add `export {DateField} from './pickers/DateField';` to the end of `src/index.ts`, rebuild, and rerun.
 Expected: exit 1, with `index: reaches @mui/x-date-pickers/DatePicker, which belongs to another entry`. Remove the line and rebuild. A check that has never failed has not been shown to work.
 
-- [ ] **Step 3: Write the consumer fixture**
+- [x] **Step 3: Write the consumer fixture**
 
 A small Vite app that imports the package the way promptiva will: a sign-in form from the root entry, and a date field registered through `lazyField`. It is built, never run or served.
 
@@ -6657,7 +6657,7 @@ export function SignIn() {
 
 `date-fns` is imported by the fixture (through the adapter), not by the package. It is already in the package's devDependencies, which is where the fixture resolves it from.
 
-- [ ] **Step 4: Write the fixture check**
+- [x] **Step 4: Write the fixture check**
 
 `packages/form/scripts/check-fixture.mjs`:
 
@@ -6731,7 +6731,7 @@ console.log(`check-fixture: initial load is ${initial.length} modules, none of t
 
 Under pnpm, a module id reads like `…/node_modules/.pnpm/@mui+x-date-pickers@9.12.0_…/node_modules/@mui/x-date-pickers/DatePicker/…`, which the patterns match. If `build()` returns an object without `output` (a watcher), `build.watch` is set somewhere it should not be; the config above sets `configFile: false` so no project config can do that.
 
-- [ ] **Step 5: Prove the fixture check can fail**
+- [x] **Step 5: Prove the fixture check can fail**
 
 Run: `node packages/form/scripts/check-fixture.mjs`
 Expected: `check-fixture: initial load is N modules, none of them pickers, phone or date code`.
@@ -6739,7 +6739,7 @@ Expected: `check-fixture: initial load is N modules, none of them pickers, phone
 Then, temporarily, change the `BirthdayField` line in `SignIn.tsx` to a static import (`import {BirthdayField} from './BirthdayField';`) and rerun.
 Expected: exit 1, naming `MUI X date pickers` and `date-fns` in the initial load and `lazyField did not split`. Restore the line.
 
-- [ ] **Step 6: Add the tools and measure**
+- [x] **Step 6: Add the tools and measure**
 
 In `packages/form/package.json`, add to `devDependencies`:
 
@@ -6814,7 +6814,7 @@ Then give each row a `"limit"`: its measured size times 1.1, rounded up to the n
 
 Sanity check on the numbers: "root: a sign-in form" should be well under "root: everything". If they are equal, tree-shaking across `preserveModules` output is not happening; stop and report instead of setting limits.
 
-- [ ] **Step 7: Wire `verify`**
+- [x] **Step 7: Wire `verify`**
 
 In `packages/form/package.json` `scripts`, add:
 
@@ -6834,7 +6834,7 @@ In the root `package.json`, change `turbo run typecheck build` to `turbo run typ
 
 `attw --pack .` runs `pnpm pack` under the hood; `publint` reads `package.json` and `dist/`. Both need the build, which the turbo dependency guarantees.
 
-- [ ] **Step 8: Run the gate**
+- [x] **Step 8: Run the gate**
 
 Run: `pnpm --filter @vt-labs/form verify`
 Expected: exit 0. The graph and fixture lines print as in Steps 2 and 5, size-limit passes every row, publint reports no errors, and attw's table shows 🟢 for `node16 (from ESM)` and `bundler` on all four entries (`esm-only` skips the CommonJS columns).
@@ -6844,7 +6844,7 @@ If attw reports `Masquerading as CJS` or `Missing types` on an entry, the fix is
 Then run: `pnpm validate`
 Expected: exit 0.
 
-- [ ] **Step 9: Handoff**
+- [x] **Step 9: Handoff**
 
 Do not run git. Suggested message: `build(form): check the import graph, a consumer build, bundle size and package exports`
 
@@ -6863,7 +6863,7 @@ Do not run git. Suggested message: `build(form): check the import graph, a consu
 - Consumes: everything above.
 - Produces: nothing new in code.
 
-- [ ] **Step 1: Coverage for the new package**
+- [x] **Step 1: Coverage for the new package**
 
 In `vitest.config.ts`, the coverage `exclude` list names `**/index.ts` as a barrel. This package has three more. Add, under the existing barrel comment:
 
@@ -6886,14 +6886,14 @@ and a threshold for this package only, beside `exclude`:
 Run: `pnpm test:cov`
 Expected: exit 0, and the text report lists `packages/form/src` files. If a glob threshold never applies (the report shows no threshold line for the package), Vitest is matching threshold globs relative to the root; change the key to `'packages/form/src/**'` and rerun. If the package is under a threshold, the fix is a test for the uncovered branch the report names, not a lower number.
 
-- [ ] **Step 2: The showcase dependency**
+- [x] **Step 2: The showcase dependency**
 
 In `apps/storybook/package.json` `dependencies`, add `"@vt-labs/form": "workspace:*"` below the datatable line, then run `pnpm install`. The stories already run (they sit in the package and the app's glob finds them); this makes the dependency the app has in fact declared, so turbo builds the package before `build-storybook`.
 
 Run: `pnpm build-storybook`
 Expected: exit 0.
 
-- [ ] **Step 3: The README**
+- [x] **Step 3: The README**
 
 `packages/form/README.md`. It opens with what the package is for, not with install. Required contents, in this order:
 
@@ -6920,7 +6920,7 @@ Expected: exit 0.
 
 Follow the text rules in `CLAUDE.md`: no em-dashes, no filler. Every code block must compile against the package as built; copy them from the tests and stories rather than writing fresh ones.
 
-- [ ] **Step 4: The changeset**
+- [x] **Step 4: The changeset**
 
 `.changeset/form-initial.md`:
 
@@ -6934,7 +6934,7 @@ First version of `@vt-labs/form`: MUI fields for TanStack Form. Text, password, 
 
 The package stays `"private": true` at `0.0.0`; the changeset records the entry for when it publishes. Flipping `private` is a separate decision.
 
-- [ ] **Step 5: The docs**
+- [x] **Step 5: The docs**
 
 - Root `README.md` package table: add a row below datatable:
   `| \`packages/form\` | MUI fields for TanStack Form, with pickers, phone and maps entries | 0.0.0, private |`
@@ -6943,11 +6943,11 @@ The package stays `"private": true` at `0.0.0`; the changeset records the entry 
 - The spec's status line: `**Status:** implemented, <date>. Plan: [2026-09-29 form package](../plans/done/2026-09-29-form-package.md).`
 - Move `docs/superpowers/plans/open/2026-09-29-form-package.md` to `docs/superpowers/plans/done/`, with every task checked.
 
-- [ ] **Step 6: The final gate**
+- [x] **Step 6: The final gate**
 
 Run: `pnpm validate:ci`
 Expected: exit 0. Then hand the whole change to the `lib-reviewer` agent, and the three entry files plus `package.json` to `api-surface-auditor`. Report what they found; fix what is a real defect and list the rest for the user.
 
-- [ ] **Step 7: Handoff**
+- [x] **Step 7: Handoff**
 
 Do not run git. Suggested message: `docs(form): README, changeset and roadmap for @vt-labs/form`
