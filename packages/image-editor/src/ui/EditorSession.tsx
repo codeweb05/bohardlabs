@@ -7,25 +7,30 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
 import IconButton from '@mui/material/IconButton';
-import {useEffect, useReducer, useRef, useState, type ReactNode} from 'react';
+import Tab from '@mui/material/Tab';
+import Tabs from '@mui/material/Tabs';
+import {useEffect, useId, useReducer, useRef, useState, type ReactNode} from 'react';
 
 import {EditorError} from '../errors';
 import {resolveFeatures, type ResolvedFeatures} from '../features';
 import {DEFAULT_ACCEPT, type LoadedImage} from '../input/loadSource';
 import type {ImageEditorLabels} from '../labels';
 import {exportImage} from '../output/exportImage';
-import {filterString} from '../output/filters';
+import {filterString, supportsCanvasFilter} from '../output/filters';
 import {
   currentZoom,
   editorReducer,
   initialEditorState,
+  sameState,
   type EditorAction,
   type EditorState,
 } from '../state/editorState';
 import {createHistory, historyReducer} from '../state/history';
 import type {ImageEditorProps} from '../types';
+import {AdjustControls} from './AdjustControls';
 import {CanvasArea, visuallyHidden} from './CanvasArea';
 import {CropControls} from './CropControls';
+import {HistoryButtons} from './HistoryButtons';
 import {errorMessage, useLabels} from './LabelsContext';
 import {FileButton, Picker} from './Picker';
 import {useLoadedImage} from './useLoadedImage';
@@ -50,20 +55,22 @@ function describe(labels: ImageEditorLabels, action: EditorAction, next: EditorS
     case 'zoomTo':
       return labels.zoomChanged(Math.round(currentZoom(next) * 100));
     case 'adjust':
-    case 'replace':
       return null;
+    case 'replace':
+      return labels.resetDone;
   }
 }
 
 type SessionProps = Omit<ImageEditorProps, 'open' | 'labels'> & {readonly titleId: string};
 
-function Header({titleId, onClose}: Readonly<{titleId: string; onClose: () => void}>) {
+function Header({titleId, onClose, actions}: Readonly<{titleId: string; onClose: () => void; actions?: ReactNode}>) {
   const labels = useLabels();
   return (
     <Box sx={{display: 'flex', alignItems: 'center', pr: 1}}>
       <DialogTitle id={titleId} sx={{flex: 1}}>
         {labels.title}
       </DialogTitle>
+      {actions}
       <IconButton aria-label={labels.close} onClick={onClose}>
         <CloseIcon />
       </IconButton>
@@ -149,10 +156,13 @@ function Workspace({
   titleId,
 }: Readonly<WorkspaceProps>) {
   const labels = useLabels();
-  const [history, dispatch] = useReducer(reducer, null, () =>
-    createHistory(initialEditorState({width: image.width, height: image.height}, features)),
-  );
+  const tabsId = useId();
+  const [initial] = useState(() => initialEditorState({width: image.width, height: image.height}, features));
+  const [history, dispatch] = useReducer(reducer, initial, createHistory);
   const state = history.present;
+  const [tab, setTab] = useState<'crop' | 'adjust'>('crop');
+  // Where the canvas cannot filter, an adjustment would preview but not export. Hidden instead.
+  const adjust = features.adjust && supportsCanvasFilter() ? features.adjust : false;
   const [applying, setApplying] = useState(false);
   const [failure, setFailure] = useState<string | null>(null);
   const [announcement, announce] = useState('');
@@ -176,13 +186,15 @@ function Workspace({
     if (message) announce(message);
   };
   const onCommit = () => dispatch({type: 'commit'});
+  const canUndo = history.past.length > 0 || history.pending !== null;
+  const canRedo = history.future.length > 0;
   const undo = () => {
-    if (history.past.length === 0 && history.pending === null) return;
+    if (!canUndo) return;
     dispatch({type: 'undo'});
     announce(labels.undone);
   };
   const redo = () => {
-    if (history.future.length === 0) return;
+    if (!canRedo) return;
     dispatch({type: 'redo'});
     announce(labels.redone);
   };
@@ -217,7 +229,11 @@ function Workspace({
 
   return (
     <>
-      <Header titleId={titleId} onClose={onClose} />
+      <Header
+        titleId={titleId}
+        onClose={onClose}
+        actions={features.history && <HistoryButtons onUndo={canUndo ? undo : null} onRedo={canRedo ? redo : null} />}
+      />
       <DialogContent sx={{px: 3, pb: 0}}>
         <CanvasArea
           src={image.url}
@@ -231,14 +247,36 @@ function Workspace({
           onUndo={features.history ? undo : null}
           onRedo={features.history ? redo : null}
         />
-        <CropControls
-          state={state}
-          features={features}
-          onAction={onAction}
-          onCommit={onCommit}
-          announce={announce}
-          disabled={applying}
-        />
+        {adjust && (
+          <Tabs value={tab} onChange={(_event, value: 'crop' | 'adjust') => setTab(value)} sx={{mt: 1}}>
+            <Tab value="crop" label={labels.cropTab} id={`${tabsId}-crop`} aria-controls={`${tabsId}-panel`} />
+            <Tab value="adjust" label={labels.adjustTab} id={`${tabsId}-adjust`} aria-controls={`${tabsId}-panel`} />
+          </Tabs>
+        )}
+        <Box
+          role={adjust ? 'tabpanel' : undefined}
+          id={`${tabsId}-panel`}
+          aria-labelledby={adjust ? `${tabsId}-${tab}` : undefined}
+        >
+          {adjust && tab === 'adjust' ? (
+            <AdjustControls
+              adjust={state.adjust}
+              tools={adjust}
+              onAction={onAction}
+              onCommit={onCommit}
+              disabled={applying}
+            />
+          ) : (
+            <CropControls
+              state={state}
+              features={features}
+              onAction={onAction}
+              onCommit={onCommit}
+              announce={announce}
+              disabled={applying}
+            />
+          )}
+        </Box>
         <Box role="status" aria-live="polite" sx={visuallyHidden}>
           {announcement}
         </Box>
@@ -250,15 +288,23 @@ function Workspace({
       </DialogContent>
       <Footer
         start={
-          features.replace && (
-            <FileButton
-              accept={input?.accept ?? DEFAULT_ACCEPT}
-              label={labels.replace}
-              onPick={onPick}
-              variant="text"
-              disabled={applying}
-            />
-          )
+          <>
+            <Button
+              disabled={applying || sameState(state, initial)}
+              onClick={() => onAction({type: 'replace', state: initial})}
+            >
+              {labels.reset}
+            </Button>
+            {features.replace && (
+              <FileButton
+                accept={input?.accept ?? DEFAULT_ACCEPT}
+                label={labels.replace}
+                onPick={onPick}
+                variant="text"
+                disabled={applying}
+              />
+            )}
+          </>
         }
       >
         <Button onClick={onClose}>{labels.cancel}</Button>
