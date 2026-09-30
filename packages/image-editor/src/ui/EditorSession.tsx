@@ -12,17 +12,48 @@ import {useEffect, useReducer, useRef, useState, type ReactNode} from 'react';
 import {EditorError} from '../errors';
 import {resolveFeatures, type ResolvedFeatures} from '../features';
 import {DEFAULT_ACCEPT, type LoadedImage} from '../input/loadSource';
+import type {ImageEditorLabels} from '../labels';
 import {exportImage} from '../output/exportImage';
 import {filterString} from '../output/filters';
-import {editorReducer, initialEditorState, type EditorAction} from '../state/editorState';
+import {
+  currentZoom,
+  editorReducer,
+  initialEditorState,
+  type EditorAction,
+  type EditorState,
+} from '../state/editorState';
 import {createHistory, historyReducer} from '../state/history';
 import type {ImageEditorProps} from '../types';
-import {CanvasArea} from './CanvasArea';
+import {CanvasArea, visuallyHidden} from './CanvasArea';
+import {CropControls} from './CropControls';
 import {errorMessage, useLabels} from './LabelsContext';
 import {FileButton, Picker} from './Picker';
 import {useLoadedImage} from './useLoadedImage';
 
 const reducer = historyReducer(editorReducer);
+
+/** What the live region says after an action, given the state it produced. */
+function describe(labels: ImageEditorLabels, action: EditorAction, next: EditorState): string | null {
+  switch (action.type) {
+    case 'rotate':
+      return labels.rotated(action.direction * 90);
+    case 'flip':
+      return labels.flipped;
+    case 'straighten':
+      return labels.straightened(action.degrees);
+    case 'setCrop':
+    case 'moveCrop':
+    case 'resizeCrop':
+    case 'setRatio':
+      return labels.cropChanged(Math.round(next.crop.width), Math.round(next.crop.height));
+    case 'zoomBy':
+    case 'zoomTo':
+      return labels.zoomChanged(Math.round(currentZoom(next) * 100));
+    case 'adjust':
+    case 'replace':
+      return null;
+  }
+}
 
 type SessionProps = Omit<ImageEditorProps, 'open' | 'labels'> & {readonly titleId: string};
 
@@ -124,6 +155,7 @@ function Workspace({
   const state = history.present;
   const [applying, setApplying] = useState(false);
   const [failure, setFailure] = useState<string | null>(null);
+  const [announcement, announce] = useState('');
   // State updates are not synchronous, so a second click in the same frame would still
   // see `applying` false. The ref is what makes Apply run once.
   const busy = useRef(false);
@@ -138,6 +170,21 @@ function Workspace({
   const onAction = (action: EditorAction, options?: {transient?: boolean}) => {
     if (!features.zoom && (action.type === 'zoomBy' || action.type === 'zoomTo')) return;
     dispatch({type: 'apply', action, transient: options?.transient});
+    // A gesture is announced once, where it ends; a single step is announced as it lands.
+    if (options?.transient) return;
+    const message = describe(labels, action, editorReducer(state, action));
+    if (message) announce(message);
+  };
+  const onCommit = () => dispatch({type: 'commit'});
+  const undo = () => {
+    if (history.past.length === 0 && history.pending === null) return;
+    dispatch({type: 'undo'});
+    announce(labels.undone);
+  };
+  const redo = () => {
+    if (history.future.length === 0) return;
+    dispatch({type: 'redo'});
+    announce(labels.redone);
   };
 
   const apply = async () => {
@@ -178,11 +225,25 @@ function Workspace({
           shape={features.crop.shape}
           filter={filterString(state.adjust)}
           editable={features.crop.enabled}
+          features={features}
           onAction={onAction}
-          onCommit={() => dispatch({type: 'commit'})}
+          onCommit={onCommit}
+          onUndo={features.history ? undo : null}
+          onRedo={features.history ? redo : null}
         />
+        <CropControls
+          state={state}
+          features={features}
+          onAction={onAction}
+          onCommit={onCommit}
+          announce={announce}
+          disabled={applying}
+        />
+        <Box role="status" aria-live="polite" sx={visuallyHidden}>
+          {announcement}
+        </Box>
         {failure && (
-          <Alert severity="error" sx={{mt: 2}}>
+          <Alert severity="error" sx={{mb: 1}}>
             {failure}
           </Alert>
         )}
