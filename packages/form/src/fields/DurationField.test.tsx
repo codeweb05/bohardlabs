@@ -110,6 +110,17 @@ describe('DurationField', () => {
     expect(screen.getByLabelText('Submitted value')).toHaveTextContent(/^null$/);
   });
 
+  it('offers the empty choice under Hours only', async () => {
+    const user = userEvent.setup();
+    render(
+      <FieldHarness defaultValue={90}>
+        <DurationField label="Break" emptyLabel="None" />
+      </FieldHarness>,
+    );
+    await user.click(screen.getByRole('combobox', {name: /Minutes/}));
+    expect(within(screen.getByRole('listbox')).queryByRole('option', {name: 'None'})).not.toBeInTheDocument();
+  });
+
   it('offers no empty choice when required', async () => {
     const user = userEvent.setup();
     render(

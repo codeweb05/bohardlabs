@@ -13,8 +13,8 @@ export interface DurationFieldProps extends CommonFieldProps {
   /** The gap between minute options. */
   readonly minuteStep?: number;
   /**
-   * When set and the field is not `required`, the first item of each part clears the
-   * duration back to null and reads this.
+   * When set, the Hours select starts with an item that reads this and clears the whole
+   * duration back to null. A `required` field never offers it.
    */
   readonly emptyLabel?: string;
 }
@@ -103,7 +103,7 @@ export function DurationField({
               fullWidth
               SelectDisplayProps={{id: `${binding.inputId}-${part}`, ...binding.inputProps}}
             >
-              {emptyLabel === undefined || required ? null : (
+              {emptyLabel === undefined || required || part !== 'hours' ? null : (
                 <MenuItem value={EMPTY}>
                   <em>{emptyLabel}</em>
                 </MenuItem>
