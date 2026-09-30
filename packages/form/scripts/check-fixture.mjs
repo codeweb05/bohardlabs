@@ -1,7 +1,7 @@
-// Builds fixtures/consumer against dist/ with Vite and inspects the chunks. The sign-in
-// form's initial load (the entry chunk and everything it imports statically) must hold no
-// date picker, phone input or date library, and the lazily registered date field must
-// land in a chunk of its own.
+// Builds fixtures/consumer against dist/ with Vite and inspects the chunks. The fixture
+// renders a sign-in form and a sign-up form. Its initial load (the entry chunk and everything
+// it imports statically) must hold no date picker, phone input or date library, and the date
+// field the sign-up form registers through lazyField must land in a chunk of its own.
 import {readFileSync} from 'node:fs';
 import {resolve} from 'node:path';
 
