@@ -36,6 +36,26 @@ describe('PhoneField', () => {
     expect(screen.getByLabelText('Submitted value')).toHaveTextContent('null');
   });
 
+  it('stores null once backspacing leaves only the calling code', async () => {
+    const user = userEvent.setup();
+    render(
+      <FieldHarness defaultValue={null}>
+        <PhoneField label="Phone" defaultCountry="DE" />
+      </FieldHarness>,
+    );
+    const input = screen.getByLabelText('Phone');
+    await user.type(input, '3');
+    await user.click(screen.getByRole('button', {name: 'Submit'}));
+    expect(screen.getByLabelText('Submitted value')).toHaveTextContent('"+493"');
+
+    // One keystroke at a time, so the input passes through '+49', where mui-tel-input's
+    // numberValue is '+49' but there is no national number.
+    await user.type(input, '{Backspace}');
+    expect(input).toHaveValue('+49');
+    await user.click(screen.getByRole('button', {name: 'Submit'}));
+    expect(screen.getByLabelText('Submitted value')).toHaveTextContent('null');
+  });
+
   it('shows a stored number and follows a value set from outside', () => {
     const formRef = createRef<AnyFormApi>();
     render(
