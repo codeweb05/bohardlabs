@@ -217,6 +217,16 @@ describe.each(ADAPTERS)('pickers under %s', (_name, Adapter) => {
       expect(hiddenInput(within(stay).getByRole('group', {name: 'End'}))).toHaveValue('');
     });
 
+    it('writes an unusable end as null once the user edits the other end', async () => {
+      vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const user = userEvent.setup();
+      renderPicker(<DateRangeField label="Stay" />, {defaultValue: {start: '2026-05-01', end: 'garbage'}});
+      const start = within(screen.getByRole('group', {name: 'Stay'})).getByRole('group', {name: 'Start'});
+      await user.click(firstSection(start));
+      await user.keyboard('05022026');
+      expect(await submitted(user)).toBe('{"start":"2026-05-02","end":null}');
+    });
+
     it('stores a rejected start once a later end makes it valid', async () => {
       const user = userEvent.setup();
       renderPicker(<DateRangeField label="Stay" />, {defaultValue: {start: null, end: '2026-01-20'}});

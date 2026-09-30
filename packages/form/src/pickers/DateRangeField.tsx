@@ -46,7 +46,8 @@ function readRange(value: unknown): DateRange {
  * package. Each end limits the other: an end typed before the start (or a start after the
  * end) shows as invalid and is stored as null, until a change to the other end makes it
  * valid and it is stored. Any other rule between the two (a maximum length, end required
- * once start is set) belongs in the schema.
+ * once start is set) belongs in the schema. A stored end that is not a usable date shows
+ * as empty, and the next edit to the other end writes it as null.
  */
 export function DateRangeField({
   label,
