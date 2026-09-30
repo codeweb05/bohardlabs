@@ -2,8 +2,8 @@ import type {AnyFieldApi, AnyFormApi} from '@tanstack/react-form';
 
 /**
  * A server error answers the value that was submitted, so it stops applying the moment
- * the user edits that field. TanStack does not clear it on its own, and while it stays
- * set the form cannot submit.
+ * the user edits that field. TanStack does not clear it on an edit. It does clear it on
+ * the next submit, which goes through: a server error does not block a resubmit.
  */
 export function clearServerError(field: AnyFieldApi): void {
   if (field.state.meta.errorMap.onServer === undefined) return;

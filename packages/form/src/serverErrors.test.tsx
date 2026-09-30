@@ -1,5 +1,5 @@
 import type {AnyFormApi} from '@tanstack/react-form';
-import {act, render, screen} from '@testing-library/react';
+import {act, render, screen, waitFor} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {createRef, useEffect} from 'react';
 import type {RefObject} from 'react';
@@ -11,37 +11,51 @@ import {applyServerErrors} from './serverErrors.js';
 import {FieldHarness} from './test/FieldHarness.js';
 
 describe('applyServerErrors on a field', () => {
-  function setup() {
+  // The normal flow: the user submits, the server rejects the first save, and the submit
+  // handler puts the rejection on screen. Later saves succeed.
+  async function setup() {
     const user = userEvent.setup();
     const formRef = createRef<AnyFormApi>();
-    const onSubmit = vi.fn();
+    const save = vi.fn<(value: unknown) => Promise<void>>().mockRejectedValueOnce(new Error('409')).mockResolvedValue();
+    const onSubmit = vi.fn(async (value: unknown) => {
+      try {
+        await save(value);
+      } catch {
+        applyServerErrors(formRef.current!, {fields: {value: 'Already invited'}});
+      }
+    });
     render(
       <FieldHarness defaultValue="ada@example.com" formRef={formRef} onSubmit={onSubmit}>
         <TextField label="Email" />
       </FieldHarness>,
     );
-    act(() => applyServerErrors(formRef.current!, {fields: {value: 'Already invited'}}));
-    return {user, onSubmit, input: screen.getByLabelText('Email')};
+    const input = screen.getByLabelText('Email');
+    await user.click(screen.getByRole('button', {name: 'Submit'}));
+    await waitFor(() => expect(input).toHaveAccessibleDescription('Already invited'));
+    return {user, save, input};
   }
 
-  it('shows the message without the user touching the field', () => {
-    const {input} = setup();
+  it('shows the message without the user touching the field', async () => {
+    const {input} = await setup();
     expect(input).toHaveAccessibleDescription('Already invited');
     expect(input).toHaveAttribute('aria-invalid', 'true');
   });
 
-  it('blocks a resubmit of the same value', async () => {
-    const {user, onSubmit} = setup();
+  it('does not block a resubmit: the next submit sends the same value and clears the message', async () => {
+    const {user, save, input} = await setup();
     await user.click(screen.getByRole('button', {name: 'Submit'}));
-    expect(onSubmit).not.toHaveBeenCalled();
+    await waitFor(() => expect(save).toHaveBeenCalledTimes(2));
+    expect(save).toHaveBeenLastCalledWith('ada@example.com');
+    expect(screen.queryByText('Already invited')).not.toBeInTheDocument();
+    expect(input).toHaveAttribute('aria-invalid', 'false');
   });
 
   it('clears on the next edit, and the form submits again', async () => {
-    const {user, onSubmit, input} = setup();
+    const {user, save, input} = await setup();
     await user.type(input, 'x');
     expect(screen.queryByText('Already invited')).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', {name: 'Submit'}));
-    expect(onSubmit).toHaveBeenCalledWith('ada@example.comx');
+    await waitFor(() => expect(save).toHaveBeenLastCalledWith('ada@example.comx'));
   });
 });
 

@@ -311,7 +311,8 @@ export function showSaveError(form: AnyFormApi) {
 - A path with a mounted field shows its message under that field, touched or not.
 - A path with no mounted field joins the form-level message, so it still reaches the user.
   `FormError` shows that message.
-- A user edit clears that field's server error. While it stays set, the form cannot submit.
+- The message shows until the user edits that field or submits again. It does not block a
+  resubmit: the next submit sends the value again and clears the message.
 
 ## Recipe: a select whose options come from a query
 
