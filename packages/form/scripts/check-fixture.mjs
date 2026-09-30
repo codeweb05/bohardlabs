@@ -61,11 +61,13 @@ const lazyHasPickers = [...chunks.values()].some(
 if (!lazyHasPickers) failures.push('no lazily loaded chunk holds the date picker; lazyField did not split');
 
 // SignIn.tsx is the README's sign-in example as printed, so the example a reader copies is
-// the one measured here. An edit to either has to be made to both.
-const readmeExample = readFileSync(resolve(root, 'README.md'), 'utf8')
-  .split('## A form')[1]
+// the one measured here. An edit to either has to be made to both. Both are read with LF
+// line endings, so a checkout that converts to CRLF does not fail the comparison.
+const readText = (path) => readFileSync(resolve(root, path), 'utf8').replaceAll('\r\n', '\n');
+const readmeExample = readText('README.md')
+  .split(/^## A form$/m)[1]
   ?.match(/```tsx\n([\s\S]*?)```/)?.[1];
-if (readmeExample !== readFileSync(resolve(root, 'fixtures/consumer/src/SignIn.tsx'), 'utf8')) {
+if (readmeExample !== readText('fixtures/consumer/src/SignIn.tsx')) {
   failures.push('fixtures/consumer/src/SignIn.tsx no longer matches the sign-in example in README.md');
 }
 
