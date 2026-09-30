@@ -39,5 +39,6 @@ if [ -z "$changed" ]; then
 fi
 
 # Unit tests only. Storybook Chromium stays in CI; it is too slow for a push hook.
-echo "datatable tests related to changes against $base..."
-pnpm exec vitest run --project @vt-labs/datatable --changed="$base" --passWithNoTests --bail=1
+# Every package project, so a new package is covered without editing this file.
+echo "unit tests related to changes against $base..."
+pnpm exec vitest run --project '!storybook' --changed="$base" --passWithNoTests --bail=1
