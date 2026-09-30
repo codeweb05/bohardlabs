@@ -116,6 +116,10 @@ A field reads and writes one shape. An empty single choice is `null`, never `''`
 In development, a field that finds another shape in the form warns once in the console and
 names the field. `AsyncAutocompleteField` is the exception: its option type is yours.
 
+A stored value that is not in `options` is kept. `MultiSelectField` shows it as a chip labelled
+with the raw value and keeps it in the array when the user picks something else, and
+`DurationField` adds it to its choices.
+
 ## Heavy fields
 
 `createAppForm` needs a component for every field up front. `lazyField` hands it a small stub,

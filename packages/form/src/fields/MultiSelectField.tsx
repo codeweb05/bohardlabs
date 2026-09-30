@@ -31,9 +31,12 @@ export interface MultiSelectFieldProps<V extends string | number> extends Common
 export function MultiSelectField<V extends string | number>(props: Readonly<MultiSelectFieldProps<V>>) {
   const {label, description, required, tooltip, disabled} = props;
   const binding = useFieldBinding<V[]>({required, expect: SCALAR_ARRAY});
-  const selected = (Array.isArray(binding.value) ? binding.value : []).flatMap(
-    (value) => findOption(props.options, value) ?? [],
-  );
+  // A stored value no longer in `options` (an archived tag) stays selected, labelled with
+  // itself, so a toggle elsewhere does not drop it. DurationField keeps off-list values too.
+  const selected = (Array.isArray(binding.value) ? binding.value : []).flatMap((value): Option<V>[] => {
+    if (typeof value !== 'string' && typeof value !== 'number') return [];
+    return [findOption(props.options, value) ?? {value, label: String(value)}];
+  });
 
   if (props.searchable) {
     return (
@@ -64,6 +67,14 @@ export function MultiSelectField<V extends string | number>(props: Readonly<Mult
   );
 }
 
+/** `options`, plus any selected value that is not one of them, so it can be unpicked. */
+function withSelected<V extends string | number>(
+  options: readonly Option<V>[],
+  selected: readonly Option<V>[],
+): Option<V>[] {
+  return [...options, ...selected.filter((option) => !options.includes(option))];
+}
+
 interface VariantProps<V extends string | number> extends MultiSelectFieldProps<V> {
   readonly binding: FieldBinding<V[]>;
   readonly selected: readonly Option<V>[];
@@ -85,7 +96,9 @@ function PlainMulti<V extends string | number>({
       onChange={(event) => {
         const raw = event.target.value;
         const values = typeof raw === 'string' ? raw.split(',') : raw;
-        binding.setValue(values.flatMap((value) => findOption(options, value)?.value ?? []));
+        binding.setValue(
+          values.flatMap((value) => (findOption(options, value) ?? findOption(selected, value))?.value ?? []),
+        );
       }}
       onBlur={binding.onBlur}
       error={binding.error !== null}
@@ -108,7 +121,7 @@ function PlainMulti<V extends string | number>({
       }
       SelectDisplayProps={{id: binding.inputId, ...binding.inputProps}}
     >
-      {options.map((option) => (
+      {withSelected(options, selected).map((option) => (
         <MenuItem key={String(option.value)} value={String(option.value)} disabled={option.disabled}>
           {option.label}
         </MenuItem>
@@ -130,7 +143,7 @@ function SearchableMulti<V extends string | number>({
     <Autocomplete<Option<V>, true>
       multiple
       id={binding.inputId}
-      options={options}
+      options={withSelected(options, selected)}
       value={[...selected]}
       onChange={(_event, chosen) => binding.setValue(chosen.map((option) => option.value))}
       onBlur={binding.onBlur}

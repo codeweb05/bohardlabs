@@ -10,6 +10,11 @@ const TAGS = [
   {value: 3, label: 'Bug'},
 ];
 
+const LETTERS = [
+  {value: 'a', label: 'a'},
+  {value: 'b', label: 'b'},
+];
+
 describe('MultiSelectField', () => {
   it('stores an array of values, as chips, from a plain select', async () => {
     const user = userEvent.setup();
@@ -50,6 +55,44 @@ describe('MultiSelectField', () => {
     await user.keyboard('{Backspace}');
     await user.click(screen.getByRole('button', {name: 'Submit'}));
     expect(screen.getByLabelText('Submitted value')).toHaveTextContent('[2]');
+  });
+
+  it('keeps a stored value that is not in the options when another is toggled', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const user = userEvent.setup();
+    render(
+      <FieldHarness defaultValue={['a', 'archived']}>
+        <MultiSelectField label="Tags" options={LETTERS} />
+      </FieldHarness>,
+    );
+    const combobox = screen.getByRole('combobox', {name: /Tags/});
+    expect(within(combobox).getByText('archived')).toBeInTheDocument();
+    await user.click(combobox);
+    await user.click(within(screen.getByRole('listbox')).getByRole('option', {name: 'b'}));
+    await user.keyboard('{Escape}');
+
+    await user.click(screen.getByRole('button', {name: 'Submit'}));
+    expect(screen.getByLabelText('Submitted value')).toHaveTextContent('["a","archived","b"]');
+    expect(warn).not.toHaveBeenCalled();
+    warn.mockRestore();
+  });
+
+  it('keeps a stored value that is not in the options when searchable', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const user = userEvent.setup();
+    render(
+      <FieldHarness defaultValue={['a', 'archived']}>
+        <MultiSelectField label="Tags" options={LETTERS} searchable />
+      </FieldHarness>,
+    );
+    expect(screen.getByRole('button', {name: 'archived'})).toBeInTheDocument();
+    await user.type(screen.getByRole('combobox', {name: 'Tags'}), 'b');
+    await user.click(screen.getByRole('option', {name: 'b'}));
+
+    await user.click(screen.getByRole('button', {name: 'Submit'}));
+    expect(screen.getByLabelText('Submitted value')).toHaveTextContent('["a","archived","b"]');
+    expect(warn).not.toHaveBeenCalled();
+    warn.mockRestore();
   });
 
   it('wires the error to the combobox', async () => {
