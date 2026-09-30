@@ -143,6 +143,24 @@ export const Avatar: Story = {
   },
 };
 
+/** A round crop in a type without transparency: the corners take `output.background`. */
+export const RoundJpeg: Story = {
+  parameters: showcase('output'),
+  args: {
+    features: {crop: {shape: 'circle'}},
+    output: {type: 'image/jpeg', maxWidth: 256, maxHeight: 256, background: '#ff00ff'},
+  },
+  play: async ({args, canvasElement}) => {
+    const dialog = await openEditor(canvasElement);
+    const result = await applyEdits(dialog, args.onApply);
+    await expect(result).toEqual(expect.objectContaining({type: 'image/jpeg', width: 256, height: 256}));
+    // JPEG is lossy, so each channel is compared within a tolerance.
+    const corner = await pixelAt(result.file, 2, 2);
+    const drift = rgba('#ff00ff').map((channel, index) => Math.abs((corner[index] ?? 0) - channel));
+    await expect(Math.max(...drift)).toBeLessThan(12);
+  },
+};
+
 /**
  * Every tool at once: ratios, the zoom slider, straighten, the Adjust tab with presets, undo
  * and redo, Reset and Replace. Most apps want a handful of these; this is the ceiling.

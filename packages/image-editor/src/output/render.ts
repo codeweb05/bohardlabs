@@ -37,14 +37,15 @@ export function renderState(
   const frame = frameOf(state);
   const linear = linearOf(state.image, state.orientation, state.straighten);
 
+  // Filled before the clip, so a circle's corners take the background too.
+  if (options.background !== null) {
+    context.fillStyle = options.background;
+    context.fillRect(0, 0, width, height);
+  }
   if (options.shape === 'circle') {
     context.beginPath();
     context.ellipse(width / 2, height / 2, width / 2, height / 2, 0, 0, Math.PI * 2);
     context.clip();
-  }
-  if (options.background !== null) {
-    context.fillStyle = options.background;
-    context.fillRect(0, 0, width, height);
   }
   context.scale(width / crop.width, height / crop.height);
   context.translate(-crop.x + frame.width / 2, -crop.y + frame.height / 2);

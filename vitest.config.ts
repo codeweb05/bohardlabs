@@ -88,6 +88,8 @@ export default defineConfig({
       // averaged into the others. Datatable has none yet; adding one is its own change.
       // Relative, unlike `include`: Vitest matches threshold globs against root-relative
       // paths, and an absolute key never applies.
+      // Image-editor's floor holds for the merged run (`pnpm test:cov`): its canvas, cropper
+      // and pixel paths run only in the stories, so a unit-only run lands under it.
       thresholds: {
         'packages/image-editor/src/**': {lines: 90, functions: 90, branches: 90, statements: 90},
         'packages/form/src/**': {lines: 90, functions: 90, branches: 90, statements: 90},

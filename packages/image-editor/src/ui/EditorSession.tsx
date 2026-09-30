@@ -89,7 +89,7 @@ function MobileHeader({
   return (
     <Box sx={{display: 'flex', alignItems: 'center', gap: 1, px: 1, py: 1, borderBottom: 1, borderColor: 'divider'}}>
       <Button onClick={onClose}>{labels.cancel}</Button>
-      <DialogTitle id={titleId} variant="subtitle1" sx={{flex: 1, p: 0, textAlign: 'center', fontWeight: 600}}>
+      <DialogTitle id={titleId} variant="subtitle1" sx={{flex: 1, p: 0, textAlign: 'center'}}>
         {labels.title}
       </DialogTitle>
       {children}

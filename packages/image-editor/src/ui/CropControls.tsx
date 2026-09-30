@@ -94,7 +94,7 @@ export function CropControls({
           step={STRAIGHTEN_STEP}
           marks={[{value: -straighten.range}, {value: 0}, {value: straighten.range}]}
           valueLabelDisplay="auto"
-          valueLabelFormat={(value) => `${value}°`}
+          valueLabelFormat={labels.straightenValue}
           value={state.straighten}
           onChange={(_event, value) => onAction({type: 'straighten', degrees: single(value)}, {transient: true})}
           onChangeCommitted={(_event, value) => {
@@ -114,7 +114,7 @@ export function CropControls({
           max={zoom.max}
           step={0.01}
           valueLabelDisplay="auto"
-          valueLabelFormat={(value) => `${Math.round(value * 100)}%`}
+          valueLabelFormat={(value) => labels.zoomValue(Math.round(value * 100))}
           value={currentZoom(state)}
           onChange={(_event, value) => onAction({type: 'zoomTo', zoom: single(value)}, {transient: true})}
           onChangeCommitted={(_event, value) => {

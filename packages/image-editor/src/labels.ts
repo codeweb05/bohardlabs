@@ -31,7 +31,11 @@ export interface ImageEditorLabels {
   flipHorizontal: string;
   flipVertical: string;
   straighten: string;
+  /** The straighten slider's value bubble. */
+  straightenValue: (degrees: number) => string;
   zoom: string;
+  /** The zoom slider's value bubble. */
+  zoomValue: (percent: number) => string;
   brightness: string;
   contrast: string;
   saturation: string;
@@ -93,7 +97,9 @@ export const DEFAULT_IMAGE_EDITOR_LABELS: ImageEditorLabels = {
   flipHorizontal: 'Flip horizontally',
   flipVertical: 'Flip vertically',
   straighten: 'Straighten',
+  straightenValue: (degrees) => `${degrees}°`,
   zoom: 'Zoom',
+  zoomValue: (percent) => `${percent}%`,
   brightness: 'Brightness',
   contrast: 'Contrast',
   saturation: 'Saturation',
