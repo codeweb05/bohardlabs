@@ -23,8 +23,8 @@ Updated as each task lands. "Done" means reviewed, fixed and committed on `main`
 | 5    | `CheckboxField`, `SwitchField`               | done    | d53edc4          |
 | 6    | `SelectField`, `RadioGroupField`             | done    | d66380e, ef31bc7 |
 | 7    | `SearchableSelectField`, `MultiSelectField`  | done    | af62ae6, d261259 |
-| 8    | `AsyncAutocompleteField`                     | working |                  |
-| 9    | `DurationField`, `lazyField`                 | to do   |                  |
+| 8    | `AsyncAutocompleteField`                     | done    | a2f7777, 8bc60ed |
+| 9    | `DurationField`, `lazyField`                 | working |                  |
 | 10   | `/pickers` (re-planned for x-date-pickers 9) | to do   |                  |
 | 11   | `/phone`                                     | to do   |                  |
 | 12   | `/maps`                                      | to do   |                  |
