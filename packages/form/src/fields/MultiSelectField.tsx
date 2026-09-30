@@ -98,9 +98,12 @@ function PlainMulti<V extends string | number>({
     kept = offList;
     setHeld({source: binding.value, offList});
   }
-  const menu = [...options, ...kept];
+  // Kept items are a snapshot, so one the options now hold, or one still selected, is
+  // skipped here rather than listed twice.
+  const current = withSelected(options, selected);
+  const menu = [...current, ...kept.filter((option) => !findOption(current, option.value))];
   const write = (next: V[]) => {
-    setHeld({source: next, offList: kept});
+    setHeld({source: next, offList: menu.filter((option) => !options.includes(option))});
     binding.setValue(next);
   };
 

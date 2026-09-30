@@ -112,6 +112,52 @@ describe('MultiSelectField', () => {
     expect(names).toEqual(['a', 'b']);
   });
 
+  it('lists a value once when the options load after it', async () => {
+    const error = vi.spyOn(console, 'error');
+    const user = userEvent.setup();
+    const {rerender} = render(
+      <FieldHarness defaultValue={['a']}>
+        <MultiSelectField label="Tags" options={[]} />
+      </FieldHarness>,
+    );
+    rerender(
+      <FieldHarness defaultValue={['a']}>
+        <MultiSelectField label="Tags" options={LETTERS} />
+      </FieldHarness>,
+    );
+    await user.click(screen.getByRole('combobox', {name: /Tags/}));
+    const names = within(screen.getByRole('listbox'))
+      .getAllByRole('option')
+      .map((option) => option.textContent);
+    expect(names).toEqual(['a', 'b']);
+    expect(error).not.toHaveBeenCalled();
+  });
+
+  it('keeps a selected value in the menu when the options drop it', async () => {
+    const user = userEvent.setup();
+    const {rerender} = render(
+      <FieldHarness defaultValue={['a']}>
+        <MultiSelectField label="Tags" options={LETTERS} />
+      </FieldHarness>,
+    );
+    rerender(
+      <FieldHarness defaultValue={['a']}>
+        <MultiSelectField label="Tags" options={LETTERS.slice(1)} />
+      </FieldHarness>,
+    );
+    await user.click(screen.getByRole('combobox', {name: /Tags/}));
+    const listbox = screen.getByRole('listbox');
+    expect(
+      within(listbox)
+        .getAllByRole('option')
+        .map((option) => option.textContent),
+    ).toEqual(['b', 'a']);
+    await user.click(within(listbox).getByRole('option', {name: 'a'}));
+    await user.keyboard('{Escape}');
+    await user.click(screen.getByRole('button', {name: 'Submit'}));
+    expect(screen.getByLabelText('Submitted value')).toHaveTextContent(/^\[\]$/);
+  });
+
   it('keeps a stored value that is not in the options when searchable', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const user = userEvent.setup();
