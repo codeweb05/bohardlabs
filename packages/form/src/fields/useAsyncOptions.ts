@@ -2,6 +2,26 @@ import {useEffect, useRef, useState} from 'react';
 
 export type LoadOptions<T> = (query: string, options: {signal: AbortSignal}) => Promise<readonly T[]>;
 
+/**
+ * The search-and-shape properties `AsyncAutocompleteField` and `AsyncAutocompleteInput`
+ * both take. Declared once here and picked up through `extends`, so a consumer's hover
+ * still sees each property's own doc comment on either type.
+ */
+export interface AsyncOptionsProps<T> {
+  /**
+   * Called with what the user typed. Abort on `signal`; a newer query has replaced this one.
+   * For caching, call `queryClient.fetchQuery` in here.
+   */
+  readonly loadOptions: LoadOptions<T>;
+  readonly getOptionValue: (option: T) => string | number;
+  readonly getOptionLabel: (option: T) => string;
+  /** Store `T[]` instead of `T | null`. */
+  readonly multiple?: boolean;
+  readonly debounceMs?: number;
+  readonly minQueryLength?: number;
+  readonly placeholder?: string;
+}
+
 interface Settings {
   /** False while the list is closed: nothing loads until someone looks. */
   readonly active: boolean;

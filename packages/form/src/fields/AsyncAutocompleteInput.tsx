@@ -1,31 +1,32 @@
 import Autocomplete from '@mui/material/Autocomplete';
-import MuiTextField from '@mui/material/TextField';
 import {useState} from 'react';
 
 import {useFormConfig} from '../config/FormConfigContext';
 import {autocompleteText} from '../core/autocompleteText';
+import {renderAutocompleteInput} from '../core/renderAutocompleteInput';
 import type {FieldBinding} from '../core/useFieldBinding';
 import {useAsyncOptions} from './useAsyncOptions';
-import type {LoadOptions} from './useAsyncOptions';
+import type {AsyncOptionsProps} from './useAsyncOptions';
 
-function toArray<T>(value: T | readonly T[] | null) {
-  if (value === null) return [];
-  return Array.isArray(value) ? value : [value];
+// `Array.isArray` alone narrows an unconstrained generic union like `T | readonly T[]` to a
+// type with an `any`-typed branch, which silently drops checking on the array elements. A
+// user-defined type guard narrows soundly instead, so `toArray`'s declared `readonly T[]`
+// return type is real, not a cast.
+function isArray<T>(value: T | readonly T[]): value is readonly T[] {
+  return Array.isArray(value);
 }
 
-export interface AsyncAutocompleteInputProps<T> {
+function toArray<T>(value: T | readonly T[] | null): readonly T[] {
+  if (value === null) return [];
+  return isArray(value) ? value : [value];
+}
+
+export interface AsyncAutocompleteInputProps<T> extends AsyncOptionsProps<T> {
   readonly binding: Pick<FieldBinding<unknown>, 'inputId' | 'error' | 'onBlur' | 'inputProps'>;
   readonly value: T | readonly T[] | null;
   readonly onChange: (value: T | T[] | null) => void;
-  readonly multiple?: boolean;
-  readonly loadOptions: LoadOptions<T>;
-  readonly getOptionValue: (option: T) => string | number;
-  readonly getOptionLabel: (option: T) => string;
-  readonly debounceMs?: number;
-  readonly minQueryLength?: number;
   readonly autoFocus?: boolean;
   readonly disabled?: boolean;
-  readonly placeholder?: string;
 }
 
 /**
@@ -82,18 +83,7 @@ export function AsyncAutocompleteInput<T>({
       fullWidth
       {...text}
       noOptionsText={status === 'error' ? labels.loadFailed : text.noOptionsText}
-      renderInput={(params) => {
-        const htmlInput = {...params.slotProps.htmlInput, ...binding.inputProps};
-        return (
-          <MuiTextField
-            {...params}
-            autoFocus={autoFocus}
-            placeholder={placeholder}
-            error={binding.error !== null}
-            slotProps={{...params.slotProps, htmlInput}}
-          />
-        );
-      }}
+      renderInput={(params) => renderAutocompleteInput(params, binding, {autoFocus, placeholder})}
     />
   );
 }

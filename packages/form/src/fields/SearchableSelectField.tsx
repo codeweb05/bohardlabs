@@ -1,9 +1,9 @@
 import Autocomplete from '@mui/material/Autocomplete';
-import MuiTextField from '@mui/material/TextField';
 
 import {useFormConfig} from '../config/FormConfigContext';
 import {autocompleteText} from '../core/autocompleteText';
 import {FieldShell} from '../core/FieldShell';
+import {renderAutocompleteInput} from '../core/renderAutocompleteInput';
 import type {CommonFieldProps, Option} from '../core/types';
 import {useFieldBinding} from '../core/useFieldBinding';
 import {NULLABLE_SCALAR} from '../core/valueChecks';
@@ -49,15 +49,7 @@ export function SearchableSelectField<V extends string | number>({
         disabled={disabled}
         fullWidth
         {...autocompleteText(labels)}
-        renderInput={(params) => (
-          <MuiTextField
-            {...params}
-            autoFocus={autoFocus}
-            placeholder={placeholder}
-            error={binding.error !== null}
-            slotProps={{...params.slotProps, htmlInput: {...params.slotProps.htmlInput, ...binding.inputProps}}}
-          />
-        )}
+        renderInput={(params) => renderAutocompleteInput(params, binding, {autoFocus, placeholder})}
       />
     </FieldShell>
   );

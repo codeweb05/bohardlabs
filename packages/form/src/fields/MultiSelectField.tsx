@@ -3,11 +3,11 @@ import Box from '@mui/material/Box';
 import Chip from '@mui/material/Chip';
 import MenuItem from '@mui/material/MenuItem';
 import Select from '@mui/material/Select';
-import MuiTextField from '@mui/material/TextField';
 
 import {useFormConfig} from '../config/FormConfigContext';
 import {autocompleteText} from '../core/autocompleteText';
 import {FieldShell} from '../core/FieldShell';
+import {renderAutocompleteInput} from '../core/renderAutocompleteInput';
 import {SelectFieldShell} from '../core/SelectFieldShell';
 import type {CommonFieldProps, Option} from '../core/types';
 import {useFieldBinding} from '../core/useFieldBinding';
@@ -141,15 +141,12 @@ function SearchableMulti<V extends string | number>({
       disabled={disabled}
       fullWidth
       {...autocompleteText(labels)}
-      renderInput={(params) => (
-        <MuiTextField
-          {...params}
-          autoFocus={autoFocus}
-          placeholder={selected.length === 0 ? placeholder : undefined}
-          error={binding.error !== null}
-          slotProps={{...params.slotProps, htmlInput: {...params.slotProps.htmlInput, ...binding.inputProps}}}
-        />
-      )}
+      renderInput={(params) =>
+        renderAutocompleteInput(params, binding, {
+          autoFocus,
+          placeholder: selected.length === 0 ? placeholder : undefined,
+        })
+      }
     />
   );
 }
