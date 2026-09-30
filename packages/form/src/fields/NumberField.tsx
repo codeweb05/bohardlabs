@@ -37,7 +37,8 @@ export function NumberField({
   placeholder,
 }: Readonly<NumberFieldProps>) {
   const binding = useFieldBinding<number | null>({required, expect: NULLABLE_NUMBER});
-  const value = typeof binding.value === 'number' ? binding.value : null;
+  // NaN and Infinity count as empty: NaN never equals itself, so the resync below would loop.
+  const value = Number.isFinite(binding.value) ? binding.value : null;
 
   // What the user typed, kept apart from the form value so `4.` and `-` survive a render.
   // When the form value changes from outside (reset, a loaded record), the text follows it.

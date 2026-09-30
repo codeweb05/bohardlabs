@@ -59,6 +59,19 @@ describe('NumberField', () => {
     expect(await submitted(user)).toBe('-4');
   });
 
+  it.each([
+    ['NaN', Number.NaN],
+    ['Infinity', Number.POSITIVE_INFINITY],
+  ])('renders a stored %s as empty instead of crashing', (_name, stored) => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    render(
+      <FieldHarness defaultValue={stored}>
+        <NumberField label="Price" />
+      </FieldHarness>,
+    );
+    expect(screen.getByLabelText('Price')).toHaveValue('');
+  });
+
   it('ignores keystrokes that cannot be part of a number', async () => {
     const user = userEvent.setup();
     render(
