@@ -12,10 +12,11 @@ pnpm validate    # lint + typecheck + test + build
 
 ## Packages
 
-| Package              | What it is                                                         | Status                           |
-| -------------------- | ------------------------------------------------------------------ | -------------------------------- |
-| `packages/datatable` | Server-driven React data table (TanStack Table + MUI)              | 0.1.0, first release pending     |
-| `packages/form`      | MUI fields for TanStack Form, with pickers, phone and maps entries | 0.1.0-next.0, prerelease pending |
+| Package                 | What it is                                                                      | Status                           |
+| ----------------------- | ------------------------------------------------------------------------------- | -------------------------------- |
+| `packages/datatable`    | Server-driven React data table (TanStack Table + MUI)                           | 0.1.0, first release pending     |
+| `packages/form`         | MUI fields for TanStack Form, with pickers, phone and maps entries              | 0.1.0-next.0, prerelease pending |
+| `packages/image-editor` | MUI dialog that crops, rotates and adjusts an image into an upload-ready `File` | 0.1.0, first release pending     |
 
 Packages are scoped `@vt-labs/*`. See the [roadmap](docs/roadmap.md#1-publishing).
 

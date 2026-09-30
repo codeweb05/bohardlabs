@@ -1,5 +1,9 @@
 # @vt-labs/image-editor
 
+## 0.1.0
+
+The first stable release, on the `latest` tag. It is `0.1.0-next.0` unchanged.
+
 ## 0.1.0-next.0
 
 ### Minor Changes
