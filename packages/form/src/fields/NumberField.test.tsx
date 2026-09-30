@@ -88,4 +88,29 @@ describe('NumberField', () => {
     act(() => formRef.current?.reset());
     expect(input).toHaveValue('');
   });
+
+  it('replaces a half-typed comma draft on a differing external change, but not on one that matches it', async () => {
+    const user = userEvent.setup();
+    const formRef = createRef<AnyFormApi>();
+    render(
+      <FieldHarness defaultValue={null} formRef={formRef}>
+        <NumberField label="Price" decimalSeparator="," />
+      </FieldHarness>,
+    );
+    const input = screen.getByLabelText('Price');
+
+    // A draft the user is still typing is replaced once an outside value actually differs from it.
+    await user.type(input, '1,');
+    expect(input).toHaveValue('1,');
+    act(() => formRef.current?.setFieldValue('value', 99));
+    expect(input).toHaveValue('99');
+
+    // A fresh draft that already amounts to the same number an outside call sets is left alone:
+    // the field only resyncs the text when the numeric value actually changes.
+    await user.clear(input);
+    await user.type(input, '2,');
+    expect(input).toHaveValue('2,');
+    act(() => formRef.current?.setFieldValue('value', 2));
+    expect(input).toHaveValue('2,');
+  });
 });

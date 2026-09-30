@@ -32,7 +32,8 @@ export const Password: Story = {
 };
 
 /** A comma separator on screen, a plain number in the form. */
-export const Comma: Story = {
+export const NumberStory: Story = {
+  name: 'Number',
   render: () => (
     <FieldHarness defaultValue={null}>
       <NumberField label="Price" decimalSeparator="," description="In euros" />
