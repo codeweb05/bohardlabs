@@ -209,6 +209,9 @@ importers:
       '@vt-labs/datatable':
         specifier: workspace:*
         version: link:../../packages/datatable
+      '@vt-labs/form':
+        specifier: workspace:*
+        version: link:../../packages/form
     devDependencies:
       '@chromatic-com/storybook':
         specifier: ^5.3.0
