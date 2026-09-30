@@ -17,7 +17,14 @@ export interface SelectFieldProps<V extends string | number> extends CommonField
   readonly emptyLabel?: string;
 }
 
+/** MUI's own "nothing chosen" value, the only one it does not warn about. */
 const EMPTY = '';
+/** Stands in the DOM for an option whose value is `''`, which would otherwise read as nothing chosen. */
+const EMPTY_STRING_OPTION = '\u0000vt-empty-string';
+
+function toDom(value: string | number): string {
+  return value === '' ? EMPTY_STRING_OPTION : String(value);
+}
 
 /** The layout is `LabelledByShell`: see its comment for why this doesn't go through `FieldShell` directly. */
 export function SelectField<V extends string | number>({
@@ -45,8 +52,12 @@ export function SelectField<V extends string | number>({
     >
       <Select<string>
         labelId={binding.labelId}
-        value={selected ? String(selected.value) : EMPTY}
-        onChange={(event) => binding.setValue(findOption(options, event.target.value)?.value ?? null)}
+        value={selected ? toDom(selected.value) : EMPTY}
+        onChange={(event) => {
+          const raw = event.target.value;
+          if (raw === EMPTY) binding.setValue(null);
+          else binding.setValue(findOption(options, raw === EMPTY_STRING_OPTION ? '' : raw)?.value ?? null);
+        }}
         onBlur={binding.onBlur}
         error={binding.error !== null}
         disabled={disabled}
@@ -70,7 +81,7 @@ export function SelectField<V extends string | number>({
           </MenuItem>
         )}
         {options.map((option) => (
-          <MenuItem key={String(option.value)} value={String(option.value)} disabled={option.disabled}>
+          <MenuItem key={String(option.value)} value={toDom(option.value)} disabled={option.disabled}>
             <ListItemText primary={option.label} secondary={option.description} />
           </MenuItem>
         ))}

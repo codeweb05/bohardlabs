@@ -45,6 +45,32 @@ describe('SelectField', () => {
     expect(screen.getByLabelText('Submitted value')).toHaveTextContent('null');
   });
 
+  it("stores an option whose value is '', apart from the empty item", async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const user = userEvent.setup();
+    render(
+      <FieldHarness defaultValue={null}>
+        <SelectField
+          label="Region"
+          options={[
+            {value: '', label: 'Any region'},
+            {value: 'eu', label: 'Europe'},
+          ]}
+          emptyLabel="Not set"
+        />
+      </FieldHarness>,
+    );
+    await choose(user, /Region/, 'Any region');
+    expect(screen.getByRole('combobox', {name: /Region/})).toHaveTextContent('Any region');
+    await user.click(screen.getByRole('button', {name: 'Submit'}));
+    expect(screen.getByLabelText('Submitted value')).toHaveTextContent(/^""$/);
+
+    await choose(user, /Region/, 'Not set');
+    await user.click(screen.getByRole('button', {name: 'Submit'}));
+    expect(screen.getByLabelText('Submitted value')).toHaveTextContent(/^null$/);
+    expect(warn).not.toHaveBeenCalled();
+  });
+
   it('disables a disabled option and shows a description', async () => {
     const user = userEvent.setup();
     render(
