@@ -102,6 +102,22 @@ describe('NumberField', () => {
     expect(input).toHaveValue('');
   });
 
+  it('drops a half-typed number on reset, though the value stays null', async () => {
+    const user = userEvent.setup();
+    const formRef = createRef<AnyFormApi>();
+    render(
+      <FieldHarness defaultValue={null} formRef={formRef}>
+        <NumberField label="Price" />
+      </FieldHarness>,
+    );
+    const input = screen.getByLabelText('Price');
+    await user.type(input, '-');
+    expect(input).toHaveValue('-');
+
+    act(() => formRef.current?.reset());
+    expect(input).toHaveValue('');
+  });
+
   it('replaces a half-typed comma draft on a differing external change, but not on one that matches it', async () => {
     const user = userEvent.setup();
     const formRef = createRef<AnyFormApi>();

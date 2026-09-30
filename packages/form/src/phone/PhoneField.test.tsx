@@ -72,6 +72,22 @@ describe('PhoneField', () => {
     expect(screen.getByLabelText('Phone')).toHaveValue('+1 415 555 2671');
   });
 
+  it('drops a partial number on reset, though the value stays null', async () => {
+    const user = userEvent.setup();
+    const formRef = createRef<AnyFormApi>();
+    render(
+      <FieldHarness defaultValue={null} formRef={formRef}>
+        <PhoneField label="Phone" />
+      </FieldHarness>,
+    );
+    const input = screen.getByLabelText('Phone');
+    await user.type(input, '+49');
+    expect(input).toHaveValue('+49');
+
+    act(() => formRef.current?.reset());
+    expect(input).toHaveValue('');
+  });
+
   it('names the country button from the labels', () => {
     render(
       <FormConfigProvider labels={{selectCountry: 'Land wählen'}}>

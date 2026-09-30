@@ -1,8 +1,10 @@
+import {useStore} from '@tanstack/react-form';
 import {MuiTelInput} from 'mui-tel-input';
 import type {MuiTelInputCountry, MuiTelInputProps} from 'mui-tel-input';
 import {useState} from 'react';
 
 import {useFormConfig} from '../config/FormConfigContext.js';
+import {useFieldContext} from '../context.js';
 import {FieldShell} from '../core/FieldShell.js';
 import type {CommonFieldProps} from '../core/types.js';
 import {useFieldBinding} from '../core/useFieldBinding.js';
@@ -43,14 +45,19 @@ export function PhoneField({
   const {labels} = useFormConfig();
   const value = typeof binding.value === 'string' ? binding.value : null;
 
+  const field = useFieldContext<unknown>();
+  const isTouched = useStore(field.store, (state) => state.meta.isTouched);
+
   // What the user typed, formatted. Rebuilt from the form value when that changes from
-  // outside (a reset, an edit record arriving).
+  // outside (an edit record arriving), or when a reset untouches the field.
   const [draft, setDraft] = useState(value ?? '');
   const [shownValue, setShownValue] = useState(value);
-  if (value !== shownValue) {
+  const [wasTouched, setWasTouched] = useState(isTouched);
+  if (value !== shownValue || (wasTouched && !isTouched)) {
     setShownValue(value);
     setDraft(value ?? '');
   }
+  if (isTouched !== wasTouched) setWasTouched(isTouched);
 
   return (
     <FieldShell

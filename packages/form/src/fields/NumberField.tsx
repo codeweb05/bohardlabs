@@ -1,6 +1,8 @@
 import MuiTextField from '@mui/material/TextField';
+import {useStore} from '@tanstack/react-form';
 import {useState} from 'react';
 
+import {useFieldContext} from '../context.js';
 import {FieldShell} from '../core/FieldShell.js';
 import type {CommonFieldProps} from '../core/types.js';
 import {useFieldBinding} from '../core/useFieldBinding.js';
@@ -39,15 +41,20 @@ export function NumberField({
   const binding = useFieldBinding<number | null>({required, expect: NULLABLE_NUMBER});
   // NaN and Infinity count as empty: NaN never equals itself, so the resync below would loop.
   const value = Number.isFinite(binding.value) ? binding.value : null;
+  const field = useFieldContext<unknown>();
+  const isTouched = useStore(field.store, (state) => state.meta.isTouched);
 
   // What the user typed, kept apart from the form value so `4.` and `-` survive a render.
-  // When the form value changes from outside (reset, a loaded record), the text follows it.
+  // When the form value changes from outside (a loaded record), or a reset untouches the
+  // field, the text is rebuilt from the value.
   const [text, setText] = useState(() => toText(value, decimalSeparator));
   const [shownValue, setShownValue] = useState(value);
-  if (value !== shownValue) {
+  const [wasTouched, setWasTouched] = useState(isTouched);
+  if (value !== shownValue || (wasTouched && !isTouched)) {
     setShownValue(value);
     setText(toText(value, decimalSeparator));
   }
+  if (isTouched !== wasTouched) setWasTouched(isTouched);
 
   const escaped = decimalSeparator === '.' ? '\\.' : ',';
   const accepted = new RegExp(allowDecimals ? `^-?\\d*(${escaped}\\d*)?$` : '^-?\\d*$');
