@@ -1,4 +1,5 @@
 import {useFormConfig} from '../config/FormConfigContext.js';
+import {useFieldContext} from '../context.js';
 import {FieldPart, FieldParts} from '../core/FieldParts.js';
 import type {CommonFieldProps} from '../core/types.js';
 import {useFieldBinding} from '../core/useFieldBinding.js';
@@ -58,6 +59,8 @@ export function DateRangeField({
   maxDate,
 }: Readonly<DateRangeFieldProps>) {
   const binding = useFieldBinding<DateRange>({required, expect: DATE_RANGE});
+  // Writes read the value at that moment: both ends can settle in one commit.
+  const field = useFieldContext<unknown>();
   const {labels} = useFormConfig();
   const range = readRange(binding.value);
 
@@ -75,7 +78,7 @@ export function DateRangeField({
         labelledBy={`${binding.labelId}-start`}
         caption={labels.rangeStart}
         value={range.start}
-        onChange={(start) => binding.setValue({...range, start})}
+        onChange={(start) => binding.setValue({...readRange(field.form.getFieldValue(field.name)), start})}
         minDate={minDate}
         maxDate={range.end ?? maxDate}
         disabled={disabled}
@@ -86,7 +89,7 @@ export function DateRangeField({
         labelledBy={`${binding.labelId}-end`}
         caption={labels.rangeEnd}
         value={range.end}
-        onChange={(end) => binding.setValue({...range, end})}
+        onChange={(end) => binding.setValue({...readRange(field.form.getFieldValue(field.name)), end})}
         minDate={range.start ?? minDate}
         maxDate={maxDate}
         disabled={disabled}

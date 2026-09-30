@@ -234,6 +234,28 @@ describe.each(ADAPTERS)('pickers under %s', (_name, Adapter) => {
       expect(await submitted(user)).toBe('{"start":"2026-01-25","end":"2026-01-30"}');
     });
 
+    it('stores both rejected ends when a wider maxDate makes them valid together', async () => {
+      const user = userEvent.setup();
+      const {rerender} = renderPicker(<DateRangeField label="Stay" maxDate="2026-01-20" />, {
+        defaultValue: {start: null, end: null},
+      });
+      const stay = screen.getByRole('group', {name: 'Stay'});
+      await user.click(firstSection(within(stay).getByRole('group', {name: 'Start'})));
+      await user.keyboard('01252026');
+      await user.click(firstSection(within(stay).getByRole('group', {name: 'End'})));
+      await user.keyboard('01282026');
+      expect(await submitted(user)).toBe('{"start":null,"end":null}');
+
+      rerender(
+        <LocalizationProvider dateAdapter={Adapter}>
+          <FieldHarness defaultValue={{start: null, end: null}}>
+            <DateRangeField label="Stay" maxDate="2026-01-31" />
+          </FieldHarness>
+        </LocalizationProvider>,
+      );
+      expect(await submitted(user)).toBe('{"start":"2026-01-25","end":"2026-01-28"}');
+    });
+
     it('does not carry a rejected end into a record loaded by reset', async () => {
       const user = userEvent.setup();
       const formRef = createRef<AnyFormApi>();
