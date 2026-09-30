@@ -1,5 +1,8 @@
-// Filled in by its own task. The entry exists now so the build and the exports map
-// cover all four from the start. A type-only placeholder (rather than a bare `export {}`)
-// because oxlint and eslint both reject an empty export specifier list; erased at
-// runtime, so this entry's public surface stays empty until its task replaces it.
-export type Placeholder = Record<string, never>;
+export {AddressField} from './maps/AddressField';
+export type {AddressFieldProps} from './maps/AddressField';
+export {createGooglePlacesProvider} from './maps/googlePlaces';
+export type {GooglePlaces, GooglePlacesOptions} from './maps/googlePlaces';
+export {LocationSearchField} from './maps/LocationSearchField';
+export type {LocationSearchFieldProps} from './maps/LocationSearchField';
+export {EMPTY_ADDRESS} from './maps/types';
+export type {Address, Place, PlaceSuggestion, PlacesProvider, ResolvedPlace} from './maps/types';

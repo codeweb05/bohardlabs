@@ -26,6 +26,8 @@ export interface FormLabels {
   rangeEnd: string;
   /** PhoneField's country button. */
   selectCountry: string;
+  /** Under LocationSearchField or AddressField when the provider could not resolve a pick. */
+  placeLookupFailed: string;
   /** AddressField's search box and parts. */
   searchAddress: string;
   addressLine1: string;
@@ -52,6 +54,7 @@ export const DEFAULT_FORM_LABELS: FormLabels = {
   rangeStart: 'Start',
   rangeEnd: 'End',
   selectCountry: 'Select country',
+  placeLookupFailed: 'Could not look up that place',
   searchAddress: 'Search for an address',
   addressLine1: 'Address line 1',
   addressLine2: 'Address line 2',

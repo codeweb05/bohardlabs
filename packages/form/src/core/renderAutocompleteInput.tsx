@@ -6,6 +6,8 @@ import type {FieldBinding} from './useFieldBinding';
 interface Extra {
   readonly autoFocus?: boolean;
   readonly placeholder?: string;
+  /** `aria-label` for the input, when no `<label>` names it. */
+  readonly inputLabel?: string;
 }
 
 /**
@@ -25,7 +27,10 @@ export function renderAutocompleteInput(
       autoFocus={extra?.autoFocus}
       placeholder={extra?.placeholder}
       error={binding.error !== null}
-      slotProps={{...params.slotProps, htmlInput: {...params.slotProps.htmlInput, ...binding.inputProps}}}
+      slotProps={{
+        ...params.slotProps,
+        htmlInput: {...params.slotProps.htmlInput, ...binding.inputProps, 'aria-label': extra?.inputLabel},
+      }}
     />
   );
 }

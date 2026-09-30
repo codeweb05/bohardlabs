@@ -27,6 +27,8 @@ export interface AsyncAutocompleteInputProps<T> extends AsyncOptionsProps<T> {
   readonly onChange: (value: T | T[] | null) => void;
   readonly autoFocus?: boolean;
   readonly disabled?: boolean;
+  /** An accessible name for an input with no `<label>` of its own (AddressField's search box). */
+  readonly inputLabel?: string;
 }
 
 /**
@@ -47,6 +49,7 @@ export function AsyncAutocompleteInput<T>({
   placeholder,
   autoFocus,
   disabled,
+  inputLabel,
 }: AsyncAutocompleteInputProps<T>) {
   const {labels} = useFormConfig();
   const [open, setOpen] = useState(false);
@@ -83,7 +86,7 @@ export function AsyncAutocompleteInput<T>({
       fullWidth
       {...text}
       noOptionsText={status === 'error' ? labels.loadFailed : text.noOptionsText}
-      renderInput={(params) => renderAutocompleteInput(params, binding, {autoFocus, placeholder})}
+      renderInput={(params) => renderAutocompleteInput(params, binding, {autoFocus, placeholder, inputLabel})}
     />
   );
 }

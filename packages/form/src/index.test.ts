@@ -42,7 +42,7 @@ const ROOT_API = [
 ];
 const PICKERS_API = ['DateField', 'DateRangeField', 'TimePickerField'];
 const PHONE_API = ['PhoneField'];
-const MAPS_API: string[] = [];
+const MAPS_API = ['AddressField', 'EMPTY_ADDRESS', 'LocationSearchField', 'createGooglePlacesProvider'];
 
 describe('public surface', () => {
   it.each([
