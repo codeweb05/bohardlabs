@@ -230,8 +230,9 @@ export function PickupForm() {
 
 Importing the provider or `EMPTY_ADDRESS` from `@vt-labs/form/maps` loads that entry, so the
 fields are imported directly here. `lazyField` would save nothing. It keeps the maps code out of
-the initial load only when that load imports nothing from `@vt-labs/form/maps` statically, for
-example when the form above is itself a route loaded with `import()`.
+the initial load only when the module that calls `createAppForm` imports nothing from
+`@vt-labs/form/maps` at runtime: the provider is created in a lazily loaded module and passed
+down as a prop, or it is your own `PlacesProvider`, whose type import costs nothing.
 
 Google bills autocomplete by session: the keystrokes of one search and the pick that ends it
 are one charge. A new provider on every render starts a new session each time and drops the
