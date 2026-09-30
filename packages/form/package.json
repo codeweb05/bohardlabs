@@ -46,6 +46,7 @@
   "peerDependencies": {
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
+    "@mui/icons-material": "^9.0.0",
     "@mui/material": "^9.0.0",
     "@mui/x-date-pickers": "^9.0.0",
     "@tanstack/react-form": "^1.33.0",
@@ -64,6 +65,7 @@
   "devDependencies": {
     "@emotion/react": "catalog:",
     "@emotion/styled": "catalog:",
+    "@mui/icons-material": "catalog:",
     "@mui/material": "catalog:",
     "@mui/x-date-pickers": "catalog:",
     "@storybook/react-vite": "^10.5.10",

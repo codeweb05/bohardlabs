@@ -1,3 +1,5 @@
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import IconButton from '@mui/material/IconButton';
 import InputAdornment from '@mui/material/InputAdornment';
 import MuiTextField from '@mui/material/TextField';
@@ -5,7 +7,6 @@ import {useState} from 'react';
 
 import {useFormConfig} from '../config/FormConfigContext';
 import {FieldShell} from '../core/FieldShell';
-import {VisibilityIcon, VisibilityOffIcon} from '../core/icons';
 import type {CommonFieldProps} from '../core/types';
 import {useFieldBinding} from '../core/useFieldBinding';
 import {STRING} from '../core/valueChecks';

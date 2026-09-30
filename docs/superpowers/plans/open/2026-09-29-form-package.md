@@ -39,7 +39,7 @@ empty in `SelectField`) are held for the final review's fix round.
 ## Global Constraints
 
 - Package name `@vt-labs/form`, `"private": true`, version `0.0.0`. Flipping `private` is a separate decision.
-- Peers: `react` and `react-dom` `^19.0.0`; `@mui/material` `^9.0.0`; `@emotion/react` and `@emotion/styled` `^11.14.0`; `@tanstack/react-form` `^1.33.0`. Optional peers: `@mui/x-date-pickers` `^9.0.0` and `mui-tel-input` `^11.0.0`. There is no `@types/google.maps` peer and no `@mui/icons-material` peer.
+- Peers: `react` and `react-dom` `^19.0.0`; `@mui/material` and `@mui/icons-material` `^9.0.0`; `@emotion/react` and `@emotion/styled` `^11.14.0`; `@tanstack/react-form` `^1.33.0`. Optional peers: `@mui/x-date-pickers` `^9.0.0` and `mui-tel-input` `^11.0.0`. There is no `@types/google.maps` peer.
 - Every peer is listed again in `devDependencies` as `catalog:`. A peer range is written out in full, never `catalog:`.
 - The root entry (`src/index.ts`) never reaches `@mui/x-date-pickers`, `mui-tel-input` or `mui-tel-input`'s `libphonenumber-js`. `/pickers`, `/phone` and `/maps` never reach each other's peers.
 - Deep MUI imports only (`@mui/material/TextField`), never `from '@mui/material'`. Icons are inline `SvgIcon` paths.
@@ -6474,7 +6474,13 @@ const FORBIDDEN_BY_ENTRY = {
   maps: [PICKERS, PHONE],
 };
 // Never, from any entry: the MUI barrel, an icon pack, a date library, phone metadata.
-const FORBIDDEN_EVERYWHERE = [/^@mui\/material$/, /^@mui\/icons-material/, /^date-fns/, /^dayjs/, /^libphonenumber-js/];
+const FORBIDDEN_EVERYWHERE = [
+  /^@mui\/material$/,
+  /^@mui\/icons-material$/,
+  /^date-fns/,
+  /^dayjs/,
+  /^libphonenumber-js/,
+];
 
 // Rolldown emits one import or export statement per line in the lib output. This is a
 // scanner for that output, not a general JS parser.

@@ -1,7 +1,6 @@
+import InfoIcon from '@mui/icons-material/InfoOutlined';
 import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
-
-import {InfoIcon} from './icons';
 
 interface InfoTooltipProps {
   readonly title: string;

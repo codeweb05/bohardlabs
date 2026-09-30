@@ -52,12 +52,12 @@ One package, four entry points. Each optional peer is reachable from exactly one
 [Decision 0009](../../decisions/0009-optional-peers-get-a-subpath.md) makes this the rule
 for every package here.
 
-| Entry      | Peers                                                                                  |
-| ---------- | -------------------------------------------------------------------------------------- |
-| `.`        | `react`, `react-dom` `^19`, `@mui/material` `^9`, `@emotion/*`, `@tanstack/react-form` |
-| `/pickers` | adds `@mui/x-date-pickers` `^9` (optional)                                             |
-| `/phone`   | adds `mui-tel-input` `^11` (optional)                                                  |
-| `/maps`    | nothing; the consumer loads Google's Places library                                    |
+| Entry      | Peers                                                                                                              |
+| ---------- | ------------------------------------------------------------------------------------------------------------------ |
+| `.`        | `react`, `react-dom` `^19`, `@mui/material` `^9`, `@mui/icons-material` `^9`, `@emotion/*`, `@tanstack/react-form` |
+| `/pickers` | adds `@mui/x-date-pickers` `^9` (optional)                                                                         |
+| `/phone`   | adds `mui-tel-input` `^11` (optional)                                                                              |
+| `/maps`    | nothing; the consumer loads Google's Places library                                                                |
 
 Why not one entry: a root `index.js` that re-exports `DateField` puts
 `@mui/x-date-pickers` in the import graph of every consumer. Vite's dependency
@@ -73,7 +73,7 @@ Build rules that keep it lean:
   once across entries.
 - `"sideEffects": false`, and no module does work at import time.
 - Deep MUI imports (`@mui/material/TextField`), never the barrel.
-- Icons are inline `SvgIcon` paths. `@mui/icons-material` is not a peer.
+- Icons are deep imports (`@mui/icons-material/Visibility`), never the barrel. `@mui/icons-material` `^9` is a peer.
 - No date library is imported anywhere. The consumer's `LocalizationProvider` supplies the
   adapter.
 - No Google script loader. The consumer loads the Places library.
@@ -268,8 +268,8 @@ provider, with no key and no network.
   a per-glob threshold in the root `vitest.config.ts`.
 - **Import graph:** a script walks the built `dist/` from each entry and fails if the root
   reaches `@mui/x-date-pickers` or `mui-tel-input`, if any `.d.ts` mentions `google.maps`, if a subpath reaches
-  another subpath's peer, or if any file imports the `@mui/material` barrel or
-  `@mui/icons-material`.
+  another subpath's peer, or if any file imports the `@mui/material` or
+  `@mui/icons-material` barrel.
 - **Consumer fixture:** `packages/form/fixtures/consumer`, a Vite app with a sign-in form
   and a lazily registered `DateField`. A script builds it and asserts the entry chunk holds no
   picker modules and the pickers land in their own chunk.
