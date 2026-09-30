@@ -89,6 +89,23 @@ describe('LocationSearchField', () => {
     expect(screen.getByLabelText('Submitted value')).toHaveTextContent('null');
   });
 
+  it('shows a validation error in place of a failed lookup', async () => {
+    const user = userEvent.setup();
+    render(
+      <FieldHarness defaultValue={null} validate={(value) => (value ? undefined : 'Pick a pickup point')}>
+        <LocationSearchField label="Pickup" provider={failingPlaces([PUNE])} debounceMs={0} />
+      </FieldHarness>,
+    );
+    const input = await pickPlace(user, 'pune', 'FC Road, Pune');
+    await screen.findByText(FAILED);
+
+    await user.click(screen.getByRole('button', {name: 'Submit'}));
+
+    expect(await screen.findByText('Pick a pickup point')).toBeInTheDocument();
+    expect(screen.queryByText(FAILED)).not.toBeInTheDocument();
+    expect(input).toHaveAccessibleDescription('Pick a pickup point');
+  });
+
   it('drops a failed lookup when the form is reset', async () => {
     const user = userEvent.setup();
     const formRef = createRef<AnyFormApi>();
