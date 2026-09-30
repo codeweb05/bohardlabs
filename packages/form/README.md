@@ -5,16 +5,13 @@ apps on React 19 and MUI 9. Every field shows the same label, helper and error l
 the same value shape, and wires the same aria attributes. Date, phone and address fields sit
 behind their own entry points, so a sign-in form ships none of them.
 
-> **Status: prerelease (`0.1.0-next`).** Install it with `@vt-labs/form@next`. The API may
-> change before 0.1.0.
-
 ## Install
 
 The package has no `dependencies`; everything it uses is a peer, so your app's copy of React,
 MUI and TanStack Form is the only copy in the bundle.
 
 ```sh
-pnpm add @vt-labs/form@next @tanstack/react-form @mui/material @mui/icons-material @emotion/react @emotion/styled
+pnpm add @vt-labs/form @tanstack/react-form @mui/material @mui/icons-material @emotion/react @emotion/styled
 pnpm add @mui/x-date-pickers date-fns   # for @vt-labs/form/pickers (or dayjs)
 pnpm add mui-tel-input                  # for @vt-labs/form/phone
 ```

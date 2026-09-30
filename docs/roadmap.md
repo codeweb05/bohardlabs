@@ -28,14 +28,14 @@ Status words, used the same way in every table below:
 
 ## Where things stand
 
-| Workstream                                       | Status                                                    | Next step                                       |
-| ------------------------------------------------ | --------------------------------------------------------- | ----------------------------------------------- |
-| [1. Publishing](#1-publishing)                   | datatable and image-editor 0.1.0, form 0.1.0-next.0 ready | first releases                                  |
-| [2. `@vt-labs/datatable`](#2-vt-labsdatatable)   | ported, hardened, on MUI 9; 3 features done               | `noUncheckedIndexedAccess`, then feature item 1 |
-| [3. New packages](#3-new-packages)               | 5 plans written, image-editor and form done               | start plan 2, admin-ui-kit                      |
-| [4. Deferred candidates](#4-deferred-candidates) | 4 deferred                                                | nothing until a trigger fires                   |
-| [5. Repo and tooling](#5-repo-and-tooling)       | hooks, jscpd; 3 upgrades deferred                         | the monthly `pnpm outdated -r`                  |
-| [6. Decisions](#6-decisions)                     | 9 made, 2 open                                            | answer B before plan 4 starts                   |
+| Workstream                                       | Status                                       | Next step                                       |
+| ------------------------------------------------ | -------------------------------------------- | ----------------------------------------------- |
+| [1. Publishing](#1-publishing)                   | datatable, form and image-editor 0.1.0 ready | first releases                                  |
+| [2. `@vt-labs/datatable`](#2-vt-labsdatatable)   | ported, hardened, on MUI 9; 3 features done  | `noUncheckedIndexedAccess`, then feature item 1 |
+| [3. New packages](#3-new-packages)               | 5 plans written, image-editor and form done  | start plan 2, admin-ui-kit                      |
+| [4. Deferred candidates](#4-deferred-candidates) | 4 deferred                                   | nothing until a trigger fires                   |
+| [5. Repo and tooling](#5-repo-and-tooling)       | hooks, jscpd; 3 upgrades deferred            | the monthly `pnpm outdated -r`                  |
+| [6. Decisions](#6-decisions)                     | 9 made, 2 open                               | answer B before plan 4 starts                   |
 
 ## 1. Publishing
 
@@ -43,16 +43,15 @@ Status words, used the same way in every table below:
 private until they are genuinely ready; flipping that flag is the decision to support the
 thing forever.
 
-| Step                                                              | Status            | Detail                                                                                 |
-| ----------------------------------------------------------------- | ----------------- | -------------------------------------------------------------------------------------- |
-| Pick the npm scope                                                | done (2026-08-28) | [decision 0001](decisions/0001-npm-scope.md)                                           |
-| Pick the license                                                  | done (2026-09-28) | [decision 0007](decisions/0007-mit-license.md)                                         |
-| Remove `"private": true` from `@vt-labs/datatable`                | done (2026-08-29) |                                                                                        |
-| Create the `vt-labs` org on npm, add the publishing account       | done (2026-09-29) | decision 0001                                                                          |
-| First `pnpm release`: `@vt-labs/datatable@0.1.0`                  | open              | after the org exists                                                                   |
-| First `pnpm release` of `@vt-labs/form`: `0.1.0-next.0` on `next` | open              | staged in pre mode; needs the owner's npm one-time code                                |
-| `@vt-labs/form@0.1.0`: `changeset pre exit`, then release         | open              | on the owner's word, after the prerelease                                              |
-| First release of `@vt-labs/image-editor`: `0.1.0` on `latest`     | open              | skips the prerelease; published with `pnpm publish` since pre mode would tag it `next` |
+| Step                                                          | Status            | Detail                                                                                 |
+| ------------------------------------------------------------- | ----------------- | -------------------------------------------------------------------------------------- |
+| Pick the npm scope                                            | done (2026-08-28) | [decision 0001](decisions/0001-npm-scope.md)                                           |
+| Pick the license                                              | done (2026-09-28) | [decision 0007](decisions/0007-mit-license.md)                                         |
+| Remove `"private": true` from `@vt-labs/datatable`            | done (2026-08-29) |                                                                                        |
+| Create the `vt-labs` org on npm, add the publishing account   | done (2026-09-29) | decision 0001                                                                          |
+| First `pnpm release`: `@vt-labs/datatable@0.1.0`              | open              | after the org exists                                                                   |
+| First release of `@vt-labs/form`: `0.1.0` on `latest`         | open              | skips the prerelease; published with `pnpm publish`, like image-editor                 |
+| First release of `@vt-labs/image-editor`: `0.1.0` on `latest` | open              | skips the prerelease; published with `pnpm publish` since pre mode would tag it `next` |
 
 Each new package from section 3 joins this queue once its plan closes: the last task of
 every plan writes the README and the changeset, and the package stays private until it is
