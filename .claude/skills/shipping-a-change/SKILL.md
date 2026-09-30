@@ -9,8 +9,10 @@ description: Use when finishing a unit of work in this repo, or when asked wheth
 
 Agents commit their own work without asking; the rules are in the Git section of
 `CLAUDE.md`. In short: a `<type>/<slug>` branch, never `main`; a conventional-commit message
-that commitlint accepts; files staged by name; `git mv` for moves; never `--no-verify`.
-Push, rebase, reset, clean, merges into `main` and PRs still wait for the user.
+that commitlint accepts; files staged by name; `git mv` for moves; never `--no-verify`;
+linear history, so a branch catches up with `git rebase main` and lands with
+`git merge --ff-only`, never a merge commit. Push, reset, clean, rebasing anything already
+pushed, landing on `main` and PRs still wait for the user.
 
 So "done" means: the code is written, the gate is green, the documents below are updated, and
 the unit of work is committed on its branch.
@@ -115,4 +117,5 @@ the change. Mention those rather than letting them ride along unannounced.
 - [ ] `pnpm validate:ci` green, output reported.
 - [ ] `git status` reviewed; incidental changes named.
 - [ ] Committed on a `<type>/<slug>` branch, files staged by name, hooks passed without
-      `--no-verify`. Nothing pushed, rebased or reset without the user.
+      `--no-verify`, rebased onto `main` with no merge commits. Nothing pushed, reset or
+      landed on `main` without the user.

@@ -207,6 +207,11 @@ gate, so a commit that passes them is a commit you may make.
 - **Branch first.** Work goes on `<type>/<short-slug>` (`feature`, `fix`, `chore`,
   `refactor`, `docs`, `release`, `hotfix`), never straight onto `main`. A worktree branch
   counts.
+- **Linear history, always.** No merge commits, on `main` or on a branch. Bring a branch up
+  to date with `git rebase main`, never `git merge main`, and land it on `main` with
+  `git merge --ff-only <branch>`, which moves the pointer and adds no commit. Pull with
+  `git pull --rebase`. Set `git config merge.ff only` and `git config pull.rebase true` in
+  each clone, so a stray merge fails instead of landing.
 - **Conventional commits.** `commitlint.config.js` enforces the type: `feat`, `fix`,
   `refactor`, `test`, `docs`, `chore`, `perf`, `ci`, `revert`. A scope is optional and, when
   used, names the package (`feat(datatable): …`). Subject in the imperative, lower case, no
@@ -220,8 +225,9 @@ gate, so a commit that passes them is a commit you may make.
 - **Never `--no-verify`.** A failing hook is a failing gate: fix the cause and make a new
   commit. Do not amend a commit that is already pushed.
 - **Ask first** for anything that rewrites or discards history or leaves this machine:
-  `push`, `reset --hard`, `rebase`, `clean`, force-anything, deleting a branch, merging into
-  `main`, opening a PR.
+  `push`, `reset --hard`, rebasing anything already pushed or already on `main`, `clean`,
+  force-anything, deleting a branch, landing on `main`, opening a PR. Rebasing your own
+  unpushed branch onto `main` is the linear-history rule above and needs no ask.
 
 Review agents (`lib-reviewer`, `api-surface-auditor`) stay read-only and never commit.
 
