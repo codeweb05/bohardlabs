@@ -5,6 +5,7 @@ import {useFieldBinding} from '../core/useFieldBinding.js';
 import type {ValueExpectation} from '../core/valueChecks.js';
 import {DateInput, NULLABLE_DATE_STRING} from './DateField.js';
 import type {DateInputProps} from './DateField.js';
+import {isDateString} from './dateStrings.js';
 
 export interface DateRange {
   readonly start: string | null;
@@ -31,6 +32,14 @@ const DATE_RANGE: ValueExpectation = {
 
 const EMPTY: DateRange = {start: null, end: null};
 
+/** Each end on its own, so one unusable end does not blank the other. */
+function readRange(value: unknown): DateRange {
+  if (typeof value !== 'object' || value === null) return EMPTY;
+  const start = 'start' in value && isDateString(value.start) ? value.start : null;
+  const end = 'end' in value && isDateString(value.end) ? value.end : null;
+  return {start, end};
+}
+
 /**
  * Two linked date pickers in one fieldset. MUI's DateRangePicker is in the paid Pro
  * package. Each end limits the other: an end typed before the start (or a start after the
@@ -50,7 +59,7 @@ export function DateRangeField({
 }: Readonly<DateRangeFieldProps>) {
   const binding = useFieldBinding<DateRange>({required, expect: DATE_RANGE});
   const {labels} = useFormConfig();
-  const range = DATE_RANGE.test(binding.value) ? binding.value : EMPTY;
+  const range = readRange(binding.value);
 
   return (
     <FieldParts

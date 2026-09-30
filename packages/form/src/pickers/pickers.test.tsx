@@ -186,6 +186,14 @@ describe.each(ADAPTERS)('pickers under %s', (_name, Adapter) => {
       expect(await submitted(user)).toBe('{"start":"2026-05-01","end":null}');
     });
 
+    it('keeps a valid end on screen when the other stored end is unusable', () => {
+      vi.spyOn(console, 'warn').mockImplementation(() => {});
+      renderPicker(<DateRangeField label="Stay" />, {defaultValue: {start: '2026-05-01', end: 'garbage'}});
+      const stay = screen.getByRole('group', {name: 'Stay'});
+      expect(hiddenInput(within(stay).getByRole('group', {name: 'Start'}))).toHaveValue('05/01/2026');
+      expect(hiddenInput(within(stay).getByRole('group', {name: 'End'}))).toHaveValue('');
+    });
+
     it('stores a rejected start once a later end makes it valid', async () => {
       const user = userEvent.setup();
       renderPicker(<DateRangeField label="Stay" />, {defaultValue: {start: null, end: '2026-01-20'}});
