@@ -20,6 +20,18 @@ function range(count: number, step = 1): number[] {
   return Array.from({length: count}, (_, index) => index * step);
 }
 
+/**
+ * `options`, plus `value` in sorted position when it isn't already one of them. A
+ * stored duration can land off the generated steps (an odd legacy value) or above a
+ * narrowed `maxHours`; without this the select would show blank for a value it does
+ * hold, and the value could not be picked back once cleared.
+ */
+function withCurrentValue(options: readonly number[], value: string): number[] {
+  if (value === '') return [...options];
+  const current = Number(value);
+  return options.includes(current) ? [...options] : [...options, current].sort((a, b) => a - b);
+}
+
 /** A length of time in minutes, picked as hours and minutes. */
 export function DurationField({
   label,
@@ -43,9 +55,17 @@ export function DurationField({
     binding.setValue(nextHours * 60 + nextMinutes);
   };
 
+  const cappedHours = Math.min(Math.max(maxHours, 0), 24);
+  const step = Math.max(minuteStep, 1);
+
   const parts = [
-    {part: 'hours', caption: labels.hours, value: hours, options: range(Math.min(maxHours, 24) + 1)},
-    {part: 'minutes', caption: labels.minutes, value: minutes, options: range(Math.ceil(60 / minuteStep), minuteStep)},
+    {part: 'hours', caption: labels.hours, value: hours, options: withCurrentValue(range(cappedHours + 1), hours)},
+    {
+      part: 'minutes',
+      caption: labels.minutes,
+      value: minutes,
+      options: withCurrentValue(range(Math.ceil(60 / step), step), minutes),
+    },
   ] as const;
 
   return (

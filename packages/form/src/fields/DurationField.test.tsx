@@ -69,4 +69,41 @@ describe('DurationField', () => {
     expect(hours).toHaveAttribute('aria-invalid', 'true');
     await waitFor(() => expect(hours).toHaveFocus());
   });
+
+  it('shows an off-step minute value and keeps it selectable', async () => {
+    const user = userEvent.setup();
+    render(
+      <FieldHarness defaultValue={97}>
+        <DurationField label="Estimate" />
+      </FieldHarness>,
+    );
+    const minutes = screen.getByRole('combobox', {name: /Minutes/});
+    expect(minutes).toHaveTextContent('37');
+
+    await user.click(minutes);
+    expect(within(screen.getByRole('listbox')).getByRole('option', {name: '37'})).toBeInTheDocument();
+  });
+
+  it('shows an hours value above maxHours and keeps it selectable', async () => {
+    const user = userEvent.setup();
+    render(
+      <FieldHarness defaultValue={300}>
+        <DurationField label="Estimate" maxHours={2} />
+      </FieldHarness>,
+    );
+    const hours = screen.getByRole('combobox', {name: /Hours/});
+    expect(hours).toHaveTextContent('5');
+
+    await user.click(hours);
+    expect(within(screen.getByRole('listbox')).getByRole('option', {name: '5'})).toBeInTheDocument();
+  });
+
+  it('renders without hanging when minuteStep is 0', () => {
+    render(
+      <FieldHarness defaultValue={null}>
+        <DurationField label="Estimate" minuteStep={0} />
+      </FieldHarness>,
+    );
+    expect(screen.getByRole('combobox', {name: /Minutes/})).toBeInTheDocument();
+  });
 });
