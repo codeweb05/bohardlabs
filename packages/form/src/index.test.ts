@@ -16,6 +16,7 @@ import * as pickers from './pickers';
 
 const ROOT_API = [
   'CancelButton',
+  'CheckboxField',
   'DEFAULT_FORM_LABELS',
   'FieldShell',
   'FormConfigProvider',
@@ -23,6 +24,7 @@ const ROOT_API = [
   'NumberField',
   'PasswordField',
   'SubmitButton',
+  'SwitchField',
   'TextArea',
   'TextField',
   'applyServerErrors',
