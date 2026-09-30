@@ -9,7 +9,7 @@ saturation, presets, undo and redo, and a Replace button. Pass `false` for the o
 want, so an avatar picker can be as small as crop and zoom. Below the `sm` breakpoint the dialog goes full screen, with the
 quick tools in a floating pill over the image.
 
-> **Status: private.** Not published yet. The API may change before the first release.
+> **Status: prerelease.** `0.1.0-next.0` on the `next` tag. The API may change before 0.1.0.
 
 ## Install
 
