@@ -29,6 +29,9 @@ export const Default: Story = {
   play: async ({canvasElement}) => {
     const canvas = within(canvasElement);
     const input = canvas.getByLabelText('Phone');
+    // `{End}` because this `userEvent` clicks synthetically, and in Chromium that leaves the
+    // caret at 0, before the prefilled `+91`. A real click (checked through Playwright) lands
+    // where the pointer is, as in a plain text field, so users do not hit this.
     await userEvent.click(input);
     await userEvent.keyboard('{End}9876543210');
     await userEvent.click(canvas.getByRole('button', {name: 'Submit'}));
