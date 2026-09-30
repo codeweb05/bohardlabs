@@ -199,13 +199,31 @@ Two agents in `.claude/agents/` are review passes, not authors. Both are read-on
   rule is wrong for this repo, turn it off in the config with a comment saying why, so the
   decision is in one place instead of scattered through the source.
 
-## Git (on request only)
+## Git
 
-**Run a writing git command only when the user asks for it** (`add`, `commit`, `push`,
-`checkout`, `stash`, `reset`, `rebase`, and the like). Otherwise the user manages version
-control, and "done" means the gate is green, not "committed". Read-only inspection
-(`status`, `diff`, `log`) is always fine. A request covers the git work it names, not the
-next piece of work.
+Claude and other agents **commit their own work**, without asking first. The hooks are the
+gate, so a commit that passes them is a commit you may make.
+
+- **Branch first.** Work goes on `<type>/<short-slug>` (`feature`, `fix`, `chore`,
+  `refactor`, `docs`, `release`, `hotfix`), never straight onto `main`. A worktree branch
+  counts.
+- **Conventional commits.** `commitlint.config.js` enforces the type: `feat`, `fix`,
+  `refactor`, `test`, `docs`, `chore`, `perf`, `ci`, `revert`. A scope is optional and, when
+  used, names the package (`feat(datatable): …`). Subject in the imperative, lower case, no
+  trailing period, header under 120 characters.
+- **One unit of work per commit.** The code, its test, its changeset, and any
+  `docs/roadmap.md` or decision-log edit it needs land in the same commit.
+- **Stage by name.** `git add <paths>`, never `git add -A`, `git add .` or `git commit -a`.
+  Check `git status` first so a file `pnpm format` touched, or someone else's edit, does not
+  ride along.
+- **Move with `git mv`**, so `git log --follow` still reaches the history.
+- **Never `--no-verify`.** A failing hook is a failing gate: fix the cause and make a new
+  commit. Do not amend a commit that is already pushed.
+- **Ask first** for anything that rewrites or discards history or leaves this machine:
+  `push`, `reset --hard`, `rebase`, `clean`, force-anything, deleting a branch, merging into
+  `main`, opening a PR.
+
+Review agents (`lib-reviewer`, `api-surface-auditor`) stay read-only and never commit.
 
 ## Text
 

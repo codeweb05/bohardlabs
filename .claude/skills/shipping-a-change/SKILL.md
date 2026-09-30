@@ -1,19 +1,19 @@
 ---
 name: shipping-a-change
-description: Use when finishing a unit of work in this repo, or when asked whether something needs a changeset. Covers what a changeset is for and how to pick the bump, which documents change in the same commit as the code, the decision log, the plan lifecycle, and the rule that git runs only on request.
+description: Use when finishing a unit of work in this repo, or when asked whether something needs a changeset. Covers what a changeset is for and how to pick the bump, which documents change in the same commit as the code, the decision log, the plan lifecycle, and how agents commit their own work.
 ---
 
 # Shipping a change
 
-## Git is the user's
+## Commit it yourself
 
-**No writing git command unless the user asks for one.** `add`, `commit`, `push`,
-`checkout`, `stash`, `reset` and `rebase` happen only on an explicit request, and the request
-covers the git work it names, not the next piece of work. Read-only inspection (`git status`,
-`git diff`) is always fine.
+Agents commit their own work without asking; the rules are in the Git section of
+`CLAUDE.md`. In short: a `<type>/<slug>` branch, never `main`; a conventional-commit message
+that commitlint accepts; files staged by name; `git mv` for moves; never `--no-verify`.
+Push, rebase, reset, clean, merges into `main` and PRs still wait for the user.
 
-So "done" means: the code is written, the gate is green, and the documents below are updated.
-It means "committed" only when the user asked for a commit.
+So "done" means: the code is written, the gate is green, the documents below are updated, and
+the unit of work is committed on its branch.
 
 ## Does it need a changeset?
 
@@ -114,4 +114,5 @@ the change. Mention those rather than letting them ride along unannounced.
 - [ ] README, MDX guides and the decision log still true.
 - [ ] `pnpm validate:ci` green, output reported.
 - [ ] `git status` reviewed; incidental changes named.
-- [ ] No git command run that the user did not ask for.
+- [ ] Committed on a `<type>/<slug>` branch, files staged by name, hooks passed without
+      `--no-verify`. Nothing pushed, rebased or reset without the user.

@@ -137,8 +137,8 @@ Husky, lint-staged, commitlint and jscpd landed 2026-08-29; the split is in
 The repo's own Claude Code setup landed on 2026-08-29 and is in `.claude/`: five skills
 holding the situational rules `CLAUDE.md` points at (`library-boundaries`,
 `component-authoring`, `storybook-stories`, `testing-and-validation`, `shipping-a-change`),
-two read-only review agents (`lib-reviewer`, `api-surface-auditor`), and a permissions file
-that asks before any writing git command, which runs only on request. `CLAUDE.md` indexes all of it.
+two read-only review agents (`lib-reviewer`, `api-surface-auditor`), and the git rules under
+which agents commit their own work on a branch. `CLAUDE.md` indexes all of it.
 
 Nothing else is open on the tooling side. [`repo/tooling.md`](repo/tooling.md) and
 [`repo/ci.md`](repo/ci.md) describe what exists and why.
