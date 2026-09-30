@@ -20,6 +20,8 @@ export interface CropControlsProps {
   readonly onCommit: () => void;
   readonly announce: (message: string) => void;
   readonly disabled: boolean;
+  /** Off in the mobile layout, where rotate and flip live in the floating pill. */
+  readonly transforms?: boolean;
 }
 
 const STRAIGHTEN_STEP = 0.5;
@@ -35,7 +37,15 @@ function single(value: number | number[]): number {
 }
 
 /** The context row under the canvas on the Crop tab. Each tool shows only when enabled. */
-export function CropControls({state, features, onAction, onCommit, announce, disabled}: Readonly<CropControlsProps>) {
+export function CropControls({
+  state,
+  features,
+  onAction,
+  onCommit,
+  announce,
+  disabled,
+  transforms = true,
+}: Readonly<CropControlsProps>) {
   const labels = useLabels();
   const {crop, straighten, zoom, rotate, flip} = features;
   const ratios = crop.ratios.map((ratio) => ({ratio, value: parseRatio(ratio)}));
@@ -115,7 +125,7 @@ export function CropControls({state, features, onAction, onCommit, announce, dis
         />
       )}
 
-      {(rotate || flip) && (
+      {transforms && (rotate || flip) && (
         <Box sx={{display: 'flex', gap: 0.5, ml: 'auto'}}>
           {rotate && tool(labels.rotateLeft, <RotateLeftIcon />, {type: 'rotate', direction: -1})}
           {rotate && tool(labels.rotateRight, <RotateRightIcon />, {type: 'rotate', direction: 1})}

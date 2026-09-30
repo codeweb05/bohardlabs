@@ -29,9 +29,10 @@ import {createHistory, historyReducer} from '../state/history';
 import type {ImageEditorProps} from '../types';
 import {AdjustControls} from './AdjustControls';
 import {CanvasArea, visuallyHidden} from './CanvasArea';
-import {CropControls} from './CropControls';
+import {CropControls, type CropControlsProps} from './CropControls';
 import {HistoryButtons} from './HistoryButtons';
 import {errorMessage, useLabels} from './LabelsContext';
+import {MobileToolbar} from './MobileToolbar';
 import {FileButton, Picker} from './Picker';
 import {useLoadedImage} from './useLoadedImage';
 
@@ -61,7 +62,7 @@ function describe(labels: ImageEditorLabels, action: EditorAction, next: EditorS
   }
 }
 
-type SessionProps = Omit<ImageEditorProps, 'open' | 'labels'> & {readonly titleId: string};
+type SessionProps = Omit<ImageEditorProps, 'open' | 'labels'> & {readonly titleId: string; readonly mobile: boolean};
 
 function Header({titleId, onClose, actions}: Readonly<{titleId: string; onClose: () => void; actions?: ReactNode}>) {
   const labels = useLabels();
@@ -74,6 +75,24 @@ function Header({titleId, onClose, actions}: Readonly<{titleId: string; onClose:
       <IconButton aria-label={labels.close} onClick={onClose}>
         <CloseIcon />
       </IconButton>
+    </Box>
+  );
+}
+
+/** Below `sm`: Cancel, the title and the apply button across the top, and no footer. */
+function MobileHeader({
+  titleId,
+  onClose,
+  children,
+}: Readonly<{titleId: string; onClose: () => void; children: ReactNode}>) {
+  const labels = useLabels();
+  return (
+    <Box sx={{display: 'flex', alignItems: 'center', gap: 1, px: 1, py: 1, borderBottom: 1, borderColor: 'divider'}}>
+      <Button onClick={onClose}>{labels.cancel}</Button>
+      <DialogTitle id={titleId} variant="subtitle1" sx={{flex: 1, p: 0, textAlign: 'center', fontWeight: 600}}>
+        {labels.title}
+      </DialogTitle>
+      {children}
     </Box>
   );
 }
@@ -137,6 +156,41 @@ export function EditorSession(props: Readonly<SessionProps>) {
   );
 }
 
+type DockProps = Omit<CropControlsProps, 'transforms'> & {readonly mobile: boolean};
+
+/** The tools under the canvas: the Crop row, or tabs for Crop and Adjust. */
+function Dock({mobile, ...props}: Readonly<DockProps>) {
+  const labels = useLabels();
+  const id = useId();
+  const [tab, setTab] = useState<'crop' | 'adjust'>('crop');
+  // Where the canvas cannot filter, an adjustment would preview but not export. Hidden instead.
+  const adjust = props.features.adjust && supportsCanvasFilter() ? props.features.adjust : false;
+  const crop = <CropControls {...props} transforms={!mobile} />;
+  if (!adjust) return crop;
+
+  return (
+    <>
+      <Tabs value={tab} onChange={(_event, value: 'crop' | 'adjust') => setTab(value)} sx={{mt: 1}}>
+        <Tab value="crop" label={labels.cropTab} id={`${id}-crop`} aria-controls={`${id}-panel`} />
+        <Tab value="adjust" label={labels.adjustTab} id={`${id}-adjust`} aria-controls={`${id}-panel`} />
+      </Tabs>
+      <Box role="tabpanel" id={`${id}-panel`} aria-labelledby={`${id}-${tab}`}>
+        {tab === 'adjust' ? (
+          <AdjustControls
+            adjust={props.state.adjust}
+            tools={adjust}
+            onAction={props.onAction}
+            onCommit={props.onCommit}
+            disabled={props.disabled}
+          />
+        ) : (
+          crop
+        )}
+      </Box>
+    </>
+  );
+}
+
 type WorkspaceProps = Omit<SessionProps, 'features'> & {
   readonly features: ResolvedFeatures;
   readonly image: LoadedImage;
@@ -154,15 +208,12 @@ function Workspace({
   onError,
   onPick,
   titleId,
+  mobile,
 }: Readonly<WorkspaceProps>) {
   const labels = useLabels();
-  const tabsId = useId();
   const [initial] = useState(() => initialEditorState({width: image.width, height: image.height}, features));
   const [history, dispatch] = useReducer(reducer, initial, createHistory);
   const state = history.present;
-  const [tab, setTab] = useState<'crop' | 'adjust'>('crop');
-  // Where the canvas cannot filter, an adjustment would preview but not export. Hidden instead.
-  const adjust = features.adjust && supportsCanvasFilter() ? features.adjust : false;
   const [applying, setApplying] = useState(false);
   const [failure, setFailure] = useState<string | null>(null);
   const [announcement, announce] = useState('');
@@ -227,6 +278,84 @@ function Workspace({
     }
   };
 
+  const canReset = !applying && !sameState(state, initial);
+  const reset = () => onAction({type: 'replace', state: initial});
+
+  const canvas = (
+    <CanvasArea
+      src={image.url}
+      state={state}
+      shape={features.crop.shape}
+      filter={filterString(state.adjust)}
+      editable={features.crop.enabled}
+      features={features}
+      onAction={onAction}
+      onCommit={onCommit}
+      onUndo={features.history ? undo : null}
+      onRedo={features.history ? redo : null}
+    />
+  );
+  const dock = (
+    <Dock
+      state={state}
+      features={features}
+      onAction={onAction}
+      onCommit={onCommit}
+      announce={announce}
+      disabled={applying}
+      mobile={mobile}
+    />
+  );
+  const replace = features.replace && (
+    <FileButton
+      accept={input?.accept ?? DEFAULT_ACCEPT}
+      label={labels.replace}
+      onPick={onPick}
+      variant="text"
+      disabled={applying}
+    />
+  );
+  const live = (
+    <>
+      <Box role="status" aria-live="polite" sx={visuallyHidden}>
+        {announcement}
+      </Box>
+      {failure && (
+        <Alert severity="error" sx={{mb: 1}}>
+          {failure}
+        </Alert>
+      )}
+    </>
+  );
+  if (mobile) {
+    return (
+      <>
+        <MobileHeader titleId={titleId} onClose={onClose}>
+          <Button variant="contained" disabled={applying} onClick={apply}>
+            {applying ? labels.applying : labels.done}
+          </Button>
+        </MobileHeader>
+        <DialogContent sx={{display: 'flex', flexDirection: 'column', px: 2, pt: 2, pb: 1}}>
+          <Box sx={{position: 'relative'}}>
+            {canvas}
+            <MobileToolbar
+              features={features}
+              onAction={onAction}
+              onUndo={canUndo ? undo : null}
+              onReset={canReset ? reset : null}
+              disabled={applying}
+            />
+          </Box>
+          <Box sx={{mt: 'auto'}}>
+            {dock}
+            {replace}
+            {live}
+          </Box>
+        </DialogContent>
+      </>
+    );
+  }
+
   return (
     <>
       <Header
@@ -235,75 +364,17 @@ function Workspace({
         actions={features.history && <HistoryButtons onUndo={canUndo ? undo : null} onRedo={canRedo ? redo : null} />}
       />
       <DialogContent sx={{px: 3, pb: 0}}>
-        <CanvasArea
-          src={image.url}
-          state={state}
-          shape={features.crop.shape}
-          filter={filterString(state.adjust)}
-          editable={features.crop.enabled}
-          features={features}
-          onAction={onAction}
-          onCommit={onCommit}
-          onUndo={features.history ? undo : null}
-          onRedo={features.history ? redo : null}
-        />
-        {adjust && (
-          <Tabs value={tab} onChange={(_event, value: 'crop' | 'adjust') => setTab(value)} sx={{mt: 1}}>
-            <Tab value="crop" label={labels.cropTab} id={`${tabsId}-crop`} aria-controls={`${tabsId}-panel`} />
-            <Tab value="adjust" label={labels.adjustTab} id={`${tabsId}-adjust`} aria-controls={`${tabsId}-panel`} />
-          </Tabs>
-        )}
-        <Box
-          role={adjust ? 'tabpanel' : undefined}
-          id={`${tabsId}-panel`}
-          aria-labelledby={adjust ? `${tabsId}-${tab}` : undefined}
-        >
-          {adjust && tab === 'adjust' ? (
-            <AdjustControls
-              adjust={state.adjust}
-              tools={adjust}
-              onAction={onAction}
-              onCommit={onCommit}
-              disabled={applying}
-            />
-          ) : (
-            <CropControls
-              state={state}
-              features={features}
-              onAction={onAction}
-              onCommit={onCommit}
-              announce={announce}
-              disabled={applying}
-            />
-          )}
-        </Box>
-        <Box role="status" aria-live="polite" sx={visuallyHidden}>
-          {announcement}
-        </Box>
-        {failure && (
-          <Alert severity="error" sx={{mb: 1}}>
-            {failure}
-          </Alert>
-        )}
+        {canvas}
+        {dock}
+        {live}
       </DialogContent>
       <Footer
         start={
           <>
-            <Button
-              disabled={applying || sameState(state, initial)}
-              onClick={() => onAction({type: 'replace', state: initial})}
-            >
+            <Button disabled={!canReset} onClick={reset}>
               {labels.reset}
             </Button>
-            {features.replace && (
-              <FileButton
-                accept={input?.accept ?? DEFAULT_ACCEPT}
-                label={labels.replace}
-                onPick={onPick}
-                variant="text"
-                disabled={applying}
-              />
-            )}
+            {replace}
           </>
         }
       >

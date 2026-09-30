@@ -43,6 +43,8 @@ export interface ImageEditorLabels {
   presetMono: string;
   presetFade: string;
   presetDramatic: string;
+  /** The floating tool pill in the mobile layout. */
+  toolbar: string;
   /** The focusable canvas, and the key help it points at. */
   canvas: string;
   keyHelp: string;
@@ -102,6 +104,7 @@ export const DEFAULT_IMAGE_EDITOR_LABELS: ImageEditorLabels = {
   presetMono: 'Mono',
   presetFade: 'Fade',
   presetDramatic: 'Dramatic',
+  toolbar: 'Image tools',
   canvas: 'Image crop area',
   keyHelp:
     'Arrow keys move the crop, Shift and arrow keys resize it, hold Alt for small steps. Plus and minus zoom, R rotates.',
