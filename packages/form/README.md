@@ -313,8 +313,13 @@ export function showSaveError(form: AnyFormApi) {
 - A path with a mounted field shows its message under that field, touched or not.
 - A path with no mounted field joins the form-level message, so it still reaches the user.
   `FormError` shows that message.
-- The message shows until the user edits that field or submits again. It does not block a
-  resubmit: the next submit sends the value again and clears the message.
+- The message stays until the user edits that field. What else happens depends on where
+  the field's validation lives:
+  - A field validated only by the form's `validators`, as in the quick start, or not at
+    all: the message blocks the submit. Clicking Submit again does nothing until the user
+    edits the field.
+  - A field with its own `validators`: a blur or the next submit clears the message, and
+    that submit goes through with the same value.
 
 ## Recipe: a select whose options come from a query
 

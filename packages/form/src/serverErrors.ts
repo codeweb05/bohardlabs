@@ -2,8 +2,10 @@ import type {AnyFieldApi, AnyFormApi} from '@tanstack/react-form';
 
 /**
  * A server error answers the value that was submitted, so it stops applying the moment
- * the user edits that field. TanStack does not clear it on an edit. It does clear it on
- * the next submit, which goes through: a server error does not block a resubmit.
+ * the user edits that field. TanStack does not clear it on an edit. What else clears it
+ * depends on the field. A field with its own `validators` drops it on blur and on the next
+ * submit, which then goes through. A field validated only at form level, or not at all,
+ * keeps it, and the form will not submit until the user edits that field.
  */
 export function clearServerError(field: AnyFieldApi): void {
   if (field.state.meta.errorMap.onServer === undefined) return;

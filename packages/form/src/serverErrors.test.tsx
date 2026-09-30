@@ -10,7 +10,8 @@ import {FormError} from './form/FormError.js';
 import {applyServerErrors} from './serverErrors.js';
 import {FieldHarness} from './test/FieldHarness.js';
 
-describe('applyServerErrors on a field', () => {
+// FieldHarness always gives the field its own validators, which changes how a server error clears.
+describe('applyServerErrors on a field with its own validators', () => {
   // The normal flow: the user submits, the server rejects the first save, and the submit
   // handler puts the rejection on screen. Later saves succeed.
   async function setup() {
@@ -73,6 +74,52 @@ function Profile({formRef}: {readonly formRef: RefObject<AnyFormApi | null>}) {
     </form.AppForm>
   );
 }
+
+function Invite({save}: {readonly save: (value: unknown) => Promise<void>}) {
+  const form = useAppForm({
+    defaultValues: {email: 'ada@example.com'},
+    validators: {onSubmit: ({value}) => (value.email ? undefined : 'Enter an email')},
+    onSubmit: async ({value, formApi}) => {
+      try {
+        await save(value.email);
+      } catch {
+        applyServerErrors(formApi, {fields: {email: 'Already invited'}});
+      }
+    },
+  });
+  return (
+    <form
+      onSubmit={(event) => {
+        event.preventDefault();
+        void form.handleSubmit();
+      }}
+    >
+      <form.AppField name="email">{(field) => <field.TextField label="Email" />}</form.AppField>
+      <button type="submit">Submit</button>
+    </form>
+  );
+}
+
+describe('applyServerErrors on a field validated only at form level', () => {
+  it('blocks a resubmit of the same value and keeps the message until the field is edited', async () => {
+    const user = userEvent.setup();
+    const save = vi.fn<(value: unknown) => Promise<void>>().mockRejectedValue(new Error('409'));
+    render(<Invite save={save} />);
+    const input = screen.getByLabelText('Email');
+    const submit = screen.getByRole('button', {name: 'Submit'});
+
+    await user.click(submit);
+    await waitFor(() => expect(input).toHaveAccessibleDescription('Already invited'));
+
+    await user.click(submit);
+    await user.click(submit);
+    expect(save).toHaveBeenCalledTimes(1);
+    expect(input).toHaveAccessibleDescription('Already invited');
+
+    await user.type(input, 'x');
+    expect(screen.queryByText('Already invited')).not.toBeInTheDocument();
+  });
+});
 
 describe('applyServerErrors on the form', () => {
   it('shows the form message in FormError, and clears it on the next edit', async () => {
