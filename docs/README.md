@@ -48,6 +48,9 @@ what is next, or what is blocked.
   skipwash-admin and what it left behind.
 - [`packages/datatable/roadmap.md`](packages/datatable/roadmap.md): the feature backlog, 39
   candidates ranked across seven tracks, with what already exists for each.
+- [`packages/form-migration.md`](packages/form-migration.md): internal note for teams moving
+  an existing app form (skipwash-admin, promptiva) onto `@vt-labs/form`. Not linked from the
+  package's public README.
 
 **Extraction**
 

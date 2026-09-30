@@ -63,6 +63,30 @@ describe('PhoneField', () => {
     expect(screen.getByRole('button', {name: 'Land wählen'})).toBeInTheDocument();
   });
 
+  it('shows country names in the language set by langOfCountryName', async () => {
+    const user = userEvent.setup();
+    render(
+      <FieldHarness defaultValue={null}>
+        <PhoneField label="Phone" defaultCountry="DE" langOfCountryName="de" />
+      </FieldHarness>,
+    );
+    await user.click(screen.getByRole('button', {name: 'Select country'}));
+    expect(await screen.findByRole('option', {name: /Deutschland/})).toBeInTheDocument();
+  });
+
+  it('renders flags through a supplied getFlagElement instead of flagcdn.com', () => {
+    render(
+      <FieldHarness defaultValue={null}>
+        <PhoneField
+          label="Phone"
+          defaultCountry="DE"
+          getFlagElement={(isoCode) => <span data-testid={`custom-flag-${isoCode}`} />}
+        />
+      </FieldHarness>,
+    );
+    expect(screen.getByTestId('custom-flag-DE')).toBeInTheDocument();
+  });
+
   it('wires the error onto the input', async () => {
     const user = userEvent.setup();
     render(

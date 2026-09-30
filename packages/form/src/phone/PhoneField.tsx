@@ -1,5 +1,5 @@
 import {MuiTelInput} from 'mui-tel-input';
-import type {MuiTelInputCountry} from 'mui-tel-input';
+import type {MuiTelInputCountry, MuiTelInputProps} from 'mui-tel-input';
 import {useState} from 'react';
 
 import {useFormConfig} from '../config/FormConfigContext';
@@ -14,6 +14,10 @@ export interface PhoneFieldProps extends CommonFieldProps {
   /** Listed first in the country menu. */
   readonly preferredCountries?: readonly MuiTelInputCountry[];
   readonly placeholder?: string;
+  /** Language the country names in the menu are shown in, e.g. `'de'`. Defaults to English. */
+  readonly langOfCountryName?: MuiTelInputProps['langOfCountryName'];
+  /** Renders a flag yourself, e.g. to avoid the default flagcdn.com request under a strict CSP. */
+  readonly getFlagElement?: MuiTelInputProps['getFlagElement'];
 }
 
 const NULLABLE_E164: ValueExpectation = {
@@ -32,6 +36,8 @@ export function PhoneField({
   defaultCountry,
   preferredCountries,
   placeholder,
+  langOfCountryName,
+  getFlagElement,
 }: Readonly<PhoneFieldProps>) {
   const binding = useFieldBinding<string | null>({required, expect: NULLABLE_E164});
   const {labels} = useFormConfig();
@@ -71,6 +77,8 @@ export function PhoneField({
         defaultCountry={defaultCountry}
         preferredCountries={preferredCountries ? [...preferredCountries] : undefined}
         placeholder={placeholder}
+        langOfCountryName={langOfCountryName}
+        getFlagElement={getFlagElement}
         error={binding.error !== null}
         disabled={disabled}
         autoFocus={autoFocus}
