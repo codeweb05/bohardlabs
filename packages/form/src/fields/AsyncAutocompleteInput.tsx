@@ -63,14 +63,15 @@ export function AsyncAutocompleteInput<T>({
   // label before any search has run. Folding the current value into the loaded options
   // keeps MUI from warning that the value matches none of them. Once the user types, the
   // list shows only what the loader returned, so the saved item is not listed under a
-  // query it does not match.
+  // query it does not match. Below `minQueryLength` nothing loads, so the saved item stays.
   // MUI resets the typed text whenever `value` changes identity, which in multiple mode
   // wipes every keystroke, so the array is rebuilt only when the stored value changes.
   const current = useMemo(() => toArray(value), [value]);
   const muiValue = useMemo(() => (multiple ? [...current] : (current[0] ?? null)), [multiple, current]);
   const loadedIds = new Set(options.map(getOptionValue));
   const merged = [...current.filter((item) => !loadedIds.has(getOptionValue(item))), ...options];
-  const shown = (all: T[]) => (query === '' ? all : all.filter((item) => loadedIds.has(getOptionValue(item))));
+  const searching = query !== '' && query.length >= minQueryLength;
+  const shown = (all: T[]) => (searching ? all.filter((item) => loadedIds.has(getOptionValue(item))) : all);
   const text = autocompleteText(labels);
 
   return (

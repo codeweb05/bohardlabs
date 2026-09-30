@@ -68,6 +68,20 @@ describe('AsyncAutocompleteField', () => {
     expect(error).not.toHaveBeenCalled();
   });
 
+  it('keeps the saved item listed while the text is shorter than minQueryLength', async () => {
+    const user = userEvent.setup();
+    render(
+      <FieldHarness defaultValue={USERS[0]}>
+        <AsyncAutocompleteField {...common} loadOptions={search} minQueryLength={3} />
+      </FieldHarness>,
+    );
+    const input = screen.getByRole('combobox', {name: 'Owner'});
+    await user.type(input, 'a', {initialSelectionStart: 0, initialSelectionEnd: 'Ada Lovelace'.length});
+    expect(input).toHaveValue('a');
+    expect(await screen.findByRole('option', {name: 'Ada Lovelace'})).toBeInTheDocument();
+    expect(screen.queryByText('No options')).not.toBeInTheDocument();
+  });
+
   it('shows the load failure inside the list', async () => {
     const user = userEvent.setup();
     const failing = async (): Promise<User[]> => {
