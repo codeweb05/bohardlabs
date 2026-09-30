@@ -11,6 +11,10 @@ type ToString = (adapter: MuiPickersAdapter, date: PickerValidDate | null) => st
  * A date the picker rejects (outside minDate or maxDate, or before 1900 while the year is
  * still being typed) is kept on screen the same way, and the form holds null.
  * When the form value changes from outside, the draft is rebuilt from it.
+ *
+ * A rejected draft can become valid with no edit, when a prop the picker validates against
+ * changes (a wider minDate or maxDate, or the other end of a range). The picker then fires
+ * only `onError(null)`, so `settle` stores the draft from there.
  */
 export function usePickerDraft(
   value: string | null,
@@ -33,5 +37,13 @@ export function usePickerDraft(
     onChange(next);
   };
 
-  return {draft, change};
+  const settle = (error: unknown) => {
+    if (error !== null) return;
+    const next = toString(adapter, draft);
+    if (next === null || next === value) return;
+    setShownValue(next);
+    onChange(next);
+  };
+
+  return {draft, change, settle};
 }

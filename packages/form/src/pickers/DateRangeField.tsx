@@ -34,8 +34,9 @@ const EMPTY: DateRange = {start: null, end: null};
 /**
  * Two linked date pickers in one fieldset. MUI's DateRangePicker is in the paid Pro
  * package. Each end limits the other: an end typed before the start (or a start after the
- * end) shows as invalid and is stored as null. Any other rule between the two (a maximum
- * length, end required once start is set) belongs in the schema.
+ * end) shows as invalid and is stored as null, until a change to the other end makes it
+ * valid and it is stored. Any other rule between the two (a maximum length, end required
+ * once start is set) belongs in the schema.
  */
 export function DateRangeField({
   label,

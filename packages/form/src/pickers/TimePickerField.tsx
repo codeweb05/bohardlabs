@@ -31,7 +31,7 @@ export function TimePickerField({
   minutesStep,
 }: Readonly<TimePickerFieldProps>) {
   const binding = useFieldBinding<string | null>({required, expect: NULLABLE_TIME_STRING});
-  const {draft, change} = usePickerDraft(binding.value ?? null, timeFromString, timeToString, binding.setValue);
+  const {draft, change, settle} = usePickerDraft(binding.value ?? null, timeFromString, timeToString, binding.setValue);
 
   return (
     <LabelledByShell
@@ -45,6 +45,7 @@ export function TimePickerField({
       <TimePicker
         value={draft}
         onChange={change}
+        onError={settle}
         onClose={binding.onBlur}
         disabled={disabled}
         autoFocus={autoFocus}

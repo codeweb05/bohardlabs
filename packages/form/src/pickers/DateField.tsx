@@ -91,12 +91,13 @@ export function DateInput({
   autoFocus,
 }: Readonly<DateInputProps>) {
   const adapter = usePickerAdapter();
-  const {draft, change} = usePickerDraft(value, dateFromString, dateToString, onChange);
+  const {draft, change, settle} = usePickerDraft(value, dateFromString, dateToString, onChange);
 
   return (
     <DatePicker
       value={draft}
       onChange={change}
+      onError={settle}
       onClose={binding.onBlur}
       disabled={disabled}
       autoFocus={autoFocus}
