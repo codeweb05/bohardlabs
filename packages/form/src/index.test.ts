@@ -15,6 +15,7 @@ import * as phone from './phone';
 import * as pickers from './pickers';
 
 const ROOT_API = [
+  'AsyncAutocompleteField',
   'CancelButton',
   'CheckboxField',
   'DEFAULT_FORM_LABELS',
