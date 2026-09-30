@@ -154,7 +154,18 @@ describe('ImageEditor', () => {
     const {rerender, props} = setup();
     await screen.findByRole('button', {name: L.apply});
     rerender(<ImageEditor {...props} open={false} />);
-    expect(image.revoke).toHaveBeenCalledTimes(1);
+    // The content stays through the fade-out, so the dialog never shows empty.
+    expect(screen.getByRole('button', {name: L.apply})).toBeInTheDocument();
+    await waitFor(() => expect(image.revoke).toHaveBeenCalledTimes(1));
+  });
+
+  it('starts a fresh session when reopened while fading out', async () => {
+    const {rerender, props} = setup();
+    await screen.findByRole('button', {name: L.apply});
+    rerender(<ImageEditor {...props} open={false} />);
+    rerender(<ImageEditor {...props} open />);
+    await waitFor(() => expect(loadSource).toHaveBeenCalledTimes(2));
+    expect(await screen.findByRole('button', {name: L.apply})).toBeInTheDocument();
   });
 
   it('loads a new source and revokes the old one', async () => {
