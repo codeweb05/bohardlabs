@@ -1,5 +1,4 @@
 import MuiTextField from '@mui/material/TextField';
-import {useEffect, useRef} from 'react';
 
 import {FieldShell} from '../core/FieldShell';
 import type {CommonFieldProps} from '../core/types';
@@ -32,13 +31,6 @@ export function TextField({
   maxRows,
 }: Readonly<TextFieldProps>) {
   const binding = useFieldBinding<string>({required, expect: STRING});
-  const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
-
-  // A literal `autoFocus` JSX attribute trips jsx-a11y/no-autofocus regardless of whether
-  // the value is conditional; focusing imperatively when the consumer opts in does not.
-  useEffect(() => {
-    if (autoFocus) inputRef.current?.focus();
-  }, [autoFocus]);
 
   return (
     <FieldShell
@@ -51,12 +43,12 @@ export function TextField({
     >
       <MuiTextField
         id={binding.inputId}
-        inputRef={inputRef}
         value={binding.value ?? ''}
         onChange={(event) => binding.setValue(event.target.value)}
         onBlur={binding.onBlur}
         error={binding.error !== null}
         disabled={disabled}
+        autoFocus={autoFocus}
         type={type}
         placeholder={placeholder}
         autoComplete={autoComplete}
@@ -64,6 +56,10 @@ export function TextField({
         minRows={minRows}
         maxRows={maxRows}
         fullWidth
+        // MUI 9's InputBase merges its own `rows: undefined` (from the top-level `rows`
+        // prop, which this field never sets) into inputProps ahead of slotProps.htmlInput,
+        // and that clobbers TextareaAutosize's `rows={minRows}` default. Setting `rows`
+        // here, inside slotProps.htmlInput, survives that merge and reaches the DOM.
         slotProps={{htmlInput: {...binding.inputProps, maxLength, ...(multiline ? {rows: minRows} : {})}}}
       />
     </FieldShell>

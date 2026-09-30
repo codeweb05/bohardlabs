@@ -97,6 +97,15 @@
         // off the default is the documented usage.
         "import/no-named-as-default-member": "off"
       }
+    },
+    {
+      // autoFocus on a form field here is a consumer opt-in prop that the field forwards
+      // to MUI, never focus the library applies on its own, so the rule's concern (an
+      // element grabbing focus without the page author's say-so) does not apply.
+      "files": ["packages/form/src/**"],
+      "rules": {
+        "jsx-a11y/no-autofocus": "off"
+      }
     }
   ],
 
