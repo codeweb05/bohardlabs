@@ -116,9 +116,11 @@ A field reads and writes one shape. An empty single choice is `null`, never `''`
 In development, a field that finds another shape in the form warns once in the console and
 names the field. `AsyncAutocompleteField` is the exception: its option type is yours.
 
-A stored value that is not in `options` is kept. `MultiSelectField` shows it as a chip labelled
-with the raw value and keeps it in the array when the user picks something else, and
-`DurationField` adds it to its choices.
+`MultiSelectField` and `DurationField` keep and show a stored value that is not in their
+choices. `MultiSelectField` shows it as a chip labelled with the raw value and keeps it in the
+array when the user picks something else, and `DurationField` adds it to its choices.
+`SelectField`, `RadioGroupField` and `SearchableSelectField` leave such a value in the form but
+show the field as blank.
 
 ## Heavy fields
 
