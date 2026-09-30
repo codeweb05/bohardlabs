@@ -128,7 +128,7 @@ describe('the key layer', () => {
   });
 
   it('leaves Ctrl shortcuts, and Ctrl+Z without history, to the page', async () => {
-    const {user, stage} = await setup();
+    const {user, stage} = await setup({history: false});
     stage.focus();
     const before = view.state;
     await user.keyboard('{Control>}rz{/Control}');
@@ -149,6 +149,15 @@ describe('the key layer', () => {
     const before = view.state;
     await user.keyboard('r+');
     expect(view.state).toBe(before);
+  });
+
+  it('does nothing on Ctrl+Z or Ctrl+Shift+Z with nothing to undo or redo', async () => {
+    const {user, stage} = await setup();
+    stage.focus();
+    const before = view.state;
+    await user.keyboard('{Control>}z{/Control}{Control>}{Shift>}z{/Shift}{/Control}');
+    expect(view.state).toBe(before);
+    expect(screen.getByRole('status')).toBeEmptyDOMElement();
   });
 
   it('undoes and redoes with Ctrl+Z and Ctrl+Shift+Z when history is on', async () => {

@@ -42,6 +42,14 @@ describe('CropControls', () => {
     expect(screen.queryByRole('slider')).not.toBeInTheDocument();
   });
 
+  it('shows nothing but the ratios when zoom, rotate and flip are off', () => {
+    setup({zoom: false, straighten: false, rotate: false, flip: false});
+    expect(screen.getByRole('group', {name: L.ratio})).toBeInTheDocument();
+    expect(screen.queryByRole('slider')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', {name: L.rotateLeft})).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', {name: L.flipHorizontal})).not.toBeInTheDocument();
+  });
+
   it('hides the ratio control for a circle and for a single ratio', () => {
     setup({crop: {shape: 'circle'}});
     expect(screen.queryByRole('group', {name: L.ratio})).not.toBeInTheDocument();
@@ -88,5 +96,13 @@ describe('CropControls', () => {
     expect(onAction).toHaveBeenCalledWith({type: 'straighten', degrees: 0.5}, {transient: true});
     expect(onCommit).toHaveBeenCalledTimes(1);
     expect(announce).toHaveBeenCalledWith(L.straightened(0.5));
+  });
+
+  it('moves the zoom slider as one gesture and announces the end', () => {
+    const {onAction, onCommit, announce} = setup();
+    fireEvent.keyDown(screen.getByRole('slider', {name: L.zoom}), {key: 'ArrowRight'});
+    expect(onAction).toHaveBeenCalledWith({type: 'zoomTo', zoom: 1.01}, {transient: true});
+    expect(onCommit).toHaveBeenCalledTimes(1);
+    expect(announce).toHaveBeenCalledWith(L.zoomChanged(101));
   });
 });

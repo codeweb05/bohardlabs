@@ -104,6 +104,15 @@ describe('the mobile layout', () => {
     expect(within(toolbar).getByRole('button', {name: L.flipHorizontal})).toBeInTheDocument();
   });
 
+  it('keeps only Undo and Reset when rotate and flip are off', async () => {
+    const {toolbar} = await setup({rotate: false, flip: false});
+    expect(
+      within(toolbar)
+        .getAllByRole('button')
+        .map((button) => button.getAttribute('aria-label')),
+    ).toEqual([L.undo, L.reset]);
+  });
+
   it('acts from the pill and resets back to the start', async () => {
     const {user, toolbar} = await setup({history: true});
     const reset = within(toolbar).getByRole('button', {name: L.reset});

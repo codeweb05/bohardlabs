@@ -27,34 +27,34 @@ function isUsable(ratio: CropRatio): boolean {
   return ratio === 'free' || parseRatio(ratio) !== null;
 }
 
-function options<T extends object>(value: boolean | T | undefined, fallback: boolean): T | null {
-  if (value === undefined) return fallback ? ({} as T) : null;
+/** Every tool is on unless it is `false`. */
+function options<T extends object>(value: boolean | T | undefined): T | null {
   if (value === false) return null;
-  return value === true ? ({} as T) : value;
+  return value === undefined || value === true ? ({} as T) : value;
 }
 
 export function resolveFeatures(features: ImageEditorFeatures | undefined): ResolvedFeatures {
   const f = features ?? {};
 
-  const crop = options(f.crop, true);
+  const crop = options(f.crop);
   const shape: CropShape = crop?.shape === 'circle' ? 'circle' : 'rect';
   const given = (crop?.ratios ?? []).filter(isUsable);
   let ratios: CropRatio[] = given.length ? given : DEFAULT_RATIOS;
   if (shape === 'circle') ratios = ['1:1'];
   if (!crop) ratios = ['free'];
 
-  const zoom = options(f.zoom, true);
+  const zoom = options(f.zoom);
   const zoomMin = Math.max(1, zoom?.min ?? 1);
   const zoomMax = Math.max(zoomMin, zoom?.max ?? 3);
 
-  const flip = options(f.flip, true);
+  const flip = options(f.flip);
   const horizontal = flip?.horizontal ?? true;
   const vertical = flip?.vertical ?? true;
 
-  const straighten = options(f.straighten, true);
+  const straighten = options(f.straighten);
   const range = Math.min(90, Math.max(1, straighten?.range ?? 45));
 
-  const adjust = options(f.adjust, true);
+  const adjust = options(f.adjust);
   const tools = {
     brightness: adjust?.brightness ?? true,
     contrast: adjust?.contrast ?? true,
