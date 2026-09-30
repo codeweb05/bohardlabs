@@ -71,6 +71,15 @@ describe('SelectField', () => {
     expect(warn).not.toHaveBeenCalled();
   });
 
+  it("writes no control character into the hidden input for a stored ''", () => {
+    render(
+      <FieldHarness defaultValue="">
+        <SelectField label="Region" options={[{value: '', label: 'Any region'}]} />
+      </FieldHarness>,
+    );
+    expect(screen.getByDisplayValue(/empty-string/)).toHaveValue('__vt-labs-form-empty-string__');
+  });
+
   it('disables a disabled option and shows a description', async () => {
     const user = userEvent.setup();
     render(

@@ -20,7 +20,7 @@ export interface SelectFieldProps<V extends string | number> extends CommonField
 /** MUI's own "nothing chosen" value, the only one it does not warn about. */
 const EMPTY = '';
 /** Stands in the DOM for an option whose value is `''`, which would otherwise read as nothing chosen. */
-const EMPTY_STRING_OPTION = '\u0000vt-empty-string';
+const EMPTY_STRING_OPTION = '__vt-labs-form-empty-string__';
 
 function toDom(value: string | number): string {
   return value === '' ? EMPTY_STRING_OPTION : String(value);
