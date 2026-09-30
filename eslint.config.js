@@ -71,5 +71,16 @@ export default tseslint.config(
     },
   },
 
+  {
+    // The image editor's engine tests drive cropperjs custom elements inside an
+    // aria-hidden stage. Nothing there has a role or a label to query by, so reaching the
+    // nodes directly is the test, not a shortcut around a better query.
+    files: ['packages/image-editor/src/engine/*.test.tsx'],
+    rules: {
+      'testing-library/no-container': 'off',
+      'testing-library/no-node-access': 'off',
+    },
+  },
+
   ...storybook.configs['flat/recommended'],
 );
