@@ -1,6 +1,8 @@
+import {useStore} from '@tanstack/react-form';
 import {useRef, useState} from 'react';
 
 import {useFormConfig} from '../config/FormConfigContext';
+import {useFieldContext} from '../context';
 import type {FieldBinding} from '../core/useFieldBinding';
 import type {AsyncAutocompleteInputProps} from '../fields/AsyncAutocompleteInput';
 import type {PlaceSuggestion, PlacesProvider, ResolvedPlace} from './types';
@@ -14,23 +16,31 @@ interface PlaceSearchHandlers {
 
 type SearchInputProps = Pick<
   AsyncAutocompleteInputProps<PlaceSuggestion>,
-  'onChange' | 'loadOptions' | 'getOptionValue' | 'getOptionLabel'
+  'onChange' | 'onInputChange' | 'loadOptions' | 'getOptionValue' | 'getOptionLabel'
 >;
 
 /**
  * The search box both maps fields share: suggestions inside one billing session, and a
- * pick resolved through the provider. Only the latest pick lands. A failed lookup stores
- * nothing and shows `labels.placeLookupFailed` under the field until the next pick.
+ * pick resolved through the provider. Only the latest pick lands. A failed lookup keeps
+ * the previous value and shows `labels.placeLookupFailed` under the field until the value
+ * changes, the form is reset, or the user types in the search box again.
  */
 export function usePlaceSearch(provider: PlacesProvider, {onResolved, onCleared}: PlaceSearchHandlers) {
   const {labels} = useFormConfig();
+  const field = useFieldContext<unknown>();
+  const value = useStore(field.store, (state) => state.value);
+  const isTouched = useStore(field.store, (state) => state.meta.isTouched);
   const session = usePlacesSession(provider);
   const latestPick = useRef(0);
-  const [failed, setFailed] = useState(false);
+  // The value the failed lookup left in place. The error is about that value only.
+  const [failedAt, setFailedAt] = useState<{readonly value: unknown} | null>(null);
+
+  // A reset untouches the field and may bring back the very same value, so both count.
+  if (failedAt && (failedAt.value !== value || !isTouched)) setFailedAt(null);
 
   const pick = async (suggestion: PlaceSuggestion | null) => {
     const pickId = ++latestPick.current;
-    setFailed(false);
+    setFailedAt(null);
     if (!suggestion) {
       onCleared?.();
       return;
@@ -41,12 +51,16 @@ export function usePlaceSearch(provider: PlacesProvider, {onResolved, onCleared}
       const resolved = await provider.resolve(suggestion.id, {session: current});
       if (pickId === latestPick.current) onResolved(resolved);
     } catch {
-      if (pickId === latestPick.current) setFailed(true);
+      if (pickId !== latestPick.current) return;
+      // The user acted on the field, so it counts as touched; a reset then clears the error.
+      field.setMeta((meta) => ({...meta, isTouched: true}));
+      setFailedAt({value: field.state.value});
     }
   };
 
   const inputProps: SearchInputProps = {
     onChange: (next) => void pick(Array.isArray(next) ? (next[0] ?? null) : next),
+    onInputChange: () => setFailedAt(null),
     loadOptions: (query, {signal}) => provider.suggest(query, {signal, session: session.current()}),
     getOptionValue: (suggestion) => suggestion.id,
     getOptionLabel: (suggestion) => suggestion.label,
@@ -54,7 +68,7 @@ export function usePlaceSearch(provider: PlacesProvider, {onResolved, onCleared}
 
   /** The binding with the lookup failure as its error, unless a validation error already shows. */
   const withLookupError = <T>(binding: FieldBinding<T>): FieldBinding<T> =>
-    failed && binding.error === null
+    failedAt && binding.error === null
       ? {
           ...binding,
           error: labels.placeLookupFailed,

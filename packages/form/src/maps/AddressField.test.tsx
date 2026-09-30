@@ -8,6 +8,7 @@ import {BERLIN, createFakePlaces} from '../test/fakePlaces';
 import {FieldHarness} from '../test/FieldHarness';
 import {AddressField} from './AddressField';
 import {EMPTY_ADDRESS} from './types';
+import type {PlacesProvider} from './types';
 
 describe('AddressField', () => {
   it('fills every part from a search, and keeps a manual edit', async () => {
@@ -30,6 +31,29 @@ describe('AddressField', () => {
       ...BERLIN.address,
       line2: 'Floor 3',
     });
+  });
+
+  it('shows a failed lookup, keeps the parts, and drops it on a manual edit', async () => {
+    const user = userEvent.setup();
+    const {provider} = createFakePlaces([BERLIN]);
+    const failing: PlacesProvider = {...provider, resolve: () => Promise.reject(new Error('no location'))};
+    render(
+      <FieldHarness defaultValue={{...EMPTY_ADDRESS, city: 'Pune'}}>
+        <AddressField label="Billing address" provider={failing} debounceMs={0} />
+      </FieldHarness>,
+    );
+    const search = screen.getByRole('combobox', {name: 'Search for an address'});
+    await user.type(search, 'unter');
+    await user.click(await screen.findByRole('option', {name: 'Unter den Linden 1, Berlin'}));
+
+    expect(await screen.findByText('Could not look up that place')).toBeInTheDocument();
+    expect(search).toHaveAttribute('aria-invalid', 'true');
+    expect(screen.getByLabelText('City')).toHaveValue('Pune');
+
+    await user.type(screen.getByLabelText('Postal code'), '411004');
+
+    expect(screen.queryByText('Could not look up that place')).not.toBeInTheDocument();
+    expect(search).toHaveAttribute('aria-invalid', 'false');
   });
 
   it('marks line 1, city, postal code and country as required', () => {

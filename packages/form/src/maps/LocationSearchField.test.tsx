@@ -1,9 +1,28 @@
-import {render, screen} from '@testing-library/react';
+import type {AnyFormApi} from '@tanstack/react-form';
+import {act, render, screen} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import {createRef} from 'react';
 
 import {BERLIN, PUNE, createFakePlaces} from '../test/fakePlaces';
 import {FieldHarness} from '../test/FieldHarness';
 import {LocationSearchField} from './LocationSearchField';
+import type {PlacesProvider, ResolvedPlace} from './types';
+
+const FAILED = 'Could not look up that place';
+
+/** A fake whose lookups always reject. */
+function failingPlaces(places: readonly ResolvedPlace[]): PlacesProvider {
+  const {provider} = createFakePlaces(places);
+  return {...provider, resolve: () => Promise.reject(new Error('no location'))};
+}
+
+/** Types a query and picks the option with this name. */
+async function pickPlace(user: ReturnType<typeof userEvent.setup>, query: string, option: string) {
+  const input = screen.getByRole('combobox', {name: 'Pickup'});
+  await user.type(input, query);
+  await user.click(await screen.findByRole('option', {name: option}));
+  return input;
+}
 
 describe('LocationSearchField', () => {
   it('stores the resolved place', async () => {
@@ -56,22 +75,98 @@ describe('LocationSearchField', () => {
 
   it('shows a failed lookup and stores nothing', async () => {
     const user = userEvent.setup();
-    const {provider} = createFakePlaces([PUNE]);
-    const failing = {...provider, resolve: () => Promise.reject(new Error('no location'))};
     render(
       <FieldHarness defaultValue={null}>
-        <LocationSearchField label="Pickup" provider={failing} debounceMs={0} />
+        <LocationSearchField label="Pickup" provider={failingPlaces([PUNE])} debounceMs={0} />
       </FieldHarness>,
     );
-    const input = screen.getByRole('combobox', {name: 'Pickup'});
-    await user.type(input, 'pune');
-    await user.click(await screen.findByRole('option', {name: 'FC Road, Pune'}));
+    const input = await pickPlace(user, 'pune', 'FC Road, Pune');
 
-    expect(await screen.findByText('Could not look up that place')).toBeInTheDocument();
-    expect(input).toHaveAccessibleDescription('Could not look up that place');
+    expect(await screen.findByText(FAILED)).toBeInTheDocument();
+    expect(input).toHaveAccessibleDescription(FAILED);
     expect(input).toHaveAttribute('aria-invalid', 'true');
     await user.click(screen.getByRole('button', {name: 'Submit'}));
     expect(screen.getByLabelText('Submitted value')).toHaveTextContent('null');
+  });
+
+  it('drops a failed lookup when the form is reset', async () => {
+    const user = userEvent.setup();
+    const formRef = createRef<AnyFormApi>();
+    render(
+      <FieldHarness defaultValue={null} formRef={formRef}>
+        <LocationSearchField label="Pickup" provider={failingPlaces([PUNE])} debounceMs={0} />
+      </FieldHarness>,
+    );
+    const input = await pickPlace(user, 'pune', 'FC Road, Pune');
+    await screen.findByText(FAILED);
+
+    act(() => formRef.current?.reset());
+
+    expect(screen.queryByText(FAILED)).not.toBeInTheDocument();
+    expect(input).toHaveAttribute('aria-invalid', 'false');
+  });
+
+  it('drops a failed lookup when the user clears the search', async () => {
+    const user = userEvent.setup();
+    render(
+      <FieldHarness defaultValue={null}>
+        <LocationSearchField label="Pickup" provider={failingPlaces([PUNE])} debounceMs={0} />
+      </FieldHarness>,
+    );
+    const input = await pickPlace(user, 'pune', 'FC Road, Pune');
+    await screen.findByText(FAILED);
+
+    await user.clear(input);
+
+    expect(screen.queryByText(FAILED)).not.toBeInTheDocument();
+    expect(input).toHaveAttribute('aria-invalid', 'false');
+  });
+
+  it('keeps only the latest pick when an earlier lookup answers last', async () => {
+    const user = userEvent.setup();
+    const {provider} = createFakePlaces([BERLIN, PUNE]);
+    const pending = new Map<string, () => void>();
+    const slow: PlacesProvider = {
+      ...provider,
+      resolve: (id, options) =>
+        new Promise((resolve, reject) => {
+          pending.set(id, () => {
+            provider.resolve(id, options).then(resolve, reject);
+          });
+        }),
+    };
+    render(
+      <FieldHarness defaultValue={null}>
+        <LocationSearchField label="Pickup" provider={slow} debounceMs={0} />
+      </FieldHarness>,
+    );
+    const input = await pickPlace(user, 'unter', 'Unter den Linden 1, Berlin');
+    await user.clear(input);
+    await pickPlace(user, 'pune', 'FC Road, Pune');
+
+    await act(async () => pending.get('pune')?.());
+    await act(async () => pending.get('berlin')?.());
+
+    await user.click(screen.getByRole('button', {name: 'Submit'}));
+    expect(screen.getByLabelText('Submitted value')).toHaveTextContent('"id":"pune"');
+  });
+
+  it('keeps what the user is typing when the field re-renders', async () => {
+    const user = userEvent.setup();
+    const {provider} = createFakePlaces([BERLIN, PUNE]);
+    const field = (description: string) => (
+      <FieldHarness defaultValue={BERLIN}>
+        <LocationSearchField label="Pickup" description={description} provider={provider} debounceMs={0} />
+      </FieldHarness>
+    );
+    const {rerender} = render(field('Where we collect'));
+    const input = screen.getByRole('combobox', {name: 'Pickup'});
+    await user.tripleClick(input);
+    await user.keyboard('pun');
+
+    rerender(field('Where we collect it'));
+
+    expect(input).toHaveValue('pun');
   });
 
   it('shows a stored place', () => {

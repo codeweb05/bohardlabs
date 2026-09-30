@@ -56,6 +56,9 @@ const PLACE_FIELDS = ['addressComponents', 'location', 'formattedAddress'];
  *
  *   const places = await importLibrary('places');
  *   const provider = createGooglePlacesProvider(places);
+ *
+ * Create it once, at module level or in `useMemo`. A new provider on every render starts a
+ * new billing session each time and loses the cached predictions `resolve` goes through.
  */
 export function createGooglePlacesProvider(places: GooglePlaces, options: GooglePlacesOptions = {}): PlacesProvider {
   // Predictions from a session, kept so `resolve` can call `toPlace()`, which carries the

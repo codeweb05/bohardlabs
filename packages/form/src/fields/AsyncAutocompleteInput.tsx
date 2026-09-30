@@ -29,6 +29,8 @@ export interface AsyncAutocompleteInputProps<T> extends AsyncOptionsProps<T> {
   readonly disabled?: boolean;
   /** An accessible name for an input with no `<label>` of its own (AddressField's search box). */
   readonly inputLabel?: string;
+  /** Called with the text as the user types or clears it (not when a pick fills it). */
+  readonly onInputChange?: (input: string) => void;
 }
 
 /**
@@ -50,6 +52,7 @@ export function AsyncAutocompleteInput<T>({
   autoFocus,
   disabled,
   inputLabel,
+  onInputChange,
 }: AsyncAutocompleteInputProps<T>) {
   const {labels} = useFormConfig();
   const [open, setOpen] = useState(false);
@@ -74,7 +77,10 @@ export function AsyncAutocompleteInput<T>({
       options={merged}
       value={multiple ? [...current] : (current[0] ?? null)}
       onChange={(_event, next) => onChange(next)}
-      onInputChange={(_event, input, reason) => setQuery(reason === 'input' ? input : '')}
+      onInputChange={(_event, input, reason) => {
+        setQuery(reason === 'input' ? input : '');
+        if (reason === 'input' || reason === 'clear') onInputChange?.(input);
+      }}
       onBlur={binding.onBlur}
       filterOptions={(all) => all}
       filterSelectedOptions={multiple}

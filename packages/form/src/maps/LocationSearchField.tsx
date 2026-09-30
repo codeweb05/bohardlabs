@@ -7,6 +7,10 @@ import type {Place, PlaceSuggestion, PlacesProvider} from './types';
 import {usePlaceSearch} from './usePlaceSearch';
 
 export interface LocationSearchFieldProps extends CommonFieldProps {
+  /**
+   * Create it once, at module level or in `useMemo`. A new provider on every render starts
+   * a new billing session each time and loses the suggestions `resolve` relies on.
+   */
   readonly provider: PlacesProvider;
   readonly placeholder?: string;
   /** Characters typed before the first request. Each request costs money. */
@@ -54,7 +58,8 @@ export function LocationSearchField({
       <AsyncAutocompleteInput<PlaceSuggestion>
         {...search.inputProps}
         binding={binding}
-        value={place ? {id: place.id, label: place.label} : null}
+        // The stored object itself: a new object each render would make MUI reset the text.
+        value={place}
         minQueryLength={minQueryLength}
         debounceMs={debounceMs}
         placeholder={placeholder}
