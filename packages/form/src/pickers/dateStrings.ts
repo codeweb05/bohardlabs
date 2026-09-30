@@ -54,10 +54,15 @@ export function dateToString(adapter: MuiPickersAdapter, date: PickerValidDate |
   return `${pad(adapter.getYear(date), 4)}-${pad(adapter.getMonth(date) + 1)}-${pad(adapter.getDate(date))}`;
 }
 
+/**
+ * Builds the adapter's date for a time of day. The day is fixed, 1 January 2000, because a
+ * clock change on the current day skips an hour: 02:30 would come back as 03:30.
+ */
 export function timeFromString(adapter: MuiPickersAdapter, value: string | null): PickerValidDate | null {
   const parts = timeParts(value);
   if (!parts) return null;
-  return adapter.setMinutes(adapter.setHours(adapter.startOfDay(adapter.date()), parts[0]), parts[1]);
+  const day = adapter.startOfYear(adapter.setYear(adapter.date(), 2000));
+  return adapter.setMinutes(adapter.setHours(day, parts[0]), parts[1]);
 }
 
 export function timeToString(adapter: MuiPickersAdapter, date: PickerValidDate | null): string | null {

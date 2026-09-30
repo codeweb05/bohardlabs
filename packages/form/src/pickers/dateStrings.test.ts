@@ -44,6 +44,20 @@ describe.each([
     expect(timeToString(adapter, timeFromString(adapter, '07:05'))).toBe('07:05');
   });
 
+  it('round-trips a time the clock skips today', () => {
+    // 02:30 does not exist in Los Angeles on 2027-03-14, the day the clocks go forward.
+    const zone = process.env.TZ;
+    process.env.TZ = 'America/Los_Angeles';
+    vi.useFakeTimers({toFake: ['Date']});
+    vi.setSystemTime(new Date('2027-03-14T20:00:00Z'));
+    try {
+      expect(timeToString(adapter, timeFromString(adapter, '02:30'))).toBe('02:30');
+    } finally {
+      vi.useRealTimers();
+      process.env.TZ = zone;
+    }
+  });
+
   it('writes an invalid date as null', () => {
     expect(dateToString(adapter, adapter.date('not a date'))).toBeNull();
   });

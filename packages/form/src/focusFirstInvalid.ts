@@ -1,9 +1,7 @@
 import type {AnyFormApi} from '@tanstack/react-form';
 
-// `[role="spinbutton"]` is a date or time picker's first section: MUI X 9 marks the picker's
-// group invalid, and only the first section is in the tab order.
 const FOCUSABLE =
-  'input:not([disabled]):not([type="hidden"]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"]), [role="spinbutton"]';
+  'input:not([disabled]):not([type="hidden"]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 /**
  * Moves focus to the first field of this form that shows an error, so a keyboard or

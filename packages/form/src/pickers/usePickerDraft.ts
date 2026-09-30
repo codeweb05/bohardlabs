@@ -8,6 +8,8 @@ type ToString = (adapter: MuiPickersAdapter, date: PickerValidDate | null) => st
 /**
  * The picker's own value, kept beside the form's string. A half-typed date is an invalid
  * adapter date with no string form; the draft keeps it on screen while the form holds null.
+ * A date the picker rejects (outside minDate or maxDate, or before 1900 while the year is
+ * still being typed) is kept on screen the same way, and the form holds null.
  * When the form value changes from outside, the draft is rebuilt from it.
  */
 export function usePickerDraft(
@@ -24,8 +26,8 @@ export function usePickerDraft(
     setDraft(fromString(adapter, value));
   }
 
-  const change = (date: PickerValidDate | null) => {
-    const next = toString(adapter, date);
+  const change = (date: PickerValidDate | null, context: {validationError: unknown}) => {
+    const next = context.validationError === null ? toString(adapter, date) : null;
     setDraft(date);
     setShownValue(next);
     onChange(next);

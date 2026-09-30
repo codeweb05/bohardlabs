@@ -101,6 +101,25 @@ describe.each(ADAPTERS)('pickers under %s', (_name, Adapter) => {
       expect(group).toHaveAccessibleDescription('Pick a date');
     });
 
+    it('keeps a date outside minDate out of the value and shows the field invalid', async () => {
+      const user = userEvent.setup();
+      renderPicker(<DateField label="Start" minDate="2026-01-01" />, {defaultValue: null});
+      const group = screen.getByRole('group', {name: 'Start'});
+      await user.click(firstSection(group));
+      await user.keyboard('12312025');
+      expect(hiddenInput(group)).toHaveValue('12/31/2025');
+      expect(group).toHaveAttribute('aria-invalid', 'true');
+      expect(await submitted(user)).toBe('null');
+    });
+
+    it('does not store the year a user is still typing', async () => {
+      const user = userEvent.setup();
+      renderPicker(<DateField label="Start" />, {defaultValue: null});
+      await user.click(firstSection(screen.getByRole('group', {name: 'Start'})));
+      await user.keyboard('05042');
+      expect(await submitted(user)).toBe('null');
+    });
+
     it('moves focus to its first section on an invalid submit', async () => {
       const user = userEvent.setup();
       renderPicker(<DateField label="Start" />, {
@@ -135,6 +154,28 @@ describe.each(ADAPTERS)('pickers under %s', (_name, Adapter) => {
       await user.click(firstSection(within(stay).getByRole('group', {name: 'End'})));
       await user.keyboard('05042026');
       expect(await submitted(user)).toBe('{"start":"2026-05-01","end":"2026-05-04"}');
+    });
+
+    it('keeps an end typed before the start out of the value', async () => {
+      const user = userEvent.setup();
+      renderPicker(<DateRangeField label="Stay" />, {defaultValue: {start: '2026-05-01', end: null}});
+      const end = within(screen.getByRole('group', {name: 'Stay'})).getByRole('group', {name: 'End'});
+      await user.click(firstSection(end));
+      await user.keyboard('04202026');
+      expect(hiddenInput(end)).toHaveValue('04/20/2026');
+      expect(end).toHaveAttribute('aria-invalid', 'true');
+      expect(await submitted(user)).toBe('{"start":"2026-05-01","end":null}');
+    });
+
+    it('holds the end to the start the user just picked', async () => {
+      const user = userEvent.setup();
+      renderPicker(<DateRangeField label="Stay" />, {defaultValue: {start: null, end: null}});
+      const stay = screen.getByRole('group', {name: 'Stay'});
+      await user.click(firstSection(within(stay).getByRole('group', {name: 'Start'})));
+      await user.keyboard('05012026');
+      await user.click(firstSection(within(stay).getByRole('group', {name: 'End'})));
+      await user.keyboard('04202026');
+      expect(await submitted(user)).toBe('{"start":"2026-05-01","end":null}');
     });
   });
 });
