@@ -60,7 +60,17 @@ export function AddressField({
   const field = useFieldBinding<Address>({expect: ADDRESS});
   const parent = useFieldContext<Address>();
   const {labels} = useFormConfig();
-  const search = usePlaceSearch(provider, {onResolved: (place) => field.setValue(place.address)});
+  const search = usePlaceSearch(provider, {
+    onResolved: (place) => {
+      field.setValue(place.address);
+      // The pick replaced every part, so a server error on one no longer applies.
+      for (const {key} of PARTS) {
+        const name = `${parent.name}.${key}`;
+        if (parent.form.getFieldMeta(name)?.errorMap.onServer === undefined) continue;
+        parent.form.setFieldMeta(name, (meta) => ({...meta, errorMap: {...meta.errorMap, onServer: undefined}}));
+      }
+    },
+  });
   const binding = search.withLookupError(field);
 
   return (

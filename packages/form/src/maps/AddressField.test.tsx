@@ -1,5 +1,5 @@
 import type {AnyFormApi} from '@tanstack/react-form';
-import {act, render, screen} from '@testing-library/react';
+import {act, render, screen, waitFor} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {createRef} from 'react';
 
@@ -82,5 +82,28 @@ describe('AddressField', () => {
         applyServerErrors(formRef.current, {fields: {'value.postalCode': 'We do not deliver there'}});
     });
     expect(screen.getByLabelText('Postal code')).toHaveAccessibleDescription('We do not deliver there');
+  });
+
+  it("drops a part's server error once a pick replaces that part", async () => {
+    const user = userEvent.setup();
+    const formRef = createRef<AnyFormApi>();
+    const {provider} = createFakePlaces([BERLIN]);
+    render(
+      <FieldHarness defaultValue={EMPTY_ADDRESS} formRef={formRef}>
+        <AddressField label="Address" provider={provider} debounceMs={0} />
+      </FieldHarness>,
+    );
+    act(() => {
+      if (formRef.current)
+        applyServerErrors(formRef.current, {fields: {'value.postalCode': 'We do not deliver there'}});
+    });
+    expect(screen.getByText('We do not deliver there')).toBeInTheDocument();
+
+    await user.type(screen.getByRole('combobox', {name: 'Search for an address'}), 'unter');
+    await user.click(await screen.findByRole('option', {name: 'Unter den Linden 1, Berlin'}));
+
+    await waitFor(() => expect(screen.getByLabelText('City')).toHaveValue('Berlin'));
+    expect(screen.queryByText('We do not deliver there')).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Postal code')).toHaveAttribute('aria-invalid', 'false');
   });
 });
