@@ -51,4 +51,21 @@ describe('MultiSelectField', () => {
     await user.click(screen.getByRole('button', {name: 'Submit'}));
     expect(screen.getByLabelText('Submitted value')).toHaveTextContent('[2]');
   });
+
+  it('wires the error to the combobox', async () => {
+    const user = userEvent.setup();
+    render(
+      <FieldHarness
+        defaultValue={[]}
+        validate={(value) => (Array.isArray(value) && value.length === 0 ? 'Pick a tag' : undefined)}
+      >
+        <MultiSelectField label="Tags" options={TAGS} required />
+      </FieldHarness>,
+    );
+    await user.click(screen.getByRole('button', {name: 'Submit'}));
+    const combobox = screen.getByRole('combobox', {name: /Tags/});
+    expect(combobox).toHaveAttribute('aria-invalid', 'true');
+    expect(combobox).toBeRequired();
+    expect(combobox).toHaveAccessibleDescription('Pick a tag');
+  });
 });

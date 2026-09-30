@@ -8,6 +8,7 @@ import MuiTextField from '@mui/material/TextField';
 import {useFormConfig} from '../config/FormConfigContext';
 import {autocompleteText} from '../core/autocompleteText';
 import {FieldShell} from '../core/FieldShell';
+import {SelectFieldShell} from '../core/SelectFieldShell';
 import type {CommonFieldProps, Option} from '../core/types';
 import {useFieldBinding} from '../core/useFieldBinding';
 import type {FieldBinding} from '../core/useFieldBinding';
@@ -21,6 +22,12 @@ export interface MultiSelectFieldProps<V extends string | number> extends Common
   readonly searchable?: boolean;
 }
 
+/**
+ * `SearchableMulti` can use `FieldShell`'s default `as="label"` layout: Autocomplete's `id`
+ * lands on a real `<input>`, a legitimate `<label for>` target. `PlainMulti` cannot: its
+ * `id` lands on MUI Select's display `div`, so it uses `SelectFieldShell`, the same layout
+ * `SelectField` uses for the identical reason (see its comment there).
+ */
 export function MultiSelectField<V extends string | number>(props: Readonly<MultiSelectFieldProps<V>>) {
   const {label, description, required, tooltip, disabled} = props;
   const binding = useFieldBinding<V[]>({required, expect: SCALAR_ARRAY});
@@ -28,8 +35,23 @@ export function MultiSelectField<V extends string | number>(props: Readonly<Mult
     (value) => findOption(props.options, value) ?? [],
   );
 
+  if (props.searchable) {
+    return (
+      <FieldShell
+        binding={binding}
+        label={label}
+        description={description}
+        required={required}
+        tooltip={tooltip}
+        disabled={disabled}
+      >
+        <SearchableMulti {...props} binding={binding} selected={selected} />
+      </FieldShell>
+    );
+  }
+
   return (
-    <FieldShell
+    <SelectFieldShell
       binding={binding}
       label={label}
       description={description}
@@ -37,12 +59,8 @@ export function MultiSelectField<V extends string | number>(props: Readonly<Mult
       tooltip={tooltip}
       disabled={disabled}
     >
-      {props.searchable ? (
-        <SearchableMulti {...props} binding={binding} selected={selected} />
-      ) : (
-        <PlainMulti {...props} binding={binding} selected={selected} />
-      )}
-    </FieldShell>
+      <PlainMulti {...props} binding={binding} selected={selected} />
+    </SelectFieldShell>
   );
 }
 
