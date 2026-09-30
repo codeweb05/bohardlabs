@@ -51,7 +51,8 @@ export function DurationField({
 }: Readonly<DurationFieldProps>) {
   const binding = useFieldBinding<number | null>({required, expect: NULLABLE_NUMBER});
   const {labels} = useFormConfig();
-  const total = typeof binding.value === 'number' ? binding.value : null;
+  // NaN and Infinity count as empty, as in NumberField, so neither part shows "NaN".
+  const total = Number.isFinite(binding.value) ? binding.value : null;
   const hours = total === null ? '' : String(Math.floor(total / 60));
   const minutes = total === null ? '' : String(total % 60);
 

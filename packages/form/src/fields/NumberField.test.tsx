@@ -62,14 +62,15 @@ describe('NumberField', () => {
   it.each([
     ['NaN', Number.NaN],
     ['Infinity', Number.POSITIVE_INFINITY],
-  ])('renders a stored %s as empty instead of crashing', (_name, stored) => {
-    vi.spyOn(console, 'warn').mockImplementation(() => {});
+  ])('renders a stored %s as empty instead of crashing, and warns', (name, stored) => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     render(
       <FieldHarness defaultValue={stored}>
         <NumberField label="Price" />
       </FieldHarness>,
     );
     expect(screen.getByLabelText('Price')).toHaveValue('');
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining(`holds ${name}`));
   });
 
   it('ignores keystrokes that cannot be part of a number', async () => {

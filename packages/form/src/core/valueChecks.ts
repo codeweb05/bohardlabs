@@ -15,8 +15,8 @@ export const STRING: ValueExpectation = {test: (value) => typeof value === 'stri
 export const BOOLEAN: ValueExpectation = {test: (value) => typeof value === 'boolean', description: 'a boolean'};
 
 export const NULLABLE_NUMBER: ValueExpectation = {
-  test: (value) => value === null || typeof value === 'number',
-  description: 'a number or null',
+  test: (value) => value === null || Number.isFinite(value),
+  description: 'a finite number or null',
 };
 
 export const NULLABLE_SCALAR: ValueExpectation = {
@@ -50,6 +50,7 @@ export function isDevelopment(): boolean {
 
 export function describeValue(value: unknown): string {
   if (value === null) return 'null';
+  if (typeof value === 'number' && !Number.isFinite(value)) return String(value);
   if (Array.isArray(value)) return 'an array';
   return `a ${typeof value}`;
 }

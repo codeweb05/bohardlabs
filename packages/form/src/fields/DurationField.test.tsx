@@ -121,6 +121,18 @@ describe('DurationField', () => {
     expect(within(screen.getByRole('listbox')).queryByRole('option', {name: 'None'})).not.toBeInTheDocument();
   });
 
+  it('renders a stored NaN as empty, and warns', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    render(
+      <FieldHarness defaultValue={Number.NaN}>
+        <DurationField label="Estimate" />
+      </FieldHarness>,
+    );
+    expect(screen.queryByText('NaN')).not.toBeInTheDocument();
+    expect(screen.getByRole('combobox', {name: /Hours/})).not.toHaveTextContent(/\d/);
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('holds NaN'));
+  });
+
   it('renders without hanging when minuteStep is 0', () => {
     render(
       <FieldHarness defaultValue={null}>
