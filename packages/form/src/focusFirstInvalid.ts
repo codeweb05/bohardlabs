@@ -1,7 +1,9 @@
 import type {AnyFormApi} from '@tanstack/react-form';
 
+// `[role="spinbutton"]` is a date or time picker's first section: MUI X 9 marks the picker's
+// group invalid, and only the first section is in the tab order.
 const FOCUSABLE =
-  'input:not([disabled]):not([type="hidden"]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+  'input:not([disabled]):not([type="hidden"]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"]), [role="spinbutton"]';
 
 /**
  * Moves focus to the first field of this form that shows an error, so a keyboard or
@@ -17,7 +19,7 @@ export function focusFirstInvalid(form: AnyFormApi): void {
     const candidates = document.querySelectorAll<HTMLElement>('[aria-invalid="true"][data-form-id]');
     const invalid = Array.from(candidates).find((element) => element.dataset.formId === form.formId);
     if (!invalid) return;
-    // A radio group marks its container; focus goes to its first radio.
+    // A radio group or a picker marks its container; focus goes to its first radio or section.
     const target = invalid.matches(FOCUSABLE) ? invalid : invalid.querySelector<HTMLElement>(FOCUSABLE);
     target?.focus();
   }, 0);

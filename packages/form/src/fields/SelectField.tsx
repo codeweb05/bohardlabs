@@ -3,7 +3,7 @@ import ListItemText from '@mui/material/ListItemText';
 import MenuItem from '@mui/material/MenuItem';
 import Select from '@mui/material/Select';
 
-import {SelectFieldShell} from '../core/SelectFieldShell';
+import {LabelledByShell} from '../core/LabelledByShell';
 import type {CommonFieldProps, Option} from '../core/types';
 import {useFieldBinding} from '../core/useFieldBinding';
 import {NULLABLE_SCALAR} from '../core/valueChecks';
@@ -19,7 +19,7 @@ export interface SelectFieldProps<V extends string | number> extends CommonField
 
 const EMPTY = '';
 
-/** The layout is `SelectFieldShell`: see its comment for why this doesn't go through `FieldShell` directly. */
+/** The layout is `LabelledByShell`: see its comment for why this doesn't go through `FieldShell` directly. */
 export function SelectField<V extends string | number>({
   label,
   description,
@@ -35,7 +35,7 @@ export function SelectField<V extends string | number>({
   const selected = findOption(options, binding.value);
 
   return (
-    <SelectFieldShell
+    <LabelledByShell
       binding={binding}
       label={label}
       description={description}
@@ -75,6 +75,6 @@ export function SelectField<V extends string | number>({
           </MenuItem>
         ))}
       </Select>
-    </SelectFieldShell>
+    </LabelledByShell>
   );
 }

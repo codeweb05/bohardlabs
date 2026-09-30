@@ -1,10 +1,8 @@
-import Box from '@mui/material/Box';
 import MenuItem from '@mui/material/MenuItem';
 import Select from '@mui/material/Select';
-import Typography from '@mui/material/Typography';
 
 import {useFormConfig} from '../config/FormConfigContext';
-import {FieldShell} from '../core/FieldShell';
+import {FieldPart, FieldParts} from '../core/FieldParts';
 import type {CommonFieldProps} from '../core/types';
 import {useFieldBinding} from '../core/useFieldBinding';
 import {NULLABLE_NUMBER} from '../core/valueChecks';
@@ -69,44 +67,38 @@ export function DurationField({
   ] as const;
 
   return (
-    <FieldShell
+    <FieldParts
       binding={binding}
       label={label}
       description={description}
       required={required}
       tooltip={tooltip}
       disabled={disabled}
-      as="fieldset"
     >
-      <Box sx={{display: 'flex', gap: 1}}>
-        {parts.map(({part, caption, value, options}, index) => {
-          const captionId = `${binding.inputId}-${part}-caption`;
-          return (
-            <Box key={part} sx={{flex: 1}}>
-              <Typography id={captionId} variant="caption" sx={{color: 'text.secondary'}}>
-                {caption}
-              </Typography>
-              <Select<string>
-                labelId={captionId}
-                value={value}
-                onChange={(event) => change(part, event.target.value)}
-                onBlur={binding.onBlur}
-                error={binding.error !== null}
-                disabled={disabled}
-                autoFocus={autoFocus && index === 0}
-                fullWidth
-                SelectDisplayProps={{id: `${binding.inputId}-${part}`, ...binding.inputProps}}
-              >
-                {options.map((option) => (
-                  <MenuItem key={option} value={String(option)}>
-                    {option}
-                  </MenuItem>
-                ))}
-              </Select>
-            </Box>
-          );
-        })}
-      </Box>
-    </FieldShell>
+      {parts.map(({part, caption, value, options}, index) => {
+        const captionId = `${binding.inputId}-${part}-caption`;
+        return (
+          <FieldPart key={part} captionId={captionId} caption={caption}>
+            <Select<string>
+              labelId={captionId}
+              value={value}
+              onChange={(event) => change(part, event.target.value)}
+              onBlur={binding.onBlur}
+              error={binding.error !== null}
+              disabled={disabled}
+              autoFocus={autoFocus && index === 0}
+              fullWidth
+              SelectDisplayProps={{id: `${binding.inputId}-${part}`, ...binding.inputProps}}
+            >
+              {options.map((option) => (
+                <MenuItem key={option} value={String(option)}>
+                  {option}
+                </MenuItem>
+              ))}
+            </Select>
+          </FieldPart>
+        );
+      })}
+    </FieldParts>
   );
 }

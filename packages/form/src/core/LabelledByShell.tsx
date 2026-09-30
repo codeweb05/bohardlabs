@@ -8,21 +8,21 @@ import {InfoTooltip} from './InfoTooltip';
 import type {CommonFieldProps} from './types';
 import type {FieldBinding} from './useFieldBinding';
 
-export interface SelectFieldShellProps extends Omit<CommonFieldProps, 'autoFocus'> {
+export interface LabelledByShellProps extends Omit<CommonFieldProps, 'autoFocus'> {
   readonly binding: Pick<FieldBinding<unknown>, 'inputId' | 'labelId' | 'helperId' | 'error'>;
   readonly children: ReactNode;
 }
 
 /**
- * The layout a field built on a native MUI `Select` needs. Select's `id` lands on the
- * display `div` it renders, not a labelable element, so `FieldShell`'s default `as="label"`
- * layout (a `<label for>` pointing at that `id`) can't activate it on click. This renders
- * the label itself, with no `htmlFor`, through `FieldShell`'s `as="bare"` instead; the
- * accessible name still comes from `aria-labelledby`, wired through the Select's own
- * `labelId` prop. Shared by `SelectField` and `MultiSelectField`'s plain (non-searchable)
- * variant, the two built-in fields that render a native `Select`.
+ * The layout for a field whose control is not a labelable element, so `FieldShell`'s
+ * default `as="label"` layout (a `<label for>` pointing at the control's `id`) can't name
+ * it or activate it on click. This renders the label itself, with no `htmlFor`, through
+ * `FieldShell`'s `as="bare"` instead; the control takes its accessible name from
+ * `aria-labelledby` pointing at `binding.labelId`. Used by the fields built on a native MUI
+ * `Select` (its `id` lands on a display `div`, and its `labelId` prop wires the name) and
+ * by the date and time pickers (a `role="group"` of spinbutton sections).
  */
-export function SelectFieldShell({
+export function LabelledByShell({
   binding,
   label,
   description,
@@ -30,7 +30,7 @@ export function SelectFieldShell({
   tooltip,
   disabled,
   children,
-}: Readonly<SelectFieldShellProps>) {
+}: Readonly<LabelledByShellProps>) {
   const {labels} = useFormConfig();
   const info = tooltip ? <InfoTooltip title={tooltip} label={labels.moreInfo} /> : null;
 

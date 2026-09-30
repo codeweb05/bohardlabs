@@ -40,7 +40,7 @@ const ROOT_API = [
   'useFieldContext',
   'useFormContext',
 ];
-const PICKERS_API: string[] = [];
+const PICKERS_API = ['DateField', 'DateRangeField', 'TimePickerField'];
 const PHONE_API: string[] = [];
 const MAPS_API: string[] = [];
 
