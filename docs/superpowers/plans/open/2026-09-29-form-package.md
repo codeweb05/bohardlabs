@@ -26,8 +26,8 @@ Updated as each task lands. "Done" means reviewed, fixed and committed on `main`
 | 8    | `AsyncAutocompleteField`                     | done    | a2f7777, 8bc60ed |
 | 9    | `DurationField`, `lazyField`                 | done    | de3b7ea, aa776c4 |
 | 10   | `/pickers` (re-planned for x-date-pickers 9) | done    | a9167ee, 9241f2c |
-| 11   | `/phone`                                     | working |                  |
-| 12   | `/maps`                                      | to do   |                  |
+| 11   | `/phone`                                     | done    | f3534c0          |
+| 12   | `/maps`                                      | working |                  |
 | 13   | Prove the leanness                           | to do   |                  |
 | 14   | Document and close                           | to do   |                  |
 | end  | Final whole-branch review and fixes          | to do   |                  |
