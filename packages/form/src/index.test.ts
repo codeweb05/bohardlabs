@@ -23,6 +23,8 @@ const ROOT_API = [
   'FormError',
   'NumberField',
   'PasswordField',
+  'RadioGroupField',
+  'SelectField',
   'SubmitButton',
   'SwitchField',
   'TextArea',
