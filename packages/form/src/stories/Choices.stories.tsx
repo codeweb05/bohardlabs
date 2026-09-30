@@ -15,7 +15,13 @@ const meta = {
   title: 'Form/Select and radio',
   component: SelectField<string>,
   tags: ['autodocs'],
-  args: {label: 'Role', options: ROLES, placeholder: 'Pick a role', emptyLabel: 'No role'},
+  args: {
+    label: 'Role',
+    options: ROLES,
+    placeholder: 'Pick a role',
+    emptyLabel: 'No role',
+    tooltip: 'You can change this later',
+  },
   render: (args) => (
     <FieldHarness defaultValue={null}>
       <SelectField {...args} />
@@ -29,6 +35,7 @@ type Story = StoryObj<typeof meta>;
 export const Select: Story = {
   play: async ({canvasElement}) => {
     const canvas = within(canvasElement);
+    await expect(canvas.getByRole('button', {name: 'More information'})).toBeInTheDocument();
     await userEvent.click(canvas.getByRole('combobox', {name: /Role/}));
     // The menu is portalled to the body, outside the canvas.
     await userEvent.click(await screen.findByRole('option', {name: /Editor/}));

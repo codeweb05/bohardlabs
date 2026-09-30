@@ -1,4 +1,4 @@
-import {render, screen, within} from '@testing-library/react';
+import {render, screen, waitFor, within} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import {FieldHarness} from '../test/FieldHarness';
@@ -69,5 +69,27 @@ describe('SelectField', () => {
     expect(combobox).toHaveAttribute('aria-invalid', 'true');
     expect(combobox).toBeRequired();
     expect(combobox).toHaveAccessibleDescription('Pick a role');
+  });
+
+  it('an invalid submit focuses the combobox', async () => {
+    const user = userEvent.setup();
+    render(
+      <FieldHarness defaultValue={null} validate={(value) => (value === null ? 'Pick a role' : undefined)}>
+        <SelectField label="Role" options={ROLES} required />
+      </FieldHarness>,
+    );
+    await user.click(screen.getByRole('button', {name: 'Submit'}));
+    await waitFor(() => expect(screen.getByRole('combobox', {name: /Role/})).toHaveFocus());
+  });
+
+  it('puts the tooltip behind a focusable button beside the label, before the combobox in tab order', async () => {
+    const user = userEvent.setup();
+    render(
+      <FieldHarness defaultValue={null}>
+        <SelectField label="Role" options={ROLES} tooltip="Pick carefully" />
+      </FieldHarness>,
+    );
+    await user.tab();
+    expect(screen.getByRole('button', {name: 'More information'})).toHaveFocus();
   });
 });

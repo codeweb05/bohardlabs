@@ -4,7 +4,9 @@ import ListItemText from '@mui/material/ListItemText';
 import MenuItem from '@mui/material/MenuItem';
 import Select from '@mui/material/Select';
 
+import {useFormConfig} from '../config/FormConfigContext';
 import {FieldShell} from '../core/FieldShell';
+import {InfoTooltip} from '../core/InfoTooltip';
 import type {CommonFieldProps, Option} from '../core/types';
 import {useFieldBinding} from '../core/useFieldBinding';
 import {NULLABLE_SCALAR} from '../core/valueChecks';
@@ -25,6 +27,10 @@ const EMPTY = '';
  * `labelId` prop instead of going through the shell's `as="label"` layout: that layout
  * also wires a `<label for>` to the input, and having both a native label association and
  * `aria-labelledby` on the same combobox names it twice.
+ *
+ * The tooltip icon is rendered here too, beside this label, instead of being passed to
+ * `FieldShell`: its `as="bare"` layout puts `{children}{info}` in one row, which would
+ * center the icon against the label-and-select block instead of the label text.
  */
 export function SelectField<V extends string | number>({
   label,
@@ -38,7 +44,9 @@ export function SelectField<V extends string | number>({
   emptyLabel,
 }: Readonly<SelectFieldProps<V>>) {
   const binding = useFieldBinding<V | null>({required, expect: NULLABLE_SCALAR});
+  const {labels} = useFormConfig();
   const selected = findOption(options, binding.value);
+  const info = tooltip ? <InfoTooltip title={tooltip} label={labels.moreInfo} /> : null;
 
   return (
     <FieldShell
@@ -46,20 +54,16 @@ export function SelectField<V extends string | number>({
       label={label}
       description={description}
       required={required}
-      tooltip={tooltip}
       disabled={disabled}
       as="bare"
     >
       <Box sx={{width: '100%'}}>
-        <FormLabel
-          id={binding.labelId}
-          required={required}
-          disabled={disabled}
-          error={binding.error !== null}
-          sx={{display: 'block', mb: 0.5}}
-        >
-          {label}
-        </FormLabel>
+        <Box sx={{display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.5}}>
+          <FormLabel id={binding.labelId} required={required} disabled={disabled} error={binding.error !== null}>
+            {label}
+          </FormLabel>
+          {info}
+        </Box>
         <Select<string>
           labelId={binding.labelId}
           value={selected ? String(selected.value) : EMPTY}
