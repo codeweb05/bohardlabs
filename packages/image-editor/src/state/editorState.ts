@@ -1,5 +1,5 @@
-import type {ResolvedFeatures} from '../features';
-import {parseRatio} from '../features';
+import type {ResolvedFeatures} from '../features.js';
+import {parseRatio} from '../features.js';
 import {
   FLIP_HORIZONTAL,
   FLIP_VERTICAL,
@@ -16,7 +16,7 @@ import {
   type Matrix2,
   type Rect,
   type Size,
-} from './geometry';
+} from './geometry.js';
 
 export interface Adjustments {
   brightness: number;

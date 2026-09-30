@@ -5,7 +5,7 @@
  */
 import {describe, expect, it} from 'vitest';
 
-import * as root from './index';
+import * as root from './index.js';
 
 describe('public surface', () => {
   it('exports exactly the pinned list', () => {

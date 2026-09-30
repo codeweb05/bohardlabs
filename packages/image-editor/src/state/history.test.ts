@@ -1,6 +1,6 @@
 import {describe, expect, it} from 'vitest';
 
-import {HISTORY_LIMIT, createHistory, historyReducer, type History, type HistoryAction} from './history';
+import {HISTORY_LIMIT, createHistory, historyReducer, type History, type HistoryAction} from './history.js';
 
 type Action = {type: 'add'; value: number} | {type: 'noop'};
 const reduce = historyReducer<number, Action>((state, action) =>

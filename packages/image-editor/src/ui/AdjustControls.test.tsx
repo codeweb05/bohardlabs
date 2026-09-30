@@ -2,9 +2,9 @@ import {fireEvent, render, screen} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {describe, expect, it, vi} from 'vitest';
 
-import {DEFAULT_IMAGE_EDITOR_LABELS as L} from '../labels';
-import {NEUTRAL_ADJUSTMENTS, type Adjustments} from '../state/editorState';
-import {AdjustControls, type AdjustControlsProps} from './AdjustControls';
+import {DEFAULT_IMAGE_EDITOR_LABELS as L} from '../labels.js';
+import {NEUTRAL_ADJUSTMENTS, type Adjustments} from '../state/editorState.js';
+import {AdjustControls, type AdjustControlsProps} from './AdjustControls.js';
 
 const ALL = {brightness: true, contrast: true, saturation: true, presets: true};
 
@@ -47,5 +47,13 @@ describe('AdjustControls', () => {
       type: 'adjust',
       values: {brightness: 5, contrast: 15, saturation: 35},
     });
+  });
+
+  it('keeps the picked value and the preset when the pressed button is clicked again', async () => {
+    const {user, onAction} = setup(ALL, {brightness: 0, contrast: 10, saturation: -100});
+    await user.click(screen.getByRole('button', {name: new RegExp(L.brightness)}));
+    expect(screen.getByRole('slider', {name: L.brightness})).toBeInTheDocument();
+    await user.click(screen.getByRole('button', {name: L.presetMono}));
+    expect(onAction).not.toHaveBeenCalled();
   });
 });

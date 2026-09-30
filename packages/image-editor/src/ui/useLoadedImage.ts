@@ -1,8 +1,8 @@
 import {useEffect, useLayoutEffect, useRef, useState} from 'react';
 
-import {toEditorError} from '../errors';
-import {loadSource, type LoadedImage} from '../input/loadSource';
-import type {ImageEditorError, ImageEditorInput} from '../types';
+import {toEditorError} from '../errors.js';
+import {loadSource, type LoadedImage} from '../input/loadSource.js';
+import type {ImageEditorError, ImageEditorInput} from '../types.js';
 
 type Settled = {status: 'ready'; image: LoadedImage} | {status: 'error'; error: ImageEditorError};
 

@@ -1,0 +1,17 @@
+[
+  {
+    "name": "ImageEditor",
+    "path": "dist/index.js",
+    "import": "{ ImageEditor }",
+    "limit": "11.5 kB",
+    "ignore": [
+      "react",
+      "react-dom",
+      "@mui/material",
+      "@mui/icons-material",
+      "@emotion/react",
+      "@emotion/styled",
+      "cropperjs"
+    ]
+  }
+]

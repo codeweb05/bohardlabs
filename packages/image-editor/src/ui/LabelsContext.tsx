@@ -1,9 +1,9 @@
 import {createContext, useContext, useMemo} from 'react';
 import type {ReactNode} from 'react';
 
-import type {ImageEditorLabels} from '../labels';
-import {DEFAULT_IMAGE_EDITOR_LABELS} from '../labels';
-import type {ImageEditorErrorCode} from '../types';
+import type {ImageEditorLabels} from '../labels.js';
+import {DEFAULT_IMAGE_EDITOR_LABELS} from '../labels.js';
+import type {ImageEditorErrorCode} from '../types.js';
 
 /** Defaults are the context default, so a part rendered alone under test still reads real strings. */
 const LabelsContext = createContext<ImageEditorLabels>(DEFAULT_IMAGE_EDITOR_LABELS);

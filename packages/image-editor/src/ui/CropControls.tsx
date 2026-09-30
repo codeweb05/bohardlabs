@@ -9,9 +9,9 @@ import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import Tooltip from '@mui/material/Tooltip';
 import type {ReactNode} from 'react';
 
-import {parseRatio, type ResolvedFeatures} from '../features';
-import {currentZoom, type EditorAction, type EditorState} from '../state/editorState';
-import {useLabels} from './LabelsContext';
+import {parseRatio, type ResolvedFeatures} from '../features.js';
+import {currentZoom, type EditorAction, type EditorState} from '../state/editorState.js';
+import {useLabels} from './LabelsContext.js';
 
 export interface CropControlsProps {
   readonly state: EditorState;

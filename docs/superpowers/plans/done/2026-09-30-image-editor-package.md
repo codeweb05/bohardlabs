@@ -1,6 +1,6 @@
 # `@vt-labs/image-editor` Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** A generic MUI image editor dialog (crop, zoom, rotate, flip, straighten, adjust,
 undo) that turns a `File`, `Blob` or URL into a `File` that passes the consumer's upload
@@ -22,18 +22,18 @@ including its "Amendments while planning" section, which this plan introduced.
 
 | Task | What                                              | State |
 | :--: | ------------------------------------------------- | ----- |
-|  1   | Scaffold, public types, labels, features, surface | todo  |
-|  2   | Geometry                                          | todo  |
-|  3   | Editor reducer and history                        | todo  |
-|  4   | Input: fetch, validate, decode, cap               | todo  |
-|  5   | Output: filters, render, encode, fit, export      | todo  |
-|  6   | Engine: loader and `CropperView`                  | todo  |
-|  7   | UI shell: dialog, load, apply, errors, picker     | todo  |
-|  8   | Crop tools, key layer, live region                | todo  |
-|  9   | Adjust, presets, history UI                       | todo  |
-|  10  | Mobile layout                                     | todo  |
-|  11  | Stories with pixel checks                         | todo  |
-|  12  | Verify gate, docs, changeset, close               | todo  |
+|  1   | Scaffold, public types, labels, features, surface | done  |
+|  2   | Geometry                                          | done  |
+|  3   | Editor reducer and history                        | done  |
+|  4   | Input: fetch, validate, decode, cap               | done  |
+|  5   | Output: filters, render, encode, fit, export      | done  |
+|  6   | Engine: loader and `CropperView`                  | done  |
+|  7   | UI shell: dialog, load, apply, errors, picker     | done  |
+|  8   | Crop tools, key layer, live region                | done  |
+|  9   | Adjust, presets, history UI                       | done  |
+|  10  | Mobile layout                                     | done  |
+|  11  | Stories with pixel checks                         | done  |
+|  12  | Verify gate, docs, changeset, close               | done  |
 
 ## Global Constraints
 
@@ -204,10 +204,10 @@ non-positive or non-finite value is `null`.
 runtime exports to `['DEFAULT_IMAGE_EDITOR_LABELS', 'ImageEditor']` and checks every label
 default is a non-empty string or a function returning one.
 
-- [ ] Write `features.test.ts` and `index.test.ts`, see them fail, implement, see them pass
+- [x] Write `features.test.ts` and `index.test.ts`, see them fail, implement, see them pass
       (`pnpm vitest run --project @vt-labs/image-editor`).
-- [ ] `pnpm install`, `pnpm --filter @vt-labs/image-editor typecheck`.
-- [ ] Commit `feat(image-editor): scaffold the package with its public types, labels and feature resolution`.
+- [x] `pnpm install`, `pnpm --filter @vt-labs/image-editor typecheck`.
+- [x] Commit `feat(image-editor): scaffold the package with its public types, labels and feature resolution`.
 
 ### Task 2: Geometry
 
@@ -294,7 +294,7 @@ one; `layoutStage` puts the crop centre at the stage centre, maps the crop's top
 point to the selection's top-left (apply the CSS matrix by hand), and `stageToCrop` of the
 layout's own selection returns the crop.
 
-- [ ] Tests first, fail, implement, pass. Commit `feat(image-editor): add the geometry model`.
+- [x] Tests first, fail, implement, pass. Commit `feat(image-editor): add the geometry model`.
 
 ### Task 3: Editor reducer and history
 
@@ -374,7 +374,7 @@ Behaviour and the test for each:
   `commit` pushes that once; `undo`/`redo` commit a pending gesture first; `past` never
   exceeds 50; `init` clears everything. Reset is `apply(replace(initial))`, so it is undoable.
 
-- [ ] Tests first, fail, implement, pass. Commit `feat(image-editor): add the editor reducer and gesture-aware history`.
+- [x] Tests first, fail, implement, pass. Commit `feat(image-editor): add the editor reducer and gesture-aware history`.
 
 ### Task 4: Input
 
@@ -416,7 +416,7 @@ Tests with a fake decoder and a stubbed `URL.createObjectURL`/`revokeObjectURL` 
 gives 4096×2731 and `downscale` is called once, the original URL revoked); a URL source's
 type comes from the fetched blob.
 
-- [ ] Tests first, fail, implement, pass. Commit `feat(image-editor): load and validate a file, blob or url into a capped working copy`.
+- [x] Tests first, fail, implement, pass. Commit `feat(image-editor): load and validate a file, blob or url into a capped working copy`.
 
 ### Task 5: Output
 
@@ -489,7 +489,7 @@ source type when JPEG, PNG or WebP; else PNG.
 `render` and `exportImage` need a real canvas; they are covered by the pixel stories
 (Task 11).
 
-- [ ] Tests first, fail, implement, pass. Commit `feat(image-editor): add the output pipeline with size fitting and encode fallback`.
+- [x] Tests first, fail, implement, pass. Commit `feat(image-editor): add the output pipeline with size fitting and encode fallback`.
 
 ### Task 6: Engine
 
@@ -534,7 +534,7 @@ clamps a resize to the layout's frame rect. `actionend` reads the selection back
 Test: `renderToString(<ImageEditor open source={blob} …/>)` and closed do not throw and do
 not call `import('cropperjs')` (mock `loadCropper` and assert no calls).
 
-- [ ] Implement, write the SSR test, pass. Commit `feat(image-editor): add the cropperjs view adapter`.
+- [x] Implement, write the SSR test, pass. Commit `feat(image-editor): add the cropperjs view adapter`.
 
 ### Task 7: UI shell
 
@@ -555,7 +555,7 @@ calls `onApply` with the export result; a double click calls it once; a rejectio
 `applyFailed`; Cancel and Escape call `onClose`; `labels` override one string; the URL is
 revoked on close.
 
-- [ ] Tests first, fail, implement, pass. Commit `feat(image-editor): add the dialog shell with load, apply and the picker`.
+- [x] Tests first, fail, implement, pass. Commit `feat(image-editor): add the dialog shell with load, apply and the picker`.
 
 ### Task 8: Crop tools, key layer, live region
 
@@ -575,7 +575,7 @@ by the layout's `k`. Each change is announced in a polite status region.
 Tests: which controls render for each feature combination; keys do nothing unless the
 stage has focus; arrow and rotate keys dispatch and announce.
 
-- [ ] Tests first, fail, implement, pass. Commit `feat(image-editor): add crop tools, the key layer and announcements`.
+- [x] Tests first, fail, implement, pass. Commit `feat(image-editor): add crop tools, the key layer and announcements`.
 
 ### Task 9: Adjust, presets, history UI
 
@@ -590,7 +590,7 @@ equals the initial one.
 Tests: tabs absent without adjust or without canvas filter support; a preset sets all three
 values; undo and redo buttons walk the history; reset is undoable.
 
-- [ ] Tests first, fail, implement, pass. Commit `feat(image-editor): add adjustments, presets and undo and redo`.
+- [x] Tests first, fail, implement, pass. Commit `feat(image-editor): add adjustments, presets and undo and redo`.
 
 ### Task 10: Mobile layout
 
@@ -600,7 +600,7 @@ Below `sm` the dialog is full screen; the header is Cancel, title, Done; a float
 over the stage holds undo, rotate, flip and reset (each only when its feature is on); the
 dock sits at the bottom; the footer is gone. Test by mocking `useMediaQuery` to true.
 
-- [ ] Test first, fail, implement, pass. Commit `feat(image-editor): add the mobile layout`.
+- [x] Test first, fail, implement, pass. Commit `feat(image-editor): add the mobile layout`.
 
 ### Task 11: Stories
 
@@ -613,7 +613,7 @@ output size; circle corners are transparent; an adjustment changes the pixels;
 `maxBytes` is respected; keys act only with focus; undo and redo; a rejected `onApply`
 keeps the editor open.
 
-- [ ] Write, run `pnpm vitest run --project storybook`, pass. Commit `test(image-editor): add stories with interaction and pixel checks`.
+- [x] Write, run `pnpm vitest run --project storybook`, pass. Commit `test(image-editor): add stories with interaction and pixel checks`.
 
 ### Task 12: Verify gate, docs, close
 
@@ -630,5 +630,10 @@ limit is the first measurement plus 10%. `verify` runs check-graph, size-limit, 
 `attw --pack . --profile esm-only`. Turbo and the root scripts are left alone, because the
 form package adds the same wiring in its Task 13; the two merge there.
 
-- [ ] Run `pnpm --filter @vt-labs/image-editor verify` and `pnpm validate`, both exit 0.
-- [ ] Commit `docs(image-editor): readme, changeset, verify gate and roadmap`.
+- [x] Run `pnpm --filter @vt-labs/image-editor verify` and `pnpm validate`, both exit 0.
+- [x] Commit `docs(image-editor): readme, changeset, verify gate and roadmap`.
+
+Done as written, with one addition: attw failed `node16 (from ESM)` on the emitted
+declarations, so the build tsconfig moved to `module: nodenext` and every relative import in
+`src` gained its `.js` extension, as the form package did. The build also stopped emitting
+declaration maps, which pointed at sources the tarball does not ship.

@@ -1,4 +1,4 @@
-import type {CropRatio} from './types';
+import type {CropRatio} from './types.js';
 
 /**
  * Every word the editor puts on screen or announces. Pass a partial object as the

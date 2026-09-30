@@ -1,7 +1,7 @@
-import {frameOf, type EditorState} from '../state/editorState';
-import {linearOf, type Size} from '../state/geometry';
-import type {CropShape} from '../types';
-import {filterString} from './filters';
+import {frameOf, type EditorState} from '../state/editorState.js';
+import {linearOf, type Size} from '../state/geometry.js';
+import type {CropShape} from '../types.js';
+import {filterString} from './filters.js';
 
 /** Fits the crop inside the limits without ever enlarging it. */
 export function outputSize(crop: Size, maxWidth?: number, maxHeight?: number): Size {

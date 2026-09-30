@@ -1,4 +1,4 @@
-import type {ImageEditorLabels} from './labels';
+import type {ImageEditorLabels} from './labels.js';
 
 /** A crop ratio: `'free'`, one of the named ratios, or width ÷ height as a number. */
 export type CropRatio = 'free' | '1:1' | '4:3' | '16:9' | number;

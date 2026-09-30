@@ -1,11 +1,11 @@
 import Box from '@mui/material/Box';
 import {useEffect, useId, useRef, useState, type KeyboardEvent} from 'react';
 
-import {CropperView, type CropperViewProps} from '../engine/CropperView';
-import type {ResolvedFeatures} from '../features';
-import type {EditorAction} from '../state/editorState';
-import {layoutStage, type Size} from '../state/geometry';
-import {useLabels} from './LabelsContext';
+import {CropperView, type CropperViewProps} from '../engine/CropperView.js';
+import type {ResolvedFeatures} from '../features.js';
+import type {EditorAction} from '../state/editorState.js';
+import {layoutStage, type Size} from '../state/geometry.js';
+import {useLabels} from './LabelsContext.js';
 
 /** Room around the crop for the resize handles and a glimpse of what is outside it. */
 const STAGE_PADDING = 24;

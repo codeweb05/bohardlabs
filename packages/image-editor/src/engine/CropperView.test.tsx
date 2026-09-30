@@ -1,10 +1,10 @@
 import {act, render, screen, waitFor} from '@testing-library/react';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 
-import {resolveFeatures} from '../features';
-import {initialEditorState, type EditorState} from '../state/editorState';
-import {layoutStage, type Rect} from '../state/geometry';
-import {CropperView, type CropperViewProps} from './CropperView';
+import {resolveFeatures} from '../features.js';
+import {initialEditorState, type EditorState} from '../state/editorState.js';
+import {layoutStage, type Rect} from '../state/geometry.js';
+import {CropperView, type CropperViewProps} from './CropperView.js';
 
 // Stand-ins for the cropperjs elements with just the surface the adapter uses. The real
 // ones run in the Storybook project, in Chromium.
@@ -35,7 +35,7 @@ class FakeSelection extends FakeElement {
   }
 }
 
-vi.mock('./loadCropper', () => ({
+vi.mock('./loadCropper.js', () => ({
   loadCropper: vi.fn(async () => {
     const define = (name: string, element: CustomElementConstructor) => {
       if (!customElements.get(name)) customElements.define(name, element);
@@ -130,6 +130,40 @@ describe('CropperView', () => {
       vi.advanceTimersByTime(300);
     });
     expect(props.onCommit).toHaveBeenCalledTimes(1);
+  });
+
+  it('lets other actions and malformed events through untouched', async () => {
+    const {query, props} = setup();
+    const {canvas} = await ready(query);
+    // cropperjs owns the event shape; anything the adapter cannot read is left alone.
+    for (const detail of [{action: 'select'}, {action: 7}, {}, {action: 'move'}, {action: 'scale', scale: 0}]) {
+      action(canvas, detail);
+    }
+    const plain = new Event('action', {bubbles: true, cancelable: true});
+    canvas.dispatchEvent(plain);
+    expect(plain.defaultPrevented).toBe(false);
+    canvas.dispatchEvent(new CustomEvent('action', {detail: null, bubbles: true}));
+    expect(props.onAction).not.toHaveBeenCalled();
+  });
+
+  it('zooms without a commit timer for a pinch, which ends with its own actionend', async () => {
+    const {query, props} = setup();
+    const {canvas} = await ready(query);
+    action(canvas, {action: 'transform', scale: -0.5});
+    expect(props.onAction).toHaveBeenCalledWith({type: 'zoomBy', factor: 0.5}, {transient: true});
+    act(() => {
+      vi.advanceTimersByTime(300);
+    });
+    expect(props.onCommit).not.toHaveBeenCalled();
+  });
+
+  it('ignores a selection change it cannot read', async () => {
+    const {query, layout} = setup();
+    const {selection} = await ready(query);
+    const event = new CustomEvent('change', {detail: {x: 1}, bubbles: true, cancelable: true});
+    selection.dispatchEvent(event);
+    expect(event.defaultPrevented).toBe(false);
+    expect(selectionRect(selection)).toEqual(layout.selection);
   });
 
   it('keeps a resize inside the image', async () => {

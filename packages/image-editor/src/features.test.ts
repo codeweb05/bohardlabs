@@ -1,6 +1,6 @@
 import {describe, expect, it} from 'vitest';
 
-import {DEFAULT_RATIOS, parseRatio, resolveFeatures} from './features';
+import {DEFAULT_RATIOS, parseRatio, resolveFeatures} from './features.js';
 
 describe('parseRatio', () => {
   it.each([

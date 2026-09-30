@@ -11,12 +11,12 @@ import Tab from '@mui/material/Tab';
 import Tabs from '@mui/material/Tabs';
 import {useEffect, useId, useReducer, useRef, useState, type ReactNode} from 'react';
 
-import {EditorError} from '../errors';
-import {resolveFeatures, type ResolvedFeatures} from '../features';
-import {DEFAULT_ACCEPT, type LoadedImage} from '../input/loadSource';
-import type {ImageEditorLabels} from '../labels';
-import {exportImage} from '../output/exportImage';
-import {filterString, supportsCanvasFilter} from '../output/filters';
+import {EditorError} from '../errors.js';
+import {resolveFeatures, type ResolvedFeatures} from '../features.js';
+import {DEFAULT_ACCEPT, type LoadedImage} from '../input/loadSource.js';
+import type {ImageEditorLabels} from '../labels.js';
+import {exportImage} from '../output/exportImage.js';
+import {filterString, supportsCanvasFilter} from '../output/filters.js';
 import {
   currentZoom,
   editorReducer,
@@ -24,17 +24,17 @@ import {
   sameState,
   type EditorAction,
   type EditorState,
-} from '../state/editorState';
-import {createHistory, historyReducer} from '../state/history';
-import type {ImageEditorProps} from '../types';
-import {AdjustControls} from './AdjustControls';
-import {CanvasArea, visuallyHidden} from './CanvasArea';
-import {CropControls, type CropControlsProps} from './CropControls';
-import {HistoryButtons} from './HistoryButtons';
-import {errorMessage, useLabels} from './LabelsContext';
-import {MobileToolbar} from './MobileToolbar';
-import {FileButton, Picker} from './Picker';
-import {useLoadedImage} from './useLoadedImage';
+} from '../state/editorState.js';
+import {createHistory, historyReducer} from '../state/history.js';
+import type {ImageEditorProps} from '../types.js';
+import {AdjustControls} from './AdjustControls.js';
+import {CanvasArea, visuallyHidden} from './CanvasArea.js';
+import {CropControls, type CropControlsProps} from './CropControls.js';
+import {HistoryButtons} from './HistoryButtons.js';
+import {errorMessage, useLabels} from './LabelsContext.js';
+import {MobileToolbar} from './MobileToolbar.js';
+import {FileButton, Picker} from './Picker.js';
+import {useLoadedImage} from './useLoadedImage.js';
 
 const reducer = historyReducer(editorReducer);
 
@@ -45,8 +45,6 @@ function describe(labels: ImageEditorLabels, action: EditorAction, next: EditorS
       return labels.rotated(action.direction * 90);
     case 'flip':
       return labels.flipped;
-    case 'straighten':
-      return labels.straightened(action.degrees);
     case 'setCrop':
     case 'moveCrop':
     case 'resizeCrop':
@@ -55,6 +53,8 @@ function describe(labels: ImageEditorLabels, action: EditorAction, next: EditorS
     case 'zoomBy':
     case 'zoomTo':
       return labels.zoomChanged(Math.round(currentZoom(next) * 100));
+    // Slider-only: each control announces its own value where the gesture ends.
+    case 'straighten':
     case 'adjust':
       return null;
     case 'replace':

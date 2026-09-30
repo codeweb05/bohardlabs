@@ -1,7 +1,7 @@
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 
-import {EditorError} from '../errors';
-import {accepts, checkBlob, loadSource, type Decoder} from './loadSource';
+import {EditorError} from '../errors.js';
+import {accepts, browserDecoder, checkBlob, loadSource, type Decoder} from './loadSource.js';
 
 let created: string[];
 let revoked: string[];
@@ -125,5 +125,14 @@ describe('loadSource', () => {
     expect(await failure(loadSource('https://example.com/missing.png', {}, fakeDecoder(1, 1)))).toBe('load-failed');
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('CORS')));
     expect(await failure(loadSource('https://elsewhere.com/a.png', {}, fakeDecoder(1, 1)))).toBe('load-failed');
+  });
+});
+
+describe('browserDecoder.downscale', () => {
+  it('rejects when the canvas has no 2d context', async () => {
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null);
+    await expect(browserDecoder.downscale({} as HTMLImageElement, 10, 10, 'image/png')).rejects.toThrow(
+      'No 2d context',
+    );
   });
 });

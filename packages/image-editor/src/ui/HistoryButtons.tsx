@@ -4,7 +4,7 @@ import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
 
-import {useLabels} from './LabelsContext';
+import {useLabels} from './LabelsContext.js';
 
 interface HistoryButtonsProps {
   /** `null` at that end of the history. */

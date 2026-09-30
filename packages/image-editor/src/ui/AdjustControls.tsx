@@ -5,10 +5,10 @@ import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import Typography from '@mui/material/Typography';
 import {useState} from 'react';
 
-import type {ResolvedFeatures} from '../features';
-import {PRESETS, presetOf, type PresetId} from '../output/filters';
-import type {Adjustments, EditorAction} from '../state/editorState';
-import {useLabels} from './LabelsContext';
+import type {ResolvedFeatures} from '../features.js';
+import {PRESETS, presetOf, type PresetId} from '../output/filters.js';
+import type {Adjustments, EditorAction} from '../state/editorState.js';
+import {useLabels} from './LabelsContext.js';
 
 type Value = keyof Adjustments;
 

@@ -1,6 +1,6 @@
-export {ImageEditor} from './ui/ImageEditor';
-export {DEFAULT_IMAGE_EDITOR_LABELS} from './labels';
-export type {ImageEditorLabels} from './labels';
+export {ImageEditor} from './ui/ImageEditor.js';
+export {DEFAULT_IMAGE_EDITOR_LABELS} from './labels.js';
+export type {ImageEditorLabels} from './labels.js';
 export type {
   CropRatio,
   ImageEditorError,
@@ -10,4 +10,4 @@ export type {
   ImageEditorOutput,
   ImageEditorProps,
   ImageEditorResult,
-} from './types';
+} from './types.js';

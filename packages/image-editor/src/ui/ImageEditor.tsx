@@ -3,9 +3,9 @@ import {useTheme} from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import {useId, useState} from 'react';
 
-import type {ImageEditorProps} from '../types';
-import {EditorSession} from './EditorSession';
-import {LabelsProvider} from './LabelsContext';
+import type {ImageEditorProps} from '../types.js';
+import {EditorSession} from './EditorSession.js';
+import {LabelsProvider} from './LabelsContext.js';
 
 /**
  * A dialog that crops, rotates, flips and adjusts one image and hands back a `File` that

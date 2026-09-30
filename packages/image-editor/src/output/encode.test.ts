@@ -1,6 +1,6 @@
 import {describe, expect, it, vi} from 'vitest';
 
-import {EditorError} from '../errors';
+import {EditorError} from '../errors.js';
 import {
   encodeWithFallback,
   extensionFor,
@@ -8,7 +8,7 @@ import {
   MAX_QUALITY_ENCODES,
   needsAlpha,
   resolveOutputType,
-} from './encode';
+} from './encode.js';
 
 function blobOf(size: number, type: string): Blob {
   return new Blob([new Uint8Array(size)], {type});

@@ -480,6 +480,9 @@ importers:
 
   packages/image-editor:
     devDependencies:
+      '@arethetypeswrong/cli':
+        specifier: ^0.18.5
+        version: 0.18.5
       '@emotion/react':
         specifier: 'catalog:'
         version: 11.14.0(@types/react@19.2.18)(react@19.2.8)
@@ -492,6 +495,9 @@ importers:
       '@mui/material':
         specifier: 'catalog:'
         version: 9.4.0(@emotion/react@11.14.0(@types/react@19.2.18)(react@19.2.8))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.18)(react@19.2.8))(@types/react@19.2.18)(react@19.2.8))(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      '@size-limit/preset-small-lib':
+        specifier: ^14.1.0
+        version: 14.1.0(size-limit@14.1.0)
       '@storybook/react-vite':
         specifier: 'catalog:'
         version: 10.5.10(@types/react-dom@19.2.5(@types/react@19.2.18))(@types/react@19.2.18)(esbuild@0.28.2)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(rollup@4.63.0)(storybook@10.5.10(@types/react@19.2.18)(prettier@3.9.6)(react@19.2.8))(typescript@6.0.3)(vite@8.2.2(@types/node@26.4.0)(esbuild@0.28.2)(jiti@2.6.1)(yaml@2.9.0))
@@ -525,12 +531,18 @@ importers:
       jsdom:
         specifier: 'catalog:'
         version: 30.0.1
+      publint:
+        specifier: ^0.3.24
+        version: 0.3.24
       react:
         specifier: 'catalog:'
         version: 19.2.8
       react-dom:
         specifier: 'catalog:'
         version: 19.2.8(react@19.2.8)
+      size-limit:
+        specifier: ^14.1.0
+        version: 14.1.0
       storybook:
         specifier: 'catalog:'
         version: 10.5.10(@types/react@19.2.18)(prettier@3.9.6)(react@19.2.8)

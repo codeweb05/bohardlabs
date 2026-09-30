@@ -1,4 +1,4 @@
-import type {Adjustments} from '../state/editorState';
+import type {Adjustments} from '../state/editorState.js';
 
 export type PresetId = 'original' | 'vivid' | 'mono' | 'fade' | 'dramatic';
 

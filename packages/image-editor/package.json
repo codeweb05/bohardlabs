@@ -29,7 +29,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
-    "clean": "rm -rf dist *.tsbuildinfo"
+    "clean": "rm -rf dist *.tsbuildinfo",
+    "verify": "node scripts/check-graph.mjs && size-limit && publint && attw --pack . --profile esm-only"
   },
   "peerDependencies": {
     "@emotion/react": "^11.14.0",
@@ -41,10 +42,12 @@
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
+    "@arethetypeswrong/cli": "^0.18.5",
     "@emotion/react": "catalog:",
     "@emotion/styled": "catalog:",
     "@mui/icons-material": "catalog:",
     "@mui/material": "catalog:",
+    "@size-limit/preset-small-lib": "^14.1.0",
     "@storybook/react-vite": "catalog:",
     "@testing-library/dom": "catalog:",
     "@testing-library/jest-dom": "catalog:",
@@ -56,8 +59,10 @@
     "@vitejs/plugin-react": "catalog:",
     "cropperjs": "catalog:",
     "jsdom": "catalog:",
+    "publint": "^0.3.24",
     "react": "catalog:",
     "react-dom": "catalog:",
+    "size-limit": "^14.1.0",
     "storybook": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",

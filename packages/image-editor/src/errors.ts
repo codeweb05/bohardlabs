@@ -1,4 +1,4 @@
-import type {ImageEditorError, ImageEditorErrorCode} from './types';
+import type {ImageEditorError, ImageEditorErrorCode} from './types.js';
 
 /** Thrown inside the package; reported to the consumer as a plain `ImageEditorError`. */
 export class EditorError extends Error {

@@ -1,5 +1,5 @@
-import {EditorError} from '../errors';
-import type {ImageEditorErrorCode, ImageEditorInput} from '../types';
+import {EditorError} from '../errors.js';
+import type {ImageEditorErrorCode, ImageEditorInput} from '../types.js';
 
 /** iOS Safari caps canvas memory; a larger working copy fails to draw there. */
 export const MAX_WORKING_EDGE = 4096;

@@ -2,21 +2,21 @@ import {render, screen, waitFor} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 
-import {EditorError} from '../errors';
-import type {LoadedImage} from '../input/loadSource';
-import {DEFAULT_IMAGE_EDITOR_LABELS as L} from '../labels';
-import type {ImageEditorProps, ImageEditorResult} from '../types';
-import {ImageEditor} from './ImageEditor';
+import {EditorError} from '../errors.js';
+import type {LoadedImage} from '../input/loadSource.js';
+import {DEFAULT_IMAGE_EDITOR_LABELS as L} from '../labels.js';
+import type {ImageEditorProps, ImageEditorResult} from '../types.js';
+import {ImageEditor} from './ImageEditor.js';
 
 const loadSource = vi.hoisted(() => vi.fn());
 const exportImage = vi.hoisted(() => vi.fn());
 
-vi.mock(import('../input/loadSource'), async (original) => ({
+vi.mock(import('../input/loadSource.js'), async (original) => ({
   ...(await original()),
   loadSource,
 }));
-vi.mock('../output/exportImage', () => ({exportImage}));
-vi.mock('../engine/CropperView', () => ({CropperView: () => null}));
+vi.mock('../output/exportImage.js', () => ({exportImage}));
+vi.mock('../engine/CropperView.js', () => ({CropperView: () => null}));
 
 function loaded(overrides: Partial<LoadedImage> = {}): LoadedImage {
   return {

@@ -2,11 +2,11 @@ import {fireEvent, render, screen} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {describe, expect, it, vi} from 'vitest';
 
-import {resolveFeatures} from '../features';
-import {DEFAULT_IMAGE_EDITOR_LABELS as L} from '../labels';
-import {editorReducer, initialEditorState} from '../state/editorState';
-import type {ImageEditorFeatures} from '../types';
-import {CropControls} from './CropControls';
+import {resolveFeatures} from '../features.js';
+import {DEFAULT_IMAGE_EDITOR_LABELS as L} from '../labels.js';
+import {editorReducer, initialEditorState} from '../state/editorState.js';
+import type {ImageEditorFeatures} from '../types.js';
+import {CropControls} from './CropControls.js';
 
 function setup(given: ImageEditorFeatures = {}, rotated = false) {
   const features = resolveFeatures(given);

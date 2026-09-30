@@ -3,10 +3,10 @@ import {alpha, useTheme} from '@mui/material/styles';
 import type {CropperCanvas, CropperImage, CropperSelection, CropperShade} from 'cropperjs';
 import {useLayoutEffect, useRef, useState} from 'react';
 
-import type {EditorAction, EditorState} from '../state/editorState';
-import {clampRect, stageToCrop, type Rect, type Size, type StageLayout} from '../state/geometry';
-import type {CropShape} from '../types';
-import {loadCropper} from './loadCropper';
+import type {EditorAction, EditorState} from '../state/editorState.js';
+import {clampRect, stageToCrop, type Rect, type Size, type StageLayout} from '../state/geometry.js';
+import type {CropShape} from '../types.js';
+import {loadCropper} from './loadCropper.js';
 
 export interface CropperViewProps {
   src: string;

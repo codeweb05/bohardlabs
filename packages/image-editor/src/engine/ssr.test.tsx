@@ -1,14 +1,14 @@
 import {renderToString} from 'react-dom/server';
 import {describe, expect, it, vi} from 'vitest';
 
-import {resolveFeatures} from '../features';
-import {initialEditorState} from '../state/editorState';
-import {layoutStage} from '../state/geometry';
-import {ImageEditor} from '../ui/ImageEditor';
-import {CropperView} from './CropperView';
-import {loadCropper} from './loadCropper';
+import {resolveFeatures} from '../features.js';
+import {initialEditorState} from '../state/editorState.js';
+import {layoutStage} from '../state/geometry.js';
+import {ImageEditor} from '../ui/ImageEditor.js';
+import {CropperView} from './CropperView.js';
+import {loadCropper} from './loadCropper.js';
 
-vi.mock('./loadCropper', () => ({loadCropper: vi.fn(async () => undefined)}));
+vi.mock('./loadCropper.js', () => ({loadCropper: vi.fn(async () => undefined)}));
 
 describe('server rendering', () => {
   it('renders the editor open and closed without reaching cropperjs', () => {

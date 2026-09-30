@@ -1,10 +1,15 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
+    // A consumer on `moduleResolution: node16` reads the emitted .d.ts files with Node's
+    // ESM rules, where a relative import needs its `.js` extension. `nodenext` here makes a
+    // missing one a build error instead of types that silently resolve to `any`.
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
     "noEmit": false,
     "emitDeclarationOnly": true,
     "declaration": true,
-    "declarationMap": true,
+    "declarationMap": false,
     "outDir": "dist",
     "rootDir": "src"
   },

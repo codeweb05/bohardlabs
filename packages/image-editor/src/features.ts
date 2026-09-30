@@ -1,4 +1,4 @@
-import type {CropRatio, CropShape, ImageEditorFeatures} from './types';
+import type {CropRatio, CropShape, ImageEditorFeatures} from './types.js';
 
 export interface ResolvedFeatures {
   /** `enabled: false` means the crop is the whole frame and there is no crop box. */

@@ -2,18 +2,18 @@ import {render, screen, within} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 
-import type {CropperViewProps} from '../engine/CropperView';
-import type {LoadedImage} from '../input/loadSource';
-import {DEFAULT_IMAGE_EDITOR_LABELS as L} from '../labels';
-import {exportImage} from '../output/exportImage';
-import type {EditorState} from '../state/editorState';
-import type {ImageEditorFeatures} from '../types';
-import {ImageEditor} from './ImageEditor';
+import type {CropperViewProps} from '../engine/CropperView.js';
+import type {LoadedImage} from '../input/loadSource.js';
+import {DEFAULT_IMAGE_EDITOR_LABELS as L} from '../labels.js';
+import {exportImage} from '../output/exportImage.js';
+import type {EditorState} from '../state/editorState.js';
+import type {ImageEditorFeatures} from '../types.js';
+import {ImageEditor} from './ImageEditor.js';
 
 const view = vi.hoisted(() => ({state: null as EditorState | null}));
 
 vi.mock('@mui/material/useMediaQuery', () => ({default: () => true}));
-vi.mock(import('../input/loadSource'), async (original) => ({
+vi.mock(import('../input/loadSource.js'), async (original) => ({
   ...(await original()),
   loadSource: vi.fn(async (): Promise<LoadedImage> => ({
     url: 'blob:working',
@@ -24,11 +24,11 @@ vi.mock(import('../input/loadSource'), async (original) => ({
     revoke: () => undefined,
   })),
 }));
-vi.mock(import('../output/exportImage'), async (original) => ({
+vi.mock(import('../output/exportImage.js'), async (original) => ({
   ...(await original()),
   exportImage: vi.fn(),
 }));
-vi.mock('../engine/CropperView', () => ({
+vi.mock('../engine/CropperView.js', () => ({
   CropperView: ({state}: CropperViewProps) => {
     view.state = state;
     return null;
@@ -114,5 +114,12 @@ describe('the mobile layout', () => {
     expect(view.state?.orientation).toEqual([1, 0, 0, 1]);
     await user.click(within(toolbar).getByRole('button', {name: L.undo}));
     expect(view.state?.orientation).toEqual([0, -1, 1, 0]);
+  });
+
+  it('flips both ways from the pill', async () => {
+    const {user, toolbar} = await setup();
+    await user.click(within(toolbar).getByRole('button', {name: L.flipHorizontal}));
+    await user.click(within(toolbar).getByRole('button', {name: L.flipVertical}));
+    expect(view.state?.orientation).toEqual([-1, 0, 0, -1]);
   });
 });

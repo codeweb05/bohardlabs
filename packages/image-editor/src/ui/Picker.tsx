@@ -4,7 +4,7 @@ import Button, {type ButtonProps} from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import {useRef, useState, type ChangeEvent, type DragEvent} from 'react';
 
-import {useLabels} from './LabelsContext';
+import {useLabels} from './LabelsContext.js';
 
 interface FileButtonProps {
   readonly accept: readonly string[];

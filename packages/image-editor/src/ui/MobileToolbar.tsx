@@ -6,9 +6,9 @@ import IconButton from '@mui/material/IconButton';
 import Paper from '@mui/material/Paper';
 import type {ReactNode} from 'react';
 
-import type {ResolvedFeatures} from '../features';
-import type {EditorAction} from '../state/editorState';
-import {useLabels} from './LabelsContext';
+import type {ResolvedFeatures} from '../features.js';
+import type {EditorAction} from '../state/editorState.js';
+import {useLabels} from './LabelsContext.js';
 
 interface MobileToolbarProps {
   readonly features: ResolvedFeatures;

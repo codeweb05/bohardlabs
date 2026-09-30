@@ -5,8 +5,8 @@ import type {Meta, StoryObj} from '@storybook/react-vite';
 import {useState} from 'react';
 import {expect, fn, mocked, screen, userEvent, waitFor, within} from 'storybook/test';
 
-import {ImageEditor, type ImageEditorProps, type ImageEditorResult} from '../index';
-import {noiseUrl, pixelAt, QUADRANT_COLOURS, quadrantsUrl, rgba, urlToFile} from './fixtures';
+import {ImageEditor, type ImageEditorProps, type ImageEditorResult} from '../index.js';
+import {noiseUrl, pixelAt, QUADRANT_COLOURS, quadrantsUrl, rgba, urlToFile} from './fixtures.js';
 
 type DemoProps = ImageEditorProps & {
   /** Start on the built-in picker instead of the test picture. */

@@ -1,6 +1,6 @@
 import {describe, expect, it} from 'vitest';
 
-import {resolveFeatures} from '../features';
+import {resolveFeatures} from '../features.js';
 import {
   NEUTRAL_ADJUSTMENTS,
   currentZoom,
@@ -10,8 +10,8 @@ import {
   sameState,
   type EditorAction,
   type EditorState,
-} from './editorState';
-import {IDENTITY, apply, invert, linearOf, toFrame, type Point} from './geometry';
+} from './editorState.js';
+import {IDENTITY, apply, invert, linearOf, toFrame, type Point} from './geometry.js';
 
 const image = {width: 400, height: 200};
 const base = initialEditorState(image, resolveFeatures({crop: {ratios: ['free']}}));

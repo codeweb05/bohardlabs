@@ -20,7 +20,7 @@ import {
   zoomOf,
   type Matrix2,
   type Point,
-} from './geometry';
+} from './geometry.js';
 
 const image = {width: 400, height: 200};
 

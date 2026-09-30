@@ -2,16 +2,16 @@ import {render, screen, waitFor} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 
-import type {CropperViewProps} from '../engine/CropperView';
-import type {LoadedImage} from '../input/loadSource';
-import {DEFAULT_IMAGE_EDITOR_LABELS as L} from '../labels';
-import type {EditorState} from '../state/editorState';
-import type {ImageEditorFeatures} from '../types';
-import {ImageEditor} from './ImageEditor';
+import type {CropperViewProps} from '../engine/CropperView.js';
+import type {LoadedImage} from '../input/loadSource.js';
+import {DEFAULT_IMAGE_EDITOR_LABELS as L} from '../labels.js';
+import type {EditorState} from '../state/editorState.js';
+import type {ImageEditorFeatures} from '../types.js';
+import {ImageEditor} from './ImageEditor.js';
 
 const view = vi.hoisted(() => ({state: null as EditorState | null, k: 0}));
 
-vi.mock(import('../input/loadSource'), async (original) => ({
+vi.mock(import('../input/loadSource.js'), async (original) => ({
   ...(await original()),
   loadSource: vi.fn(async (): Promise<LoadedImage> => ({
     url: 'blob:working',
@@ -22,7 +22,7 @@ vi.mock(import('../input/loadSource'), async (original) => ({
     revoke: () => undefined,
   })),
 }));
-vi.mock('../engine/CropperView', () => ({
+vi.mock('../engine/CropperView.js', () => ({
   CropperView: ({state, layout}: CropperViewProps) => {
     view.state = state;
     view.k = layout.k;
@@ -115,6 +115,32 @@ describe('the key layer', () => {
     expect(screen.getByRole('status')).toHaveTextContent(L.rotated(90));
     await user.keyboard('+');
     expect(screen.getByRole('status')).toHaveTextContent(L.zoomChanged(110));
+  });
+
+  it('zooms out with minus and rotates back with Shift+R', async () => {
+    const {user, stage} = await setup();
+    stage.focus();
+    await user.keyboard('++-');
+    expect(screen.getByRole('status')).toHaveTextContent(L.zoomChanged(110));
+    await user.keyboard('R');
+    expect(view.state?.orientation).toEqual([0, 1, -1, 0]);
+    expect(screen.getByRole('status')).toHaveTextContent(L.rotated(-90));
+  });
+
+  it('leaves Ctrl shortcuts, and Ctrl+Z without history, to the page', async () => {
+    const {user, stage} = await setup();
+    stage.focus();
+    const before = view.state;
+    await user.keyboard('{Control>}rz{/Control}');
+    expect(view.state).toBe(before);
+  });
+
+  it('does not resize with Shift when the crop is fixed', async () => {
+    const {user, stage} = await setup({crop: false});
+    stage.focus();
+    const before = crop();
+    await user.keyboard('{Shift>}{ArrowLeft}{/Shift}');
+    expect(crop()).toEqual(before);
   });
 
   it('ignores rotate and zoom keys for tools that are off', async () => {

@@ -1,7 +1,7 @@
 import {describe, expect, it} from 'vitest';
 
-import {NEUTRAL_ADJUSTMENTS} from '../state/editorState';
-import {filterString, PRESETS, presetOf, supportsCanvasFilter} from './filters';
+import {NEUTRAL_ADJUSTMENTS} from '../state/editorState.js';
+import {filterString, PRESETS, presetOf, supportsCanvasFilter} from './filters.js';
 
 describe('filterString', () => {
   it('is none when every value is neutral', () => {

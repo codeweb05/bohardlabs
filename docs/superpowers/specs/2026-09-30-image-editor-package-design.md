@@ -1,7 +1,7 @@
 # `@vt-labs/image-editor` design
 
-**Date:** 2026-09-30. **Status:** approved, amended while planning (see the last section).
-**Plan:** [2026-09-30](../plans/open/2026-09-30-image-editor-package.md). **Replaces:** the
+**Date:** 2026-09-30. **Status:** implemented 2026-09-30; approved, amended while planning (see the last section).
+**Plan:** [2026-09-30](../plans/done/2026-09-30-image-editor-package.md). **Replaces:** the
 image-editor section of [`../../extraction/README.md`](../../extraction/README.md) as the
 argument for this package, and the 2026-08-28 image-editor port plan (deleted) as the way
 to build it.

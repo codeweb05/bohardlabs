@@ -89,6 +89,7 @@ export default defineConfig({
       // Relative, unlike `include`: Vitest matches threshold globs against root-relative
       // paths, and an absolute key never applies.
       thresholds: {
+        'packages/image-editor/src/**': {lines: 90, functions: 90, branches: 90, statements: 90},
         'packages/form/src/**': {lines: 90, functions: 90, branches: 90, statements: 90},
       },
     },

@@ -1,5 +1,5 @@
-import type {EditorState} from '../state/editorState';
-import type {CropShape, ImageEditorOutput, ImageEditorResult, OutputType} from '../types';
+import type {EditorState} from '../state/editorState.js';
+import type {CropShape, ImageEditorOutput, ImageEditorResult, OutputType} from '../types.js';
 import {
   DEFAULT_QUALITY,
   encodeWithFallback,
@@ -8,8 +8,8 @@ import {
   needsAlpha,
   resolveOutputType,
   supportsAlpha,
-} from './encode';
-import {outputSize, renderState} from './render';
+} from './encode.js';
+import {outputSize, renderState} from './render.js';
 
 const DEFAULT_BACKGROUND = '#ffffff';
 

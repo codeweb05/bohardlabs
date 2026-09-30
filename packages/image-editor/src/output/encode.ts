@@ -1,5 +1,5 @@
-import {EditorError} from '../errors';
-import type {CropShape, OutputType} from '../types';
+import {EditorError} from '../errors.js';
+import type {CropShape, OutputType} from '../types.js';
 
 export const DEFAULT_QUALITY = 0.92;
 export const QUALITY_FLOOR = 0.6;
