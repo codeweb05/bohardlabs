@@ -1,5 +1,7 @@
 # @vt-labs/image-editor Implementation Plan
 
+> **Superseded** by the [2026-09-30 image-editor design](../../specs/2026-09-30-image-editor-package-design.md) (cropperjs 2, MUI 9, a wider feature set). Do not execute this plan; it is deleted when the new plan is written.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Extract the crop/zoom/rotate/flip image editor duplicated across four admin apps into a standalone package with no app imports and no hardcoded strings.
