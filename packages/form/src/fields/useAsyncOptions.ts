@@ -60,16 +60,20 @@ export function useAsyncOptions<T>(
     if (!shouldLoad) return;
     const controller = new AbortController();
     const timer = setTimeout(() => {
-      void loadRef.current(query, {signal: controller.signal}).then(
-        (options) => {
-          if (!controller.signal.aborted) setAnswer({query, result: {options, status: 'loaded'}});
-          return undefined;
-        },
-        () => {
-          if (!controller.signal.aborted) setAnswer({query, result: {options: [], status: 'error'}});
-          return undefined;
-        },
-      );
+      // Wrapped so a loader that throws before it returns a promise ends in the error
+      // branch, not in an uncaught error that leaves the list loading.
+      void Promise.resolve()
+        .then(() => loadRef.current(query, {signal: controller.signal}))
+        .then(
+          (options) => {
+            if (!controller.signal.aborted) setAnswer({query, result: {options, status: 'loaded'}});
+            return undefined;
+          },
+          () => {
+            if (!controller.signal.aborted) setAnswer({query, result: {options: [], status: 'error'}});
+            return undefined;
+          },
+        );
     }, debounceMs);
     return () => {
       clearTimeout(timer);

@@ -58,6 +58,14 @@ describe('useAsyncOptions', () => {
     await waitFor(() => expect(result.current.status).toBe('error'));
   });
 
+  it('reports a loader that throws before returning a promise as an error', async () => {
+    const load = vi.fn((): Promise<string[]> => {
+      throw new Error('bad query');
+    });
+    const {result} = renderHook(() => useAsyncOptions(load, 'a', settings));
+    await waitFor(() => expect(result.current.status).toBe('error'));
+  });
+
   it('uses the latest loadOptions without reloading when only its identity changes', async () => {
     const first = vi.fn(async () => ['first']);
     const second = vi.fn(async () => ['second']);
