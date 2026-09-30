@@ -13,6 +13,12 @@ type ComponentMap = Parameters<typeof createFormHook>[0]['fieldComponents'];
  *
  * The returned `useAppForm` focuses the first invalid field when a submit fails. A form
  * that passes its own `onSubmitInvalid` replaces that.
+ *
+ * @example
+ * const {useAppForm} = createAppForm({
+ *   fieldComponents: {TextField, PasswordField},
+ *   formComponents: {SubmitButton, FormError},
+ * });
  */
 export function createAppForm<
   const TFieldComponents extends ComponentMap,

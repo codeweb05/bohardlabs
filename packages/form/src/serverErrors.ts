@@ -25,6 +25,12 @@ export interface ServerErrors {
  *
  * A message for a path with no mounted field is added to the form message instead of
  * being dropped, so the user always sees why the save failed.
+ *
+ * @example
+ * applyServerErrors(form, {
+ *   fields: {email: 'Already invited', 'address.zip': 'Unknown postal code'},
+ *   form: 'Nothing was saved.',
+ * });
  */
 export function applyServerErrors(form: AnyFormApi, errors: ServerErrors): void {
   const unplaced: string[] = [];

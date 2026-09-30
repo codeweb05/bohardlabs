@@ -38,6 +38,21 @@ interface FieldBindingOptions {
  * the value, the error to show (touched and invalid, first error, through `formatError`),
  * and the aria wiring for the input. Exported so a consumer's own field follows the same
  * contract as the built-in ones.
+ *
+ * @example
+ * const binding = useFieldBinding<string>({required});
+ * return (
+ *   <FieldShell binding={binding} label={label} required={required}>
+ *     <MuiTextField
+ *       id={binding.inputId}
+ *       value={binding.value}
+ *       onChange={(event) => binding.setValue(event.target.value)}
+ *       onBlur={binding.onBlur}
+ *       error={binding.error !== null}
+ *       slotProps={{htmlInput: binding.inputProps}}
+ *     />
+ *   </FieldShell>
+ * );
  */
 export function useFieldBinding<T>({required, expect}: FieldBindingOptions = {}): FieldBinding<T> {
   const field = useFieldContext<T>();

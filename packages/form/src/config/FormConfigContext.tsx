@@ -28,6 +28,15 @@ interface FormConfigProviderProps {
   readonly children: ReactNode;
 }
 
+/**
+ * Supplies the words the package puts on screen itself, and the sentence shown under an
+ * invalid field. Keep `labels` and `formatError` stable (module level or `useMemo`).
+ *
+ * @example
+ * const labels: Partial<FormLabels> = {showPassword: 'Passwort anzeigen', hidePassword: 'Passwort verbergen'};
+ *
+ * <FormConfigProvider labels={labels}>{children}</FormConfigProvider>
+ */
 export function FormConfigProvider({labels, formatError, children}: Readonly<FormConfigProviderProps>) {
   const value = useMemo<FormConfig>(
     () => ({

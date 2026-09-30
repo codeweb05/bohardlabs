@@ -6,10 +6,11 @@ import type {ComponentType, ReactNode} from 'react';
  * field up front; this hands it a small stub, and the real module loads the first time the
  * field renders.
  *
- *   const DateField = lazyField(() => import('@vt-labs/form/pickers').then((m) => m.DateField));
- *
  * Call it at module level. Called inside a component, it makes a new lazy component on
  * every render and the field remounts each time.
+ *
+ * @example
+ * const DateField = lazyField(() => import('@vt-labs/form/pickers').then((m) => m.DateField));
  */
 export function lazyField<P extends object>(
   load: () => Promise<ComponentType<P>>,
