@@ -98,6 +98,29 @@ describe('DurationField', () => {
     expect(within(screen.getByRole('listbox')).getByRole('option', {name: '5'})).toBeInTheDocument();
   });
 
+  it('clears back to null from the empty choice', async () => {
+    const user = userEvent.setup();
+    render(
+      <FieldHarness defaultValue={90}>
+        <DurationField label="Break" emptyLabel="None" />
+      </FieldHarness>,
+    );
+    await pick(user, 'Hours', 'None');
+    await user.click(screen.getByRole('button', {name: 'Submit'}));
+    expect(screen.getByLabelText('Submitted value')).toHaveTextContent(/^null$/);
+  });
+
+  it('offers no empty choice when required', async () => {
+    const user = userEvent.setup();
+    render(
+      <FieldHarness defaultValue={90}>
+        <DurationField label="Break" emptyLabel="None" required />
+      </FieldHarness>,
+    );
+    await user.click(screen.getByRole('combobox', {name: /Hours/}));
+    expect(within(screen.getByRole('listbox')).queryByRole('option', {name: 'None'})).not.toBeInTheDocument();
+  });
+
   it('renders without hanging when minuteStep is 0', () => {
     render(
       <FieldHarness defaultValue={null}>

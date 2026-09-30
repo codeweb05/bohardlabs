@@ -12,7 +12,14 @@ export interface DurationFieldProps extends CommonFieldProps {
   readonly maxHours?: number;
   /** The gap between minute options. */
   readonly minuteStep?: number;
+  /**
+   * When set and the field is not `required`, the first item of each part clears the
+   * duration back to null and reads this.
+   */
+  readonly emptyLabel?: string;
 }
+
+const EMPTY = '';
 
 function range(count: number, step = 1): number[] {
   return Array.from({length: count}, (_, index) => index * step);
@@ -40,6 +47,7 @@ export function DurationField({
   autoFocus,
   maxHours = 24,
   minuteStep = 15,
+  emptyLabel,
 }: Readonly<DurationFieldProps>) {
   const binding = useFieldBinding<number | null>({required, expect: NULLABLE_NUMBER});
   const {labels} = useFormConfig();
@@ -48,6 +56,10 @@ export function DurationField({
   const minutes = total === null ? '' : String(total % 60);
 
   const change = (part: 'hours' | 'minutes', raw: string) => {
+    if (raw === EMPTY) {
+      binding.setValue(null);
+      return;
+    }
     const nextHours = Number(part === 'hours' ? raw : hours || 0);
     const nextMinutes = Number(part === 'minutes' ? raw : minutes || 0);
     binding.setValue(nextHours * 60 + nextMinutes);
@@ -90,6 +102,11 @@ export function DurationField({
               fullWidth
               SelectDisplayProps={{id: `${binding.inputId}-${part}`, ...binding.inputProps}}
             >
+              {emptyLabel === undefined || required ? null : (
+                <MenuItem value={EMPTY}>
+                  <em>{emptyLabel}</em>
+                </MenuItem>
+              )}
               {options.map((option) => (
                 <MenuItem key={option} value={String(option)}>
                   {option}
