@@ -106,6 +106,15 @@
       "rules": {
         "jsx-a11y/no-autofocus": "off"
       }
+    },
+    {
+      // The form build emits .d.ts files for consumers on `moduleResolution: node16`, where
+      // a relative import needs its `.js` extension. `tsc` catches a missing one only at
+      // build time; this catches it in the editor.
+      "files": ["packages/form/src/**"],
+      "rules": {
+        "import/extensions": ["error", "always", {"ignorePackages": true}]
+      }
     }
   ],
 
