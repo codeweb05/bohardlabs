@@ -41,7 +41,7 @@ const ROOT_API = [
   'useFormContext',
 ];
 const PICKERS_API = ['DateField', 'DateRangeField', 'TimePickerField'];
-const PHONE_API: string[] = [];
+const PHONE_API = ['PhoneField'];
 const MAPS_API: string[] = [];
 
 describe('public surface', () => {
