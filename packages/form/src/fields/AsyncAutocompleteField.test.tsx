@@ -95,4 +95,19 @@ describe('AsyncAutocompleteField', () => {
     await waitFor(() => expect(screen.getByLabelText('Submitted value')).toHaveTextContent('[{"id":1,'));
     expect(screen.getByLabelText('Submitted value')).toHaveTextContent('"Alan Turing"');
   });
+
+  it('keeps the typed text with multiple, and lists only what matches it', async () => {
+    const user = userEvent.setup();
+    render(
+      <FieldHarness defaultValue={[USERS[0]]}>
+        <AsyncAutocompleteField {...common} label="Reviewers" loadOptions={search} multiple />
+      </FieldHarness>,
+    );
+    const input = screen.getByRole('combobox', {name: 'Reviewers'});
+    await user.type(input, 'gra');
+    expect(input).toHaveValue('gra');
+    await waitFor(() =>
+      expect(screen.getAllByRole('option').map((option) => option.textContent)).toEqual(['Grace Hopper']),
+    );
+  });
 });

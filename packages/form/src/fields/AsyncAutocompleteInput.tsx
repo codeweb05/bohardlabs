@@ -1,5 +1,5 @@
 import Autocomplete from '@mui/material/Autocomplete';
-import {useState} from 'react';
+import {useMemo, useState} from 'react';
 
 import {useFormConfig} from '../config/FormConfigContext.js';
 import {autocompleteText} from '../core/autocompleteText.js';
@@ -64,7 +64,10 @@ export function AsyncAutocompleteInput<T>({
   // keeps MUI from warning that the value matches none of them. Once the user types, the
   // list shows only what the loader returned, so the saved item is not listed under a
   // query it does not match.
-  const current = toArray(value);
+  // MUI resets the typed text whenever `value` changes identity, which in multiple mode
+  // wipes every keystroke, so the array is rebuilt only when the stored value changes.
+  const current = useMemo(() => toArray(value), [value]);
+  const muiValue = useMemo(() => (multiple ? [...current] : (current[0] ?? null)), [multiple, current]);
   const loadedIds = new Set(options.map(getOptionValue));
   const merged = [...current.filter((item) => !loadedIds.has(getOptionValue(item))), ...options];
   const shown = (all: T[]) => (query === '' ? all : all.filter((item) => loadedIds.has(getOptionValue(item))));
@@ -78,7 +81,7 @@ export function AsyncAutocompleteInput<T>({
       onOpen={() => setOpen(true)}
       onClose={() => setOpen(false)}
       options={merged}
-      value={multiple ? [...current] : (current[0] ?? null)}
+      value={muiValue}
       onChange={(_event, next) => onChange(next)}
       onInputChange={(_event, input, reason) => {
         setQuery(reason === 'input' ? input : '');
