@@ -1,11 +1,11 @@
 import MenuItem from '@mui/material/MenuItem';
 import Select from '@mui/material/Select';
 
-import {useFormConfig} from '../config/FormConfigContext';
-import {FieldPart, FieldParts} from '../core/FieldParts';
-import type {CommonFieldProps} from '../core/types';
-import {useFieldBinding} from '../core/useFieldBinding';
-import {NULLABLE_NUMBER} from '../core/valueChecks';
+import {useFormConfig} from '../config/FormConfigContext.js';
+import {FieldPart, FieldParts} from '../core/FieldParts.js';
+import type {CommonFieldProps} from '../core/types.js';
+import {useFieldBinding} from '../core/useFieldBinding.js';
+import {NULLABLE_NUMBER} from '../core/valueChecks.js';
 
 export interface DurationFieldProps extends CommonFieldProps {
   /** The largest hour offered. Capped at 24. */

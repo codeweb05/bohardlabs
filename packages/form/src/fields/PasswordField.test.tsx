@@ -1,9 +1,9 @@
 import {render, screen} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
-import {FormConfigProvider} from '../config/FormConfigContext';
-import {FieldHarness} from '../test/FieldHarness';
-import {PasswordField} from './PasswordField';
+import {FormConfigProvider} from '../config/FormConfigContext.js';
+import {FieldHarness} from '../test/FieldHarness.js';
+import {PasswordField} from './PasswordField.js';
 
 describe('PasswordField', () => {
   it('hides the value until the toggle is pressed, and the toggle names what it will do', async () => {

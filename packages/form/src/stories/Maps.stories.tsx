@@ -2,11 +2,11 @@ import Stack from '@mui/material/Stack';
 import type {Meta, StoryObj} from '@storybook/react-vite';
 import {expect, screen, userEvent, within} from 'storybook/test';
 
-import {AddressField} from '../maps/AddressField';
-import {LocationSearchField} from '../maps/LocationSearchField';
-import {EMPTY_ADDRESS} from '../maps/types';
-import {BERLIN, PUNE, createFakePlaces} from '../test/fakePlaces';
-import {FieldHarness} from '../test/FieldHarness';
+import {AddressField} from '../maps/AddressField.js';
+import {LocationSearchField} from '../maps/LocationSearchField.js';
+import {EMPTY_ADDRESS} from '../maps/types.js';
+import {BERLIN, PUNE, createFakePlaces} from '../test/fakePlaces.js';
+import {FieldHarness} from '../test/FieldHarness.js';
 
 const {provider} = createFakePlaces([BERLIN, PUNE]);
 

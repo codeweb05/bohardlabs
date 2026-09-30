@@ -1,6 +1,6 @@
 import {render, screen} from '@testing-library/react';
 
-import {lazyField} from './lazyField';
+import {lazyField} from './lazyField.js';
 
 function Greeting({name}: {readonly name: string}) {
   return <p>Hello {name}</p>;

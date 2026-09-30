@@ -1,8 +1,8 @@
 import {render, screen, waitFor} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
-import {FieldHarness} from '../test/FieldHarness';
-import {AsyncAutocompleteField} from './AsyncAutocompleteField';
+import {FieldHarness} from '../test/FieldHarness.js';
+import {AsyncAutocompleteField} from './AsyncAutocompleteField.js';
 
 interface User {
   readonly id: number;

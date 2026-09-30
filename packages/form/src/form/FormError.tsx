@@ -1,9 +1,9 @@
 import Alert from '@mui/material/Alert';
 import {useStore} from '@tanstack/react-form';
 
-import {useFormConfig} from '../config/FormConfigContext';
-import {useFormContext} from '../context';
-import {firstIssue} from '../core/issues';
+import {useFormConfig} from '../config/FormConfigContext.js';
+import {useFormContext} from '../context.js';
+import {firstIssue} from '../core/issues.js';
 
 /** The form-level message from `applyServerErrors`, or nothing. */
 export function FormError() {

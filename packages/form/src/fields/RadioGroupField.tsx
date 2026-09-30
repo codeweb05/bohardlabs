@@ -4,11 +4,11 @@ import Radio from '@mui/material/Radio';
 import RadioGroup from '@mui/material/RadioGroup';
 import Typography from '@mui/material/Typography';
 
-import {FieldShell} from '../core/FieldShell';
-import type {CommonFieldProps, Option} from '../core/types';
-import {useFieldBinding} from '../core/useFieldBinding';
-import {NULLABLE_SCALAR} from '../core/valueChecks';
-import {findOption} from './optionLookup';
+import {FieldShell} from '../core/FieldShell.js';
+import type {CommonFieldProps, Option} from '../core/types.js';
+import {useFieldBinding} from '../core/useFieldBinding.js';
+import {NULLABLE_SCALAR} from '../core/valueChecks.js';
+import {findOption} from './optionLookup.js';
 
 export interface RadioGroupFieldProps<V extends string | number> extends CommonFieldProps {
   readonly options: readonly Option<V>[];

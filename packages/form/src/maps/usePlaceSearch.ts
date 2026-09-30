@@ -1,12 +1,12 @@
 import {useStore} from '@tanstack/react-form';
 import {useRef, useState} from 'react';
 
-import {useFormConfig} from '../config/FormConfigContext';
-import {useFieldContext} from '../context';
-import type {FieldBinding} from '../core/useFieldBinding';
-import type {AsyncAutocompleteInputProps} from '../fields/AsyncAutocompleteInput';
-import type {PlaceSuggestion, PlacesProvider, ResolvedPlace} from './types';
-import {usePlacesSession} from './usePlacesSession';
+import {useFormConfig} from '../config/FormConfigContext.js';
+import {useFieldContext} from '../context.js';
+import type {FieldBinding} from '../core/useFieldBinding.js';
+import type {AsyncAutocompleteInputProps} from '../fields/AsyncAutocompleteInput.js';
+import type {PlaceSuggestion, PlacesProvider, ResolvedPlace} from './types.js';
+import {usePlacesSession} from './usePlacesSession.js';
 
 interface PlaceSearchHandlers {
   readonly onResolved: (place: ResolvedPlace) => void;

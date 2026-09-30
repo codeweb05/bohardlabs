@@ -4,16 +4,16 @@ import Chip from '@mui/material/Chip';
 import MenuItem from '@mui/material/MenuItem';
 import Select from '@mui/material/Select';
 
-import {useFormConfig} from '../config/FormConfigContext';
-import {autocompleteText} from '../core/autocompleteText';
-import {FieldShell} from '../core/FieldShell';
-import {LabelledByShell} from '../core/LabelledByShell';
-import {renderAutocompleteInput} from '../core/renderAutocompleteInput';
-import type {CommonFieldProps, Option} from '../core/types';
-import {useFieldBinding} from '../core/useFieldBinding';
-import type {FieldBinding} from '../core/useFieldBinding';
-import {SCALAR_ARRAY} from '../core/valueChecks';
-import {findOption} from './optionLookup';
+import {useFormConfig} from '../config/FormConfigContext.js';
+import {autocompleteText} from '../core/autocompleteText.js';
+import {FieldShell} from '../core/FieldShell.js';
+import {LabelledByShell} from '../core/LabelledByShell.js';
+import {renderAutocompleteInput} from '../core/renderAutocompleteInput.js';
+import type {CommonFieldProps, Option} from '../core/types.js';
+import {useFieldBinding} from '../core/useFieldBinding.js';
+import type {FieldBinding} from '../core/useFieldBinding.js';
+import {SCALAR_ARRAY} from '../core/valueChecks.js';
+import {findOption} from './optionLookup.js';
 
 export interface MultiSelectFieldProps<V extends string | number> extends CommonFieldProps {
   readonly options: readonly Option<V>[];

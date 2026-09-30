@@ -1,7 +1,7 @@
 import {createFormHook} from '@tanstack/react-form';
 
-import {fieldContext, formContext} from './context';
-import {focusFirstInvalid} from './focusFirstInvalid';
+import {fieldContext, formContext} from './context.js';
+import {focusFirstInvalid} from './focusFirstInvalid.js';
 
 /** What `createFormHook` accepts as a component map, taken from its own signature. */
 type ComponentMap = Parameters<typeof createFormHook>[0]['fieldComponents'];

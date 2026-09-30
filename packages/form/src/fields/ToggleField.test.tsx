@@ -2,9 +2,9 @@ import {render, screen} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {describe, expect, it, vi} from 'vitest';
 
-import {FieldHarness} from '../test/FieldHarness';
-import {CheckboxField} from './CheckboxField';
-import {SwitchField} from './SwitchField';
+import {FieldHarness} from '../test/FieldHarness.js';
+import {CheckboxField} from './CheckboxField.js';
+import {SwitchField} from './SwitchField.js';
 
 describe.each([
   ['CheckboxField', CheckboxField, 'checkbox'],

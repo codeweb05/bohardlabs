@@ -1,4 +1,4 @@
-import type {FormLabels} from '../config/labels';
+import type {FormLabels} from '../config/labels.js';
 
 /** The Autocomplete props that are words, taken from the labels so every Autocomplete here translates the same way. */
 export function autocompleteText(labels: FormLabels) {

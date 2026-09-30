@@ -1,12 +1,12 @@
 import {TimePicker} from '@mui/x-date-pickers/TimePicker';
 
-import {LabelledByShell} from '../core/LabelledByShell';
-import type {CommonFieldProps} from '../core/types';
-import {useFieldBinding} from '../core/useFieldBinding';
-import type {ValueExpectation} from '../core/valueChecks';
-import {isTimeString, timeFromString, timeToString} from './dateStrings';
-import {pickerSlotProps} from './pickerSlotProps';
-import {usePickerDraft} from './usePickerDraft';
+import {LabelledByShell} from '../core/LabelledByShell.js';
+import type {CommonFieldProps} from '../core/types.js';
+import {useFieldBinding} from '../core/useFieldBinding.js';
+import type {ValueExpectation} from '../core/valueChecks.js';
+import {isTimeString, timeFromString, timeToString} from './dateStrings.js';
+import {pickerSlotProps} from './pickerSlotProps.js';
+import {usePickerDraft} from './usePickerDraft.js';
 
 export interface TimePickerFieldProps extends CommonFieldProps {
   /** 12-hour clock. Defaults to the adapter locale's choice. */

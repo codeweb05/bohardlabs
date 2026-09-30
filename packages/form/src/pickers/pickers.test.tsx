@@ -8,11 +8,11 @@ import userEvent from '@testing-library/user-event';
 import {createRef} from 'react';
 import type {ReactNode} from 'react';
 
-import {FieldHarness} from '../test/FieldHarness';
-import type {FieldHarnessProps} from '../test/FieldHarness';
-import {DateField} from './DateField';
-import {DateRangeField} from './DateRangeField';
-import {TimePickerField} from './TimePickerField';
+import {FieldHarness} from '../test/FieldHarness.js';
+import type {FieldHarnessProps} from '../test/FieldHarness.js';
+import {DateField} from './DateField.js';
+import {DateRangeField} from './DateRangeField.js';
+import {TimePickerField} from './TimePickerField.js';
 
 // A MUI X 9 field is a `role="group"` of `role="spinbutton"` sections, with the formatted
 // value in a hidden `<input>` inside the group. The tests read that input and type into the

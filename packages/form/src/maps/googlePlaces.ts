@@ -1,4 +1,4 @@
-import type {Address, PlaceSuggestion, PlacesProvider, ResolvedPlace} from './types';
+import type {Address, PlaceSuggestion, PlacesProvider, ResolvedPlace} from './types.js';
 
 /*
  * The members of Google's Places library this file calls, described structurally so the

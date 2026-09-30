@@ -2,9 +2,9 @@ import type {Meta, StoryObj} from '@storybook/react-vite';
 import {useEffect, useState} from 'react';
 import {expect, screen, userEvent, waitFor, within} from 'storybook/test';
 
-import type {Option} from '../core/types';
-import {SelectField} from '../fields/SelectField';
-import {FieldHarness} from '../test/FieldHarness';
+import type {Option} from '../core/types.js';
+import {SelectField} from '../fields/SelectField.js';
+import {FieldHarness} from '../test/FieldHarness.js';
 
 const TEAMS: Option<string>[] = [
   {value: 'design', label: 'Design'},

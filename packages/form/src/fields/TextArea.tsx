@@ -1,5 +1,5 @@
-import {TextField} from './TextField';
-import type {TextFieldProps} from './TextField';
+import {TextField} from './TextField.js';
+import type {TextFieldProps} from './TextField.js';
 
 export type TextAreaProps = Omit<TextFieldProps, 'multiline' | 'type'>;
 

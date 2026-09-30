@@ -1,9 +1,9 @@
 import type {Meta, StoryObj} from '@storybook/react-vite';
 import {expect, userEvent, within} from 'storybook/test';
 
-import {CheckboxField} from '../fields/CheckboxField';
-import {SwitchField} from '../fields/SwitchField';
-import {FieldHarness} from '../test/FieldHarness';
+import {CheckboxField} from '../fields/CheckboxField.js';
+import {SwitchField} from '../fields/SwitchField.js';
+import {FieldHarness} from '../test/FieldHarness.js';
 
 const meta = {
   title: 'Form/Checkbox and switch',

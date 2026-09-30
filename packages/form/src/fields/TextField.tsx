@@ -1,9 +1,9 @@
 import MuiTextField from '@mui/material/TextField';
 
-import {FieldShell} from '../core/FieldShell';
-import type {CommonFieldProps} from '../core/types';
-import {useFieldBinding} from '../core/useFieldBinding';
-import {STRING} from '../core/valueChecks';
+import {FieldShell} from '../core/FieldShell.js';
+import type {CommonFieldProps} from '../core/types.js';
+import {useFieldBinding} from '../core/useFieldBinding.js';
+import {STRING} from '../core/valueChecks.js';
 
 export interface TextFieldProps extends CommonFieldProps {
   readonly type?: 'text' | 'email' | 'url' | 'tel' | 'search';

@@ -1,6 +1,6 @@
 import {act, renderHook, waitFor} from '@testing-library/react';
 
-import {useAsyncOptions} from './useAsyncOptions';
+import {useAsyncOptions} from './useAsyncOptions.js';
 
 function deferred<T>() {
   let resolve: (value: T) => void = () => {};

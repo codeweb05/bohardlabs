@@ -1,4 +1,4 @@
-import type {PlacesProvider, ResolvedPlace} from '../maps/types';
+import type {PlacesProvider, ResolvedPlace} from '../maps/types.js';
 
 /** A `PlacesProvider` over a fixed list, recording what the fields asked for. */
 export function createFakePlaces(places: readonly ResolvedPlace[]) {

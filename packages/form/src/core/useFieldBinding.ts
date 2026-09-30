@@ -1,12 +1,12 @@
 import {useStore} from '@tanstack/react-form';
 import {useEffect, useId, useRef} from 'react';
 
-import {useFormConfig} from '../config/FormConfigContext';
-import {useFieldContext} from '../context';
-import {clearServerError} from '../serverErrors';
-import {firstIssue} from './issues';
-import {describeValue, isDevelopment} from './valueChecks';
-import type {ValueExpectation} from './valueChecks';
+import {useFormConfig} from '../config/FormConfigContext.js';
+import {useFieldContext} from '../context.js';
+import {clearServerError} from '../serverErrors.js';
+import {firstIssue} from './issues.js';
+import {describeValue, isDevelopment} from './valueChecks.js';
+import type {ValueExpectation} from './valueChecks.js';
 
 export interface FieldBinding<T> {
   readonly name: string;

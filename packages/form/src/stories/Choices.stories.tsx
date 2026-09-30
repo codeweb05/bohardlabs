@@ -1,9 +1,9 @@
 import type {Meta, StoryObj} from '@storybook/react-vite';
 import {expect, screen, userEvent, within} from 'storybook/test';
 
-import {RadioGroupField} from '../fields/RadioGroupField';
-import {SelectField} from '../fields/SelectField';
-import {FieldHarness} from '../test/FieldHarness';
+import {RadioGroupField} from '../fields/RadioGroupField.js';
+import {SelectField} from '../fields/SelectField.js';
+import {FieldHarness} from '../test/FieldHarness.js';
 
 const ROLES = [
   {value: 'admin', label: 'Admin', description: 'Manages users and billing'},

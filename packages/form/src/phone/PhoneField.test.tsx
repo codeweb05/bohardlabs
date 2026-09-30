@@ -3,9 +3,9 @@ import {act, render, screen} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {createRef} from 'react';
 
-import {FormConfigProvider} from '../config/FormConfigContext';
-import {FieldHarness} from '../test/FieldHarness';
-import {PhoneField} from './PhoneField';
+import {FormConfigProvider} from '../config/FormConfigContext.js';
+import {FieldHarness} from '../test/FieldHarness.js';
+import {PhoneField} from './PhoneField.js';
 
 describe('PhoneField', () => {
   it('stores E.164 while showing the formatted number', async () => {

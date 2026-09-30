@@ -3,8 +3,8 @@ import {act, render, screen} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {createRef} from 'react';
 
-import {FieldHarness} from '../test/FieldHarness';
-import {NumberField} from './NumberField';
+import {FieldHarness} from '../test/FieldHarness.js';
+import {NumberField} from './NumberField.js';
 
 async function submitted(user: ReturnType<typeof userEvent.setup>) {
   await user.click(screen.getByRole('button', {name: 'Submit'}));

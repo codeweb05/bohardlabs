@@ -3,10 +3,10 @@ import {act, render, screen} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {createRef} from 'react';
 
-import {BERLIN, PUNE, createFakePlaces} from '../test/fakePlaces';
-import {FieldHarness} from '../test/FieldHarness';
-import {LocationSearchField} from './LocationSearchField';
-import type {PlacesProvider, ResolvedPlace} from './types';
+import {BERLIN, PUNE, createFakePlaces} from '../test/fakePlaces.js';
+import {FieldHarness} from '../test/FieldHarness.js';
+import {LocationSearchField} from './LocationSearchField.js';
+import type {PlacesProvider, ResolvedPlace} from './types.js';
 
 const FAILED = 'Could not look up that place';
 

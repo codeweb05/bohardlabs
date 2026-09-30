@@ -1,8 +1,8 @@
 import type {Meta, StoryObj} from '@storybook/react-vite';
 import {expect, screen, userEvent, within} from 'storybook/test';
 
-import {AsyncAutocompleteField} from '../fields/AsyncAutocompleteField';
-import {FieldHarness} from '../test/FieldHarness';
+import {AsyncAutocompleteField} from '../fields/AsyncAutocompleteField.js';
+import {FieldHarness} from '../test/FieldHarness.js';
 
 interface Member {
   readonly id: string;

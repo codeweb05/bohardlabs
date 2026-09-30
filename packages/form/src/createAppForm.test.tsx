@@ -1,7 +1,7 @@
 import {render, screen} from '@testing-library/react';
 
-import {useFieldContext} from './context';
-import {createAppForm} from './createAppForm';
+import {useFieldContext} from './context.js';
+import {createAppForm} from './createAppForm.js';
 
 function EchoField({label}: {readonly label: string}) {
   const field = useFieldContext<string>();

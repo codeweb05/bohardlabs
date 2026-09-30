@@ -1,7 +1,7 @@
 import type {AutocompleteRenderInputParams} from '@mui/material/Autocomplete';
 import MuiTextField from '@mui/material/TextField';
 
-import type {FieldBinding} from './useFieldBinding';
+import type {FieldBinding} from './useFieldBinding.js';
 
 interface Extra {
   readonly autoFocus?: boolean;

@@ -2,11 +2,11 @@ import {MuiTelInput} from 'mui-tel-input';
 import type {MuiTelInputCountry, MuiTelInputProps} from 'mui-tel-input';
 import {useState} from 'react';
 
-import {useFormConfig} from '../config/FormConfigContext';
-import {FieldShell} from '../core/FieldShell';
-import type {CommonFieldProps} from '../core/types';
-import {useFieldBinding} from '../core/useFieldBinding';
-import type {ValueExpectation} from '../core/valueChecks';
+import {useFormConfig} from '../config/FormConfigContext.js';
+import {FieldShell} from '../core/FieldShell.js';
+import type {CommonFieldProps} from '../core/types.js';
+import {useFieldBinding} from '../core/useFieldBinding.js';
+import type {ValueExpectation} from '../core/valueChecks.js';
 
 export interface PhoneFieldProps extends CommonFieldProps {
   /** The country shown before the user picks one. Without it the input starts empty. */

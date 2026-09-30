@@ -1,9 +1,9 @@
 import type {Meta, StoryObj} from '@storybook/react-vite';
 import {expect, userEvent, within} from 'storybook/test';
 
-import {TextArea} from '../fields/TextArea';
-import {TextField} from '../fields/TextField';
-import {FieldHarness} from '../test/FieldHarness';
+import {TextArea} from '../fields/TextArea.js';
+import {TextField} from '../fields/TextField.js';
+import {FieldHarness} from '../test/FieldHarness.js';
 
 const meta = {
   title: 'Form/Text fields',

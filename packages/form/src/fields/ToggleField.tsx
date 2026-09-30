@@ -2,10 +2,10 @@ import Checkbox from '@mui/material/Checkbox';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Switch from '@mui/material/Switch';
 
-import {FieldShell} from '../core/FieldShell';
-import type {CommonFieldProps} from '../core/types';
-import {useFieldBinding} from '../core/useFieldBinding';
-import {BOOLEAN} from '../core/valueChecks';
+import {FieldShell} from '../core/FieldShell.js';
+import type {CommonFieldProps} from '../core/types.js';
+import {useFieldBinding} from '../core/useFieldBinding.js';
+import {BOOLEAN} from '../core/valueChecks.js';
 
 export type ToggleFieldProps = CommonFieldProps;
 

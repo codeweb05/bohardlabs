@@ -5,7 +5,7 @@ import type {AnyFormApi} from '@tanstack/react-form';
 import {useEffect, useState} from 'react';
 import type {ReactNode, RefObject} from 'react';
 
-import {createAppForm} from '../createAppForm';
+import {createAppForm} from '../createAppForm.js';
 
 const {useAppForm} = createAppForm({fieldComponents: {}, formComponents: {}});
 

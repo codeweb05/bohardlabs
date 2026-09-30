@@ -1,8 +1,8 @@
 import type {Meta, StoryObj} from '@storybook/react-vite';
 import {expect, screen, userEvent, within} from 'storybook/test';
 
-import {DurationField} from '../fields/DurationField';
-import {FieldHarness} from '../test/FieldHarness';
+import {DurationField} from '../fields/DurationField.js';
+import {FieldHarness} from '../test/FieldHarness.js';
 
 const meta = {
   title: 'Form/Duration',

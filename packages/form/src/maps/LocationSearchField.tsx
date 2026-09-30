@@ -1,10 +1,10 @@
-import {FieldShell} from '../core/FieldShell';
-import type {CommonFieldProps} from '../core/types';
-import {useFieldBinding} from '../core/useFieldBinding';
-import type {ValueExpectation} from '../core/valueChecks';
-import {AsyncAutocompleteInput} from '../fields/AsyncAutocompleteInput';
-import type {Place, PlaceSuggestion, PlacesProvider} from './types';
-import {usePlaceSearch} from './usePlaceSearch';
+import {FieldShell} from '../core/FieldShell.js';
+import type {CommonFieldProps} from '../core/types.js';
+import {useFieldBinding} from '../core/useFieldBinding.js';
+import type {ValueExpectation} from '../core/valueChecks.js';
+import {AsyncAutocompleteInput} from '../fields/AsyncAutocompleteInput.js';
+import type {Place, PlaceSuggestion, PlacesProvider} from './types.js';
+import {usePlaceSearch} from './usePlaceSearch.js';
 
 export interface LocationSearchFieldProps extends CommonFieldProps {
   /**

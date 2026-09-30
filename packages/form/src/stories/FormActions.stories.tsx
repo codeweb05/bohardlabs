@@ -2,12 +2,12 @@ import Stack from '@mui/material/Stack';
 import type {Meta, StoryObj} from '@storybook/react-vite';
 import {expect, fn, userEvent, waitFor, within} from 'storybook/test';
 
-import {createAppForm} from '../createAppForm';
-import {TextField} from '../fields/TextField';
-import {CancelButton} from '../form/CancelButton';
-import {FormError} from '../form/FormError';
-import {SubmitButton} from '../form/SubmitButton';
-import {applyServerErrors} from '../serverErrors';
+import {createAppForm} from '../createAppForm.js';
+import {TextField} from '../fields/TextField.js';
+import {CancelButton} from '../form/CancelButton.js';
+import {FormError} from '../form/FormError.js';
+import {SubmitButton} from '../form/SubmitButton.js';
+import {applyServerErrors} from '../serverErrors.js';
 
 const {useAppForm} = createAppForm({
   fieldComponents: {TextField},

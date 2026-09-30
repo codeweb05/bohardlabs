@@ -9,10 +9,10 @@ import {fileURLToPath} from 'node:url';
 
 import {describe, expect, it} from 'vitest';
 
-import * as root from './index';
-import * as maps from './maps';
-import * as phone from './phone';
-import * as pickers from './pickers';
+import * as root from './index.js';
+import * as maps from './maps.js';
+import * as phone from './phone.js';
+import * as pickers from './pickers.js';
 
 const ROOT_API = [
   'AsyncAutocompleteField',

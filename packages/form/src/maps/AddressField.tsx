@@ -2,17 +2,17 @@ import Box from '@mui/material/Box';
 import {useField} from '@tanstack/react-form';
 import type {AnyFieldApi} from '@tanstack/react-form';
 
-import {useFormConfig} from '../config/FormConfigContext';
-import type {FormLabels} from '../config/labels';
-import {fieldContext, useFieldContext} from '../context';
-import {FieldShell} from '../core/FieldShell';
-import type {CommonFieldProps} from '../core/types';
-import {useFieldBinding} from '../core/useFieldBinding';
-import type {ValueExpectation} from '../core/valueChecks';
-import {AsyncAutocompleteInput} from '../fields/AsyncAutocompleteInput';
-import {TextField} from '../fields/TextField';
-import type {Address, PlaceSuggestion, PlacesProvider} from './types';
-import {usePlaceSearch} from './usePlaceSearch';
+import {useFormConfig} from '../config/FormConfigContext.js';
+import type {FormLabels} from '../config/labels.js';
+import {fieldContext, useFieldContext} from '../context.js';
+import {FieldShell} from '../core/FieldShell.js';
+import type {CommonFieldProps} from '../core/types.js';
+import {useFieldBinding} from '../core/useFieldBinding.js';
+import type {ValueExpectation} from '../core/valueChecks.js';
+import {AsyncAutocompleteInput} from '../fields/AsyncAutocompleteInput.js';
+import {TextField} from '../fields/TextField.js';
+import type {Address, PlaceSuggestion, PlacesProvider} from './types.js';
+import {usePlaceSearch} from './usePlaceSearch.js';
 
 export interface AddressFieldProps extends CommonFieldProps {
   /**

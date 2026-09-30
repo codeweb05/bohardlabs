@@ -1,9 +1,9 @@
 import type {Meta, StoryObj} from '@storybook/react-vite';
 import {expect, screen, userEvent, within} from 'storybook/test';
 
-import {MultiSelectField} from '../fields/MultiSelectField';
-import {SearchableSelectField} from '../fields/SearchableSelectField';
-import {FieldHarness} from '../test/FieldHarness';
+import {MultiSelectField} from '../fields/MultiSelectField.js';
+import {SearchableSelectField} from '../fields/SearchableSelectField.js';
+import {FieldHarness} from '../test/FieldHarness.js';
 
 const TIMEZONES = ['Asia/Kolkata', 'Europe/Berlin', 'Europe/London', 'America/New_York', 'America/Los_Angeles'].map(
   (zone) => ({

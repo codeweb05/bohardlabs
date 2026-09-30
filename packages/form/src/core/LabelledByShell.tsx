@@ -2,11 +2,11 @@ import Box from '@mui/material/Box';
 import FormLabel from '@mui/material/FormLabel';
 import type {ReactNode} from 'react';
 
-import {useFormConfig} from '../config/FormConfigContext';
-import {FieldShell} from './FieldShell';
-import {InfoTooltip} from './InfoTooltip';
-import type {CommonFieldProps} from './types';
-import type {FieldBinding} from './useFieldBinding';
+import {useFormConfig} from '../config/FormConfigContext.js';
+import {FieldShell} from './FieldShell.js';
+import {InfoTooltip} from './InfoTooltip.js';
+import type {CommonFieldProps} from './types.js';
+import type {FieldBinding} from './useFieldBinding.js';
 
 export interface LabelledByShellProps extends Omit<CommonFieldProps, 'autoFocus'> {
   readonly binding: Pick<FieldBinding<unknown>, 'inputId' | 'labelId' | 'helperId' | 'error'>;

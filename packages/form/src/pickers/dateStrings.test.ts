@@ -1,7 +1,7 @@
 import {AdapterDateFns} from '@mui/x-date-pickers/AdapterDateFns';
 import {AdapterDayjs} from '@mui/x-date-pickers/AdapterDayjs';
 
-import {dateFromString, dateToString, isDateString, isTimeString, timeFromString, timeToString} from './dateStrings';
+import {dateFromString, dateToString, isDateString, isTimeString, timeFromString, timeToString} from './dateStrings.js';
 
 describe('isDateString and isTimeString', () => {
   it.each([

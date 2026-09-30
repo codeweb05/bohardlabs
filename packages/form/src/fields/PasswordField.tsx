@@ -5,11 +5,11 @@ import InputAdornment from '@mui/material/InputAdornment';
 import MuiTextField from '@mui/material/TextField';
 import {useState} from 'react';
 
-import {useFormConfig} from '../config/FormConfigContext';
-import {FieldShell} from '../core/FieldShell';
-import type {CommonFieldProps} from '../core/types';
-import {useFieldBinding} from '../core/useFieldBinding';
-import {STRING} from '../core/valueChecks';
+import {useFormConfig} from '../config/FormConfigContext.js';
+import {FieldShell} from '../core/FieldShell.js';
+import type {CommonFieldProps} from '../core/types.js';
+import {useFieldBinding} from '../core/useFieldBinding.js';
+import {STRING} from '../core/valueChecks.js';
 
 export interface PasswordFieldProps extends CommonFieldProps {
   /** `new-password` on sign-up and reset screens, so the browser offers to generate one. */

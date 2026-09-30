@@ -1,5 +1,5 @@
-import {createGooglePlacesProvider} from './googlePlaces';
-import type {GooglePlace, GooglePlaces} from './googlePlaces';
+import {createGooglePlacesProvider} from './googlePlaces.js';
+import type {GooglePlace, GooglePlaces} from './googlePlaces.js';
 
 function unexpectedPlace(): never {
   throw new Error('resolve should use the cached prediction, not a new Place');

@@ -1,0 +1,79 @@
+[
+  {
+    "name": "root: a sign-in form",
+    "path": "dist/index.js",
+    "import": "{ createAppForm, TextField, PasswordField, SubmitButton, FormError }",
+    "limit": "2.4 kB",
+    "ignore": [
+      "react",
+      "react-dom",
+      "@mui/material",
+      "@mui/icons-material",
+      "@emotion/react",
+      "@emotion/styled",
+      "@tanstack/react-form"
+    ]
+  },
+  {
+    "name": "root: everything",
+    "path": "dist/index.js",
+    "import": "*",
+    "limit": "5.7 kB",
+    "ignore": [
+      "react",
+      "react-dom",
+      "@mui/material",
+      "@mui/icons-material",
+      "@emotion/react",
+      "@emotion/styled",
+      "@tanstack/react-form"
+    ]
+  },
+  {
+    "name": "pickers",
+    "path": "dist/pickers.js",
+    "import": "*",
+    "limit": "3 kB",
+    "ignore": [
+      "react",
+      "react-dom",
+      "@mui/material",
+      "@mui/icons-material",
+      "@emotion/react",
+      "@emotion/styled",
+      "@tanstack/react-form",
+      "@mui/x-date-pickers"
+    ]
+  },
+  {
+    "name": "phone",
+    "path": "dist/phone.js",
+    "import": "*",
+    "limit": "2 kB",
+    "ignore": [
+      "react",
+      "react-dom",
+      "@mui/material",
+      "@mui/icons-material",
+      "@emotion/react",
+      "@emotion/styled",
+      "@tanstack/react-form",
+      "mui-tel-input"
+    ]
+  },
+  {
+    "name": "maps",
+    "path": "dist/maps.js",
+    "import": "*",
+    "limit": "4.2 kB",
+    "ignore": [
+      "react",
+      "react-dom",
+      "@mui/material",
+      "@mui/icons-material",
+      "@emotion/react",
+      "@emotion/styled",
+      "@tanstack/react-form"
+    ]
+  }
+]

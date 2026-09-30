@@ -1,8 +1,8 @@
 import {render, screen, within} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
-import {FieldHarness} from '../test/FieldHarness';
-import {MultiSelectField} from './MultiSelectField';
+import {FieldHarness} from '../test/FieldHarness.js';
+import {MultiSelectField} from './MultiSelectField.js';
 
 const TAGS = [
   {value: 1, label: 'Urgent'},

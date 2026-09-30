@@ -1,4 +1,4 @@
-import type {Option} from '../core/types';
+import type {Option} from '../core/types.js';
 
 /** Finds the option a DOM value stands for. The DOM stringifies; the option keeps the real type. */
 export function findOption<V extends string | number>(

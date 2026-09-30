@@ -1,8 +1,8 @@
 import {render, screen, waitFor} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
-import {FieldHarness} from '../test/FieldHarness';
-import {RadioGroupField} from './RadioGroupField';
+import {FieldHarness} from '../test/FieldHarness.js';
+import {RadioGroupField} from './RadioGroupField.js';
 
 const PLANS = [
   {value: 'free', label: 'Free'},

@@ -1,8 +1,8 @@
 import {render, screen, waitFor, within} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
-import {FieldHarness} from '../test/FieldHarness';
-import {SelectField} from './SelectField';
+import {FieldHarness} from '../test/FieldHarness.js';
+import {SelectField} from './SelectField.js';
 
 const ROLES = [
   {value: 1, label: 'Admin', description: 'Everything'},

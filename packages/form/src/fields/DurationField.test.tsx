@@ -1,8 +1,8 @@
 import {render, screen, waitFor, within} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
-import {FieldHarness} from '../test/FieldHarness';
-import {DurationField} from './DurationField';
+import {FieldHarness} from '../test/FieldHarness.js';
+import {DurationField} from './DurationField.js';
 
 async function pick(user: ReturnType<typeof userEvent.setup>, name: string, option: string) {
   await user.click(screen.getByRole('combobox', {name: new RegExp(name)}));

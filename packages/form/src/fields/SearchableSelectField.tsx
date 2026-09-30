@@ -1,13 +1,13 @@
 import Autocomplete from '@mui/material/Autocomplete';
 
-import {useFormConfig} from '../config/FormConfigContext';
-import {autocompleteText} from '../core/autocompleteText';
-import {FieldShell} from '../core/FieldShell';
-import {renderAutocompleteInput} from '../core/renderAutocompleteInput';
-import type {CommonFieldProps, Option} from '../core/types';
-import {useFieldBinding} from '../core/useFieldBinding';
-import {NULLABLE_SCALAR} from '../core/valueChecks';
-import {findOption} from './optionLookup';
+import {useFormConfig} from '../config/FormConfigContext.js';
+import {autocompleteText} from '../core/autocompleteText.js';
+import {FieldShell} from '../core/FieldShell.js';
+import {renderAutocompleteInput} from '../core/renderAutocompleteInput.js';
+import type {CommonFieldProps, Option} from '../core/types.js';
+import {useFieldBinding} from '../core/useFieldBinding.js';
+import {NULLABLE_SCALAR} from '../core/valueChecks.js';
+import {findOption} from './optionLookup.js';
 
 export interface SearchableSelectFieldProps<V extends string | number> extends CommonFieldProps {
   readonly options: readonly Option<V>[];

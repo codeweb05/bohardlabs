@@ -4,11 +4,11 @@ import userEvent from '@testing-library/user-event';
 import {createRef, useEffect} from 'react';
 import type {RefObject} from 'react';
 
-import {createAppForm} from './createAppForm';
-import {TextField} from './fields/TextField';
-import {FormError} from './form/FormError';
-import {applyServerErrors} from './serverErrors';
-import {FieldHarness} from './test/FieldHarness';
+import {createAppForm} from './createAppForm.js';
+import {TextField} from './fields/TextField.js';
+import {FormError} from './form/FormError.js';
+import {applyServerErrors} from './serverErrors.js';
+import {FieldHarness} from './test/FieldHarness.js';
 
 describe('applyServerErrors on a field', () => {
   function setup() {

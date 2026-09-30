@@ -1,14 +1,14 @@
 import {DatePicker} from '@mui/x-date-pickers/DatePicker';
 import {usePickerAdapter} from '@mui/x-date-pickers/hooks';
 
-import {LabelledByShell} from '../core/LabelledByShell';
-import type {CommonFieldProps} from '../core/types';
-import {useFieldBinding} from '../core/useFieldBinding';
-import type {ValueExpectation} from '../core/valueChecks';
-import {dateFromString, dateToString, isDateString} from './dateStrings';
-import {pickerSlotProps} from './pickerSlotProps';
-import type {PickerBinding} from './pickerSlotProps';
-import {usePickerDraft} from './usePickerDraft';
+import {LabelledByShell} from '../core/LabelledByShell.js';
+import type {CommonFieldProps} from '../core/types.js';
+import {useFieldBinding} from '../core/useFieldBinding.js';
+import type {ValueExpectation} from '../core/valueChecks.js';
+import {dateFromString, dateToString, isDateString} from './dateStrings.js';
+import {pickerSlotProps} from './pickerSlotProps.js';
+import type {PickerBinding} from './pickerSlotProps.js';
+import {usePickerDraft} from './usePickerDraft.js';
 
 export interface DateFieldProps extends CommonFieldProps {
   /** `YYYY-MM-DD`. */

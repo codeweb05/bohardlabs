@@ -1,10 +1,10 @@
 import MuiTextField from '@mui/material/TextField';
 import {useState} from 'react';
 
-import {FieldShell} from '../core/FieldShell';
-import type {CommonFieldProps} from '../core/types';
-import {useFieldBinding} from '../core/useFieldBinding';
-import {NULLABLE_NUMBER} from '../core/valueChecks';
+import {FieldShell} from '../core/FieldShell.js';
+import type {CommonFieldProps} from '../core/types.js';
+import {useFieldBinding} from '../core/useFieldBinding.js';
+import {NULLABLE_NUMBER} from '../core/valueChecks.js';
 
 export interface NumberFieldProps extends CommonFieldProps {
   /** The character the user types and sees. The form value is always a plain number. */

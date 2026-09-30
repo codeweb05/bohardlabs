@@ -2,8 +2,8 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import type {ReactNode} from 'react';
 
-import {FieldShell} from './FieldShell';
-import type {FieldShellProps} from './FieldShell';
+import {FieldShell} from './FieldShell.js';
+import type {FieldShellProps} from './FieldShell.js';
 
 /**
  * `FieldShell`'s fieldset with its parts side by side, wrapping when they don't fit: the

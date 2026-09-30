@@ -1,7 +1,7 @@
 import {render, screen} from '@testing-library/react';
 
-import {FormConfigProvider, useFormConfig} from './FormConfigContext';
-import {DEFAULT_FORM_LABELS} from './labels';
+import {FormConfigProvider, useFormConfig} from './FormConfigContext.js';
+import {DEFAULT_FORM_LABELS} from './labels.js';
 
 function Probe() {
   const {labels, formatError} = useFormConfig();

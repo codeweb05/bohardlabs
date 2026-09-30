@@ -1,8 +1,8 @@
 import {render, screen, waitFor} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
-import {TextField} from './fields/TextField';
-import {FieldHarness} from './test/FieldHarness';
+import {TextField} from './fields/TextField.js';
+import {FieldHarness} from './test/FieldHarness.js';
 
 const required = (value: unknown) => (value ? undefined : 'Required');
 

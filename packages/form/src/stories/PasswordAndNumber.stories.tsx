@@ -1,9 +1,9 @@
 import type {Meta, StoryObj} from '@storybook/react-vite';
 import {expect, userEvent, within} from 'storybook/test';
 
-import {NumberField} from '../fields/NumberField';
-import {PasswordField} from '../fields/PasswordField';
-import {FieldHarness} from '../test/FieldHarness';
+import {NumberField} from '../fields/NumberField.js';
+import {PasswordField} from '../fields/PasswordField.js';
+import {FieldHarness} from '../test/FieldHarness.js';
 
 const meta = {
   title: 'Form/Password and number',

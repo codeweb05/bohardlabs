@@ -1,10 +1,10 @@
 import {render, screen} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
-import {FormConfigProvider} from '../config/FormConfigContext';
-import {FieldHarness} from '../test/FieldHarness';
-import {TextArea} from './TextArea';
-import {TextField} from './TextField';
+import {FormConfigProvider} from '../config/FormConfigContext.js';
+import {FieldHarness} from '../test/FieldHarness.js';
+import {TextArea} from './TextArea.js';
+import {TextField} from './TextField.js';
 
 const required = (value: unknown) => (value ? undefined : 'Required');
 

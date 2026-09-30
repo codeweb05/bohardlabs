@@ -2,8 +2,8 @@ import type {StandardSchemaV1Issue} from '@tanstack/react-form';
 import {createContext, useContext, useMemo} from 'react';
 import type {ReactNode} from 'react';
 
-import {DEFAULT_FORM_LABELS} from './labels';
-import type {FormLabels} from './labels';
+import {DEFAULT_FORM_LABELS} from './labels.js';
+import type {FormLabels} from './labels.js';
 
 /**
  * Turns a validation issue into the sentence shown under a field. A plain string error is

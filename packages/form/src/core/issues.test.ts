@@ -1,4 +1,4 @@
-import {firstIssue} from './issues';
+import {firstIssue} from './issues.js';
 
 describe('firstIssue', () => {
   it('wraps a string error as an issue', () => {

@@ -1,10 +1,10 @@
-import {useFormConfig} from '../config/FormConfigContext';
-import {FieldPart, FieldParts} from '../core/FieldParts';
-import type {CommonFieldProps} from '../core/types';
-import {useFieldBinding} from '../core/useFieldBinding';
-import type {ValueExpectation} from '../core/valueChecks';
-import {DateInput, NULLABLE_DATE_STRING} from './DateField';
-import type {DateInputProps} from './DateField';
+import {useFormConfig} from '../config/FormConfigContext.js';
+import {FieldPart, FieldParts} from '../core/FieldParts.js';
+import type {CommonFieldProps} from '../core/types.js';
+import {useFieldBinding} from '../core/useFieldBinding.js';
+import type {ValueExpectation} from '../core/valueChecks.js';
+import {DateInput, NULLABLE_DATE_STRING} from './DateField.js';
+import type {DateInputProps} from './DateField.js';
 
 export interface DateRange {
   readonly start: string | null;

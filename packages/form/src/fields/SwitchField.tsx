@@ -1,5 +1,5 @@
-import {ToggleField} from './ToggleField';
-import type {ToggleFieldProps} from './ToggleField';
+import {ToggleField} from './ToggleField.js';
+import type {ToggleFieldProps} from './ToggleField.js';
 
 export type SwitchFieldProps = ToggleFieldProps;
 

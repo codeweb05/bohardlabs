@@ -3,7 +3,7 @@ import type {ButtonProps} from '@mui/material/Button';
 import {useStore} from '@tanstack/react-form';
 import type {ReactNode} from 'react';
 
-import {useFormContext} from '../context';
+import {useFormContext} from '../context.js';
 
 export interface SubmitButtonProps {
   readonly children: ReactNode;

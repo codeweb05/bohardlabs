@@ -4,10 +4,10 @@ import {LocalizationProvider} from '@mui/x-date-pickers/LocalizationProvider';
 import type {Meta, StoryObj} from '@storybook/react-vite';
 import {expect, userEvent, within} from 'storybook/test';
 
-import {DateField} from '../pickers/DateField';
-import {DateRangeField} from '../pickers/DateRangeField';
-import {TimePickerField} from '../pickers/TimePickerField';
-import {FieldHarness} from '../test/FieldHarness';
+import {DateField} from '../pickers/DateField.js';
+import {DateRangeField} from '../pickers/DateRangeField.js';
+import {TimePickerField} from '../pickers/TimePickerField.js';
+import {FieldHarness} from '../test/FieldHarness.js';
 
 /** A picker is a group of sections; the formatted value sits in a hidden input inside it. */
 function hiddenInput(group: HTMLElement): HTMLElement {

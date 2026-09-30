@@ -1,4 +1,4 @@
-import type {FieldBinding} from '../core/useFieldBinding';
+import type {FieldBinding} from '../core/useFieldBinding.js';
 
 /** The part of a binding a picker reads. */
 export type PickerBinding = Pick<FieldBinding<unknown>, 'error' | 'onBlur' | 'inputProps'>;

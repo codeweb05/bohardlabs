@@ -3,8 +3,8 @@ import type {ButtonProps} from '@mui/material/Button';
 import {useStore} from '@tanstack/react-form';
 import type {ReactNode} from 'react';
 
-import {useFormConfig} from '../config/FormConfigContext';
-import {useFormContext} from '../context';
+import {useFormConfig} from '../config/FormConfigContext.js';
+import {useFormContext} from '../context.js';
 
 export interface CancelButtonProps {
   /** Leave the screen, close the dialog. Called after `confirm` says yes, or at once on a pristine form. */

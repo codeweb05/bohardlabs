@@ -1,12 +1,12 @@
 import Autocomplete from '@mui/material/Autocomplete';
 import {useState} from 'react';
 
-import {useFormConfig} from '../config/FormConfigContext';
-import {autocompleteText} from '../core/autocompleteText';
-import {renderAutocompleteInput} from '../core/renderAutocompleteInput';
-import type {FieldBinding} from '../core/useFieldBinding';
-import {useAsyncOptions} from './useAsyncOptions';
-import type {AsyncOptionsProps} from './useAsyncOptions';
+import {useFormConfig} from '../config/FormConfigContext.js';
+import {autocompleteText} from '../core/autocompleteText.js';
+import {renderAutocompleteInput} from '../core/renderAutocompleteInput.js';
+import type {FieldBinding} from '../core/useFieldBinding.js';
+import {useAsyncOptions} from './useAsyncOptions.js';
+import type {AsyncOptionsProps} from './useAsyncOptions.js';
 
 // `Array.isArray` alone narrows an unconstrained generic union like `T | readonly T[]` to a
 // type with an `any`-typed branch, which silently drops checking on the array elements. A

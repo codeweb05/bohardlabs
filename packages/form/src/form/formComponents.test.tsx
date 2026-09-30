@@ -1,10 +1,10 @@
 import {render, screen, waitFor} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
-import {createAppForm} from '../createAppForm';
-import {TextField} from '../fields/TextField';
-import {CancelButton} from './CancelButton';
-import {SubmitButton} from './SubmitButton';
+import {createAppForm} from '../createAppForm.js';
+import {TextField} from '../fields/TextField.js';
+import {CancelButton} from './CancelButton.js';
+import {SubmitButton} from './SubmitButton.js';
 
 const {useAppForm} = createAppForm({fieldComponents: {TextField}, formComponents: {SubmitButton, CancelButton}});
 

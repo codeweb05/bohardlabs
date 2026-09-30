@@ -3,12 +3,12 @@ import {act, render, screen} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {createRef} from 'react';
 
-import {applyServerErrors} from '../serverErrors';
-import {BERLIN, createFakePlaces} from '../test/fakePlaces';
-import {FieldHarness} from '../test/FieldHarness';
-import {AddressField} from './AddressField';
-import {EMPTY_ADDRESS} from './types';
-import type {PlacesProvider} from './types';
+import {applyServerErrors} from '../serverErrors.js';
+import {BERLIN, createFakePlaces} from '../test/fakePlaces.js';
+import {FieldHarness} from '../test/FieldHarness.js';
+import {AddressField} from './AddressField.js';
+import {EMPTY_ADDRESS} from './types.js';
+import type {PlacesProvider} from './types.js';
 
 describe('AddressField', () => {
   it('fills every part from a search, and keeps a manual edit', async () => {

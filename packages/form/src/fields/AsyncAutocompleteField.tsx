@@ -1,8 +1,8 @@
-import {FieldShell} from '../core/FieldShell';
-import type {CommonFieldProps} from '../core/types';
-import {useFieldBinding} from '../core/useFieldBinding';
-import {AsyncAutocompleteInput} from './AsyncAutocompleteInput';
-import type {AsyncOptionsProps} from './useAsyncOptions';
+import {FieldShell} from '../core/FieldShell.js';
+import type {CommonFieldProps} from '../core/types.js';
+import {useFieldBinding} from '../core/useFieldBinding.js';
+import {AsyncAutocompleteInput} from './AsyncAutocompleteInput.js';
+import type {AsyncOptionsProps} from './useAsyncOptions.js';
 
 export interface AsyncAutocompleteFieldProps<T> extends CommonFieldProps, AsyncOptionsProps<T> {}
 
