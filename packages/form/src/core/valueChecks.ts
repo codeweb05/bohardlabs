@@ -29,6 +29,10 @@ export const SCALAR_ARRAY: ValueExpectation = {
   description: 'an array of strings or numbers',
 };
 
+// Declared here rather than pulling in `@types/node`: this is browser code, and the only use
+// is the `NODE_ENV` read below.
+declare const process: {readonly env: {readonly NODE_ENV?: string}};
+
 /**
  * Bundlers replace `process.env.NODE_ENV` textually at build time, but `process` itself is
  * `undefined` in a browser bundle, so guarding with `typeof process !== 'undefined'` first
