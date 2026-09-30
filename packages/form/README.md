@@ -316,8 +316,8 @@ export function showSaveError(form: AnyFormApi) {
 - The message stays until the user edits that field. What else happens depends on where
   the field's validation lives:
   - A field validated only by the form's `validators`, as in the quick start, or not at
-    all: the message blocks the submit. Clicking Submit again does nothing until the user
-    edits the field.
+    all: the message blocks the submit. Clicking Submit again moves focus to the field and
+    sends nothing until the user edits it.
   - A field with its own `validators`: a blur or the next submit clears the message, and
     that submit goes through with the same value.
 
