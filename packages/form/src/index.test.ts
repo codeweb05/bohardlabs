@@ -15,13 +15,17 @@ import * as phone from './phone';
 import * as pickers from './pickers';
 
 const ROOT_API = [
+  'CancelButton',
   'DEFAULT_FORM_LABELS',
   'FieldShell',
   'FormConfigProvider',
+  'FormError',
   'NumberField',
   'PasswordField',
+  'SubmitButton',
   'TextArea',
   'TextField',
+  'applyServerErrors',
   'createAppForm',
   'useFieldBinding',
   'useFieldContext',
