@@ -48,7 +48,7 @@ tiebreak for anything that unblocks another item.
 
 | #   | Package                 | Source                                             |   LOC | Apps | Plan                                                                 |
 | --- | ----------------------- | -------------------------------------------------- | ----: | :--: | -------------------------------------------------------------------- |
-| 1   | `@vt-labs/image-editor` | `components/ImageEditor/`                          |   817 |  4   | [plan](../superpowers/plans/open/2026-08-28-image-editor-package.md) |
+| 1   | `@vt-labs/image-editor` | `components/ImageEditor/`                          |   817 |  4   | [plan](../superpowers/plans/open/2026-09-30-image-editor-package.md) |
 | 2   | `@vt-labs/admin-ui`     | dialogs, `PageHeader`, `Loader`, truncation, pager | ~1000 |  4   | [plan](../superpowers/plans/open/2026-08-28-admin-ui-kit-package.md) |
 | 3   | `@vt-labs/form`         | `components/form/` + `hooks/form.tsx`              |  2640 |  4   | [plan](../superpowers/plans/done/2026-09-29-form-package.md)         |
 | 4   | `@vt-labs/api-client`   | `lib/axios`, `lib/auth`, `lib/react-query`, perms  |  1200 | 2-4  | [plan](../superpowers/plans/open/2026-08-28-api-client-package.md)   |
@@ -58,6 +58,10 @@ Order matters in one place only: `@vt-labs/admin-ui` before `@vt-labs/form`, bec
 `CancelButton` renders `UnsavedChangesDialog`. Everything else is independent.
 
 ### 1. `@vt-labs/image-editor`
+
+Superseded: the package is a new design on cropperjs 2, not a port. See the
+[spec](../superpowers/specs/2026-09-30-image-editor-package-design.md). The survey below is
+kept as the record of what skipwash had.
 
 Crop, zoom, rotate, flip over `react-easy-crop`, in a MUI dialog. Four files, one
 app-level import in the whole directory (`useTranslation`), no domain types, no API calls.

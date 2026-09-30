@@ -28,14 +28,14 @@ Status words, used the same way in every table below:
 
 ## Where things stand
 
-| Workstream                                       | Status                                      | Next step                                       |
-| ------------------------------------------------ | ------------------------------------------- | ----------------------------------------------- |
-| [1. Publishing](#1-publishing)                   | datatable 0.1.0 and form 0.1.0-next.0 ready | first releases                                  |
-| [2. `@vt-labs/datatable`](#2-vt-labsdatatable)   | ported, hardened, on MUI 9; 3 features done | `noUncheckedIndexedAccess`, then feature item 1 |
-| [3. New packages](#3-new-packages)               | 5 plans written, form (plan 3) done         | start plan 1, image-editor                      |
-| [4. Deferred candidates](#4-deferred-candidates) | 4 deferred                                  | nothing until a trigger fires                   |
-| [5. Repo and tooling](#5-repo-and-tooling)       | hooks, jscpd; 3 upgrades deferred           | the monthly `pnpm outdated -r`                  |
-| [6. Decisions](#6-decisions)                     | 9 made, 2 open                              | answer B before plan 4 starts                   |
+| Workstream                                       | Status                                          | Next step                                       |
+| ------------------------------------------------ | ----------------------------------------------- | ----------------------------------------------- |
+| [1. Publishing](#1-publishing)                   | datatable 0.1.0 and form 0.1.0-next.0 ready     | first releases                                  |
+| [2. `@vt-labs/datatable`](#2-vt-labsdatatable)   | ported, hardened, on MUI 9; 3 features done     | `noUncheckedIndexedAccess`, then feature item 1 |
+| [3. New packages](#3-new-packages)               | 5 plans written, form done, image-editor active | finish image-editor                             |
+| [4. Deferred candidates](#4-deferred-candidates) | 4 deferred                                      | nothing until a trigger fires                   |
+| [5. Repo and tooling](#5-repo-and-tooling)       | hooks, jscpd; 3 upgrades deferred               | the monthly `pnpm outdated -r`                  |
+| [6. Decisions](#6-decisions)                     | 9 made, 2 open                                  | answer B before plan 4 starts                   |
 
 ## 1. Publishing
 
@@ -100,7 +100,7 @@ no longer depends on admin-ui.
 
 | Order | Plan                                                                      | Package                 | Size      | Tasks | Status            | Blocked on                                                                                                                              |
 | :---: | ------------------------------------------------------------------------- | ----------------------- | --------- | :---: | ----------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-|   1   | [image-editor](superpowers/plans/open/2026-08-28-image-editor-package.md) | `@vt-labs/image-editor` | redesign  |   -   | design            | spec in review ([spec](superpowers/specs/2026-09-30-image-editor-package-design.md)); plan to be rewritten                              |
+|   1   | [image-editor](superpowers/plans/open/2026-09-30-image-editor-package.md) | `@vt-labs/image-editor` | redesign  | 0/12  | active            | nothing ([spec](superpowers/specs/2026-09-30-image-editor-package-design.md))                                                           |
 |   2   | [admin-ui-kit](superpowers/plans/open/2026-08-28-admin-ui-kit-package.md) | `@vt-labs/admin-ui`     | ~1000 loc |  0/9  | ready             | nothing                                                                                                                                 |
 |   3   | [form](superpowers/plans/done/2026-09-29-form-package.md)                 | `@vt-labs/form`         | redesign  | 14/14 | done (2026-09-30) | nothing ([spec](superpowers/specs/2026-09-29-form-package-design.md))                                                                   |
 |   4   | [api-client](superpowers/plans/open/2026-08-28-api-client-package.md)     | `@vt-labs/api-client`   | 1200 loc  |  0/9  | blocked           | [open question B](decisions/open-questions.md#b-do-skipwash-api-and-smarthip-backend-share-the-response-envelope), a check, not a build |

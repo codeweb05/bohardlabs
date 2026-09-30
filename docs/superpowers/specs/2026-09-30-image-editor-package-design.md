@@ -1,9 +1,9 @@
 # `@vt-labs/image-editor` design
 
-**Date:** 2026-09-30. **Status:** in review. **Plan:** not written yet. **Replaces:** the
+**Date:** 2026-09-30. **Status:** approved, amended while planning (see the last section).
+**Plan:** [2026-09-30](../plans/open/2026-09-30-image-editor-package.md). **Replaces:** the
 image-editor section of [`../../extraction/README.md`](../../extraction/README.md) as the
-argument for this package, and the
-[2026-08-28 image-editor plan](../plans/open/2026-08-28-image-editor-package.md) as the way
+argument for this package, and the 2026-08-28 image-editor port plan (deleted) as the way
 to build it.
 
 ## Who it is for
@@ -263,7 +263,7 @@ only with `history`, Replace only with `replace`, the zoom slider only with
 missing, the Adjust tab is hidden, so the saved file never differs from the preview. The
 live preview uses a CSS `filter` on the image element.
 
-**Presets** are Original, Vivid, Mono, Warm and Cool. Each is fixed filter values; choosing
+**Presets** are Original, Vivid, Mono, Fade and Dramatic. Each is fixed filter values; choosing
 one sets the three sliders, and moving a slider afterwards is allowed.
 
 **Theme.** The canvas stays dark under both preview themes, as photo editors do:
@@ -328,8 +328,28 @@ discarding edits; rendering the editor itself on the server.
 
 ## Documents this changes
 
-- The 2026-08-28 image-editor plan is marked superseded by this spec, and is deleted when
-  the new plan is written.
+- The 2026-08-28 image-editor plan is deleted; the 2026-09-30 plan replaces it.
 - The roadmap row for image-editor points here.
 - The extraction survey's image-editor section describes `react-easy-crop`; it gains a note
   pointing here when the plan lands.
+
+## Amendments while planning
+
+Planning read the cropperjs 2.2 source closely and changed four things. Where they
+contradict an earlier section, this section wins.
+
+1. **Export draws from state, not `$toCanvas`.** Output step 1 and 2 become one pass:
+   `renderState` applies the same matrix the preview uses to a canvas at the crop's
+   natural size, with `ctx.filter` set before the draw. cropperjs is only the view and the
+   pointer handler. This keeps the preview and the file identical and lets the pipeline be
+   tested without the engine.
+2. **Orientation is a matrix, not quarter turns plus flip flags.** State holds a 2×2
+   dihedral matrix; rotate and flip compose on the left, so each acts on what the user
+   currently sees, and a flip negates the straighten angle for the same reason. The crop is
+   stored in frame pixels (the oriented image), which is what the user sees.
+3. **Zoom is derived from the crop**, not stored: zoom 1 is the largest crop of the current
+   shape, and zooming shrinks the crop about its centre. After a drag or a resize the view
+   refits the crop to the stage, as iOS Photos does.
+4. **Presets are Original, Vivid, Mono, Fade and Dramatic.** Warm and Cool need a colour
+   shift that brightness, contrast and saturation cannot express, and a preset must be a
+   position of the three sliders.
