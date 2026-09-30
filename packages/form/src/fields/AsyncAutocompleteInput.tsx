@@ -61,10 +61,13 @@ export function AsyncAutocompleteInput<T>({
 
   // The form holds the item itself, not its id, so an edit screen shows the saved item's
   // label before any search has run. Folding the current value into the loaded options
-  // keeps MUI from warning that the value matches none of them.
+  // keeps MUI from warning that the value matches none of them. Once the user types, the
+  // list shows only what the loader returned, so the saved item is not listed under a
+  // query it does not match.
   const current = toArray(value);
   const loadedIds = new Set(options.map(getOptionValue));
   const merged = [...current.filter((item) => !loadedIds.has(getOptionValue(item))), ...options];
+  const shown = (all: T[]) => (query === '' ? all : all.filter((item) => loadedIds.has(getOptionValue(item))));
   const text = autocompleteText(labels);
 
   return (
@@ -82,7 +85,7 @@ export function AsyncAutocompleteInput<T>({
         if (reason === 'input' || reason === 'clear') onInputChange?.(input);
       }}
       onBlur={binding.onBlur}
-      filterOptions={(all) => all}
+      filterOptions={shown}
       filterSelectedOptions={multiple}
       getOptionLabel={getOptionLabel}
       getOptionKey={(option) => getOptionValue(option)}

@@ -47,6 +47,27 @@ describe('AsyncAutocompleteField', () => {
     expect(screen.getByRole('combobox', {name: 'Owner'})).toHaveValue('Alan Turing');
   });
 
+  it('lists the saved item only when it matches the typed text', async () => {
+    const warn = vi.spyOn(console, 'warn');
+    const error = vi.spyOn(console, 'error');
+    const user = userEvent.setup();
+    render(
+      <FieldHarness defaultValue={USERS[0]}>
+        <AsyncAutocompleteField {...common} loadOptions={search} />
+      </FieldHarness>,
+    );
+    // Typing over the whole label, never emptying the input, which would clear the value.
+    const input = screen.getByRole('combobox', {name: 'Owner'});
+    await user.type(input, 'zzz', {initialSelectionStart: 0, initialSelectionEnd: 'Ada Lovelace'.length});
+    expect(await screen.findByText('No options')).toBeInTheDocument();
+    expect(screen.queryByRole('option', {name: 'Ada Lovelace'})).not.toBeInTheDocument();
+
+    await user.type(input, 'ada', {initialSelectionStart: 0, initialSelectionEnd: 'zzz'.length});
+    expect(await screen.findAllByRole('option', {name: 'Ada Lovelace'})).toHaveLength(1);
+    expect(warn).not.toHaveBeenCalled();
+    expect(error).not.toHaveBeenCalled();
+  });
+
   it('shows the load failure inside the list', async () => {
     const user = userEvent.setup();
     const failing = async (): Promise<User[]> => {
