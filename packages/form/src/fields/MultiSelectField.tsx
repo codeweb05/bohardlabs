@@ -3,6 +3,7 @@ import Box from '@mui/material/Box';
 import Chip from '@mui/material/Chip';
 import MenuItem from '@mui/material/MenuItem';
 import Select from '@mui/material/Select';
+import {useState} from 'react';
 
 import {useFormConfig} from '../config/FormConfigContext.js';
 import {autocompleteText} from '../core/autocompleteText.js';
@@ -88,6 +89,21 @@ function PlainMulti<V extends string | number>({
   binding,
   selected,
 }: VariantProps<V>) {
+  // An off-list value keeps its menu item after it is unpicked, so a mistaken click can be
+  // undone. The kept items reset when the value changes from outside the field.
+  const offList = selected.filter((option) => !options.includes(option));
+  const [held, setHeld] = useState({source: binding.value, offList});
+  let kept = held.offList;
+  if (held.source !== binding.value) {
+    kept = offList;
+    setHeld({source: binding.value, offList});
+  }
+  const menu = [...options, ...kept];
+  const write = (next: V[]) => {
+    setHeld({source: next, offList: kept});
+    binding.setValue(next);
+  };
+
   return (
     <Select<string[]>
       multiple
@@ -96,9 +112,7 @@ function PlainMulti<V extends string | number>({
       onChange={(event) => {
         const raw = event.target.value;
         const values = typeof raw === 'string' ? raw.split(',') : raw;
-        binding.setValue(
-          values.flatMap((value) => (findOption(options, value) ?? findOption(selected, value))?.value ?? []),
-        );
+        write(values.flatMap((value) => findOption(menu, value)?.value ?? []));
       }}
       onBlur={binding.onBlur}
       error={binding.error !== null}
@@ -121,7 +135,7 @@ function PlainMulti<V extends string | number>({
       }
       SelectDisplayProps={{id: binding.inputId, ...binding.inputProps}}
     >
-      {withSelected(options, selected).map((option) => (
+      {menu.map((option) => (
         <MenuItem key={String(option.value)} value={String(option.value)} disabled={option.disabled}>
           {option.label}
         </MenuItem>

@@ -1,5 +1,7 @@
-import {render, screen, within} from '@testing-library/react';
+import type {AnyFormApi} from '@tanstack/react-form';
+import {act, render, screen, within} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import {createRef} from 'react';
 
 import {FieldHarness} from '../test/FieldHarness.js';
 import {MultiSelectField} from './MultiSelectField.js';
@@ -75,6 +77,39 @@ describe('MultiSelectField', () => {
     expect(screen.getByLabelText('Submitted value')).toHaveTextContent('["a","archived","b"]');
     expect(warn).not.toHaveBeenCalled();
     warn.mockRestore();
+  });
+
+  it('lets an off-list value be picked again after it is unpicked', async () => {
+    const user = userEvent.setup();
+    render(
+      <FieldHarness defaultValue={['a', 'archived']}>
+        <MultiSelectField label="Tags" options={LETTERS} />
+      </FieldHarness>,
+    );
+    await user.click(screen.getByRole('combobox', {name: /Tags/}));
+    const listbox = screen.getByRole('listbox');
+    await user.click(within(listbox).getByRole('option', {name: 'archived'}));
+    await user.click(within(listbox).getByRole('option', {name: 'archived'}));
+    await user.keyboard('{Escape}');
+
+    await user.click(screen.getByRole('button', {name: 'Submit'}));
+    expect(screen.getByLabelText('Submitted value')).toHaveTextContent('["a","archived"]');
+  });
+
+  it('drops a kept off-list value from the menu once the value changes from outside', async () => {
+    const user = userEvent.setup();
+    const formRef = createRef<AnyFormApi>();
+    render(
+      <FieldHarness defaultValue={['a', 'archived']} formRef={formRef}>
+        <MultiSelectField label="Tags" options={LETTERS} />
+      </FieldHarness>,
+    );
+    act(() => formRef.current?.setFieldValue('value', ['b']));
+    await user.click(screen.getByRole('combobox', {name: /Tags/}));
+    const names = within(screen.getByRole('listbox'))
+      .getAllByRole('option')
+      .map((option) => option.textContent);
+    expect(names).toEqual(['a', 'b']);
   });
 
   it('keeps a stored value that is not in the options when searchable', async () => {
