@@ -4,6 +4,7 @@ import {useCallback, useEffect, useMemo, useState} from 'react';
 
 import {useTableQuery} from '../query/hooks';
 import type {
+  ColumnFilterConfig,
   FilterOperator,
   ServerSideParams,
   ServerTableState,
@@ -11,6 +12,9 @@ import type {
   UseServerSidePaginationReturn,
 } from '../types';
 import {DEFAULT_PAGE_SIZE} from '../types';
+
+/** One array for every render, so leaving `columns` out does not rebuild the params. */
+const NO_COLUMNS: NonNullable<UseServerSidePaginationOptions<never>['columns']> = [];
 
 /**
  * The batteries-included server-side path: owns the table state, debounces the search,
@@ -30,7 +34,8 @@ import {DEFAULT_PAGE_SIZE} from '../types';
  * const table = useServerSidePagination<Order>({
  *   queryKey: ['orders'],                       // params are appended for you
  *   queryFn: (params) => api.get('/orders', {params}).then((r) => r.data),
- *   initialPageSize: 25,
+ *   columns, // so each filter goes out with the operator its control means
+  initialPageSize: 25,
  *   initialSorting: [{id: 'placedAt', desc: true}],
  *   transformers: {
  *     // ServerSideParams is this package's vocabulary; map it to the API's once, here.
@@ -68,6 +73,7 @@ export function useServerSidePagination<TData>(
     initialSorting = [],
     initialFilters = [],
     initialGlobalFilter = '',
+    columns = NO_COLUMNS,
     transformers,
     enabled = true,
     staleTime = 30000,
@@ -122,15 +128,16 @@ export function useServerSidePagination<TData>(
 
     // Add column filters
     if (columnFilters.length > 0) {
+      const filterConfigs = new Map(columns.map((column) => [column.id, column.filterConfig]));
       params.filters = columnFilters.map((f) => ({
         field: f.id,
-        operator: 'contains' as FilterOperator, // Default operator
+        operator: filterOperator(f.value, filterConfigs.get(f.id)),
         value: f.value,
       }));
     }
 
     return params;
-  }, [pagination, sorting, debouncedGlobalFilter, columnFilters]);
+  }, [pagination, sorting, debouncedGlobalFilter, columnFilters, columns]);
 
   // Transform params if transformer provided. These are what actually go to the server,
   // not just what keys the cache: a transformer that renames fields for the API would
@@ -229,4 +236,41 @@ export function useServerSidePagination<TData>(
     // Actions
     refetch: query.refetch,
   };
+}
+
+/** A number control's range: two bounds, either of which may be missing. */
+function isNumberRange(value: unknown[]): boolean {
+  return value.length === 2 && value.every((bound) => bound === null || typeof bound === 'number');
+}
+
+/** What a value means when nothing says which control wrote it. */
+function operatorOfValue(value: unknown): FilterOperator {
+  if (typeof value === 'string') return 'contains';
+  if (Array.isArray(value)) return isNumberRange(value) ? 'between' : 'in';
+  // A date range is `{from, to}`, with either end optional.
+  if (typeof value === 'object' && value !== null && ('from' in value || 'to' in value)) return 'between';
+  return 'equals';
+}
+
+/**
+ * The comparison a filter asks the server for. A column's own `filterConfig.operator` wins;
+ * otherwise it follows the control: a dropdown picks a whole value, a range is a range, and
+ * only free text is a substring.
+ */
+function filterOperator(value: unknown, config: ColumnFilterConfig | undefined): FilterOperator {
+  if (config?.operator) return config.operator;
+  switch (config?.type) {
+    case 'text':
+      return 'contains';
+    case 'boolean':
+      return 'equals';
+    case 'select':
+      return Array.isArray(value) ? 'in' : 'equals';
+    case 'number':
+      return Array.isArray(value) ? 'between' : 'equals';
+    case 'date':
+      return typeof value === 'string' ? 'equals' : 'between';
+    default:
+      return operatorOfValue(value);
+  }
 }

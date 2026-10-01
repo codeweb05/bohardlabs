@@ -92,6 +92,7 @@ export type FilterType = 'text' | 'number' | 'select' | 'date' | 'boolean' | 'cu
 /** Filter operator types */
 export type FilterOperator =
   | 'equals'
+  | 'in'
   | 'notEquals'
   | 'contains'
   | 'startsWith'
@@ -116,6 +117,16 @@ export interface FilterOption {
 export interface ColumnFilterConfig {
   readonly type: FilterType;
   readonly operators?: readonly FilterOperator[];
+  /**
+   * The comparison `useServerSidePagination` sends for this column, in place of the one it
+   * derives from `type`: `contains` for text, `equals` for a dropdown or a yes/no (`in` when
+   * the value is a list), `between` for a number or date range and `equals` for a single
+   * number or day. Set it when the server wants something else, such as `startsWith` for a
+   * reference number.
+   *
+   * Only the request is affected. A table that filters its own rows ignores it.
+   */
+  readonly operator?: FilterOperator;
   readonly options?: readonly FilterOption[];
   readonly placeholder?: string;
   readonly min?: number;
@@ -429,7 +440,11 @@ export interface ServerSideParams {
   multiSort?: {field: string; order: 'asc' | 'desc'}[];
   /** The search box's debounced value. Which fields it matches is the server's decision. */
   globalFilter?: string;
-  /** Per-column filters, each carrying the operator the control produced. */
+  /**
+   * Per-column filters, each with the comparison its control means. A range arrives as the
+   * control stored it: `[min, max]` for a number (a missing bound is `null`), `{from, to}`
+   * for a date.
+   */
   filters?: {
     field: string;
     operator: FilterOperator;
@@ -1110,6 +1125,15 @@ export interface UseServerSidePaginationOptions<TData> {
   readonly initialSorting?: SortingState;
   readonly initialFilters?: ColumnFiltersState;
   readonly initialGlobalFilter?: string;
+  /**
+   * The table's columns, so each filter is sent with the operator its control means (see
+   * `filterConfig.operator`). Only `id` and `filterConfig` are read.
+   *
+   * Without it the operator is read off the value: text is `contains`, a number or a yes/no
+   * is `equals`, a range is `between`, any other list is `in`. That cannot tell a dropdown's
+   * value from typed text, so a `select` filter goes out as `contains`.
+   */
+  readonly columns?: readonly {readonly id: string; readonly filterConfig?: ColumnFilterConfig}[];
   readonly transformers?: ServerSideTransformers<TData>;
   readonly enabled?: boolean;
   readonly staleTime?: number;

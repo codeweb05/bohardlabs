@@ -112,6 +112,96 @@ describe('useServerSidePagination — request params', () => {
     });
   });
 
+  it('sends the operator each filter control means, read from the columns', async () => {
+    renderPagination({
+      columns: [
+        {id: 'name', filterConfig: {type: 'text'}},
+        {id: 'status', filterConfig: {type: 'select'}},
+        {id: 'tags', filterConfig: {type: 'select'}},
+        {id: 'price', filterConfig: {type: 'number'}},
+        {id: 'stock', filterConfig: {type: 'number'}},
+        {id: 'placedAt', filterConfig: {type: 'date'}},
+        {id: 'shippedAt', filterConfig: {type: 'date'}},
+        {id: 'active', filterConfig: {type: 'boolean'}},
+      ],
+      initialFilters: [
+        {id: 'name', value: 'soap'},
+        {id: 'status', value: 'OPEN'},
+        {id: 'tags', value: ['new', 'sale']},
+        {id: 'price', value: [5, null]},
+        {id: 'stock', value: 3},
+        {id: 'placedAt', value: {from: '2026-04-01', to: '2026-04-30'}},
+        {id: 'shippedAt', value: '2026-04-02'},
+        {id: 'active', value: false},
+      ],
+    });
+
+    await waitFor(() => {
+      expect(lastParams().filters).toEqual([
+        {field: 'name', operator: 'contains', value: 'soap'},
+        {field: 'status', operator: 'equals', value: 'OPEN'},
+        {field: 'tags', operator: 'in', value: ['new', 'sale']},
+        {field: 'price', operator: 'between', value: [5, null]},
+        {field: 'stock', operator: 'equals', value: 3},
+        {field: 'placedAt', operator: 'between', value: {from: '2026-04-01', to: '2026-04-30'}},
+        {field: 'shippedAt', operator: 'equals', value: '2026-04-02'},
+        {field: 'active', operator: 'equals', value: false},
+      ]);
+    });
+  });
+
+  it("sends a column's own operator in place of the derived one", async () => {
+    renderPagination({
+      columns: [{id: 'name', filterConfig: {type: 'text', operator: 'startsWith'}}],
+      initialFilters: [{id: 'name', value: 'so'}],
+    });
+
+    await waitFor(() => {
+      expect(lastParams().filters).toEqual([{field: 'name', operator: 'startsWith', value: 'so'}]);
+    });
+  });
+
+  it('reads the operator off the value when it is not told the columns', async () => {
+    renderPagination({
+      initialFilters: [
+        {id: 'name', value: 'soap'},
+        {id: 'active', value: true},
+        {id: 'stock', value: 3},
+        {id: 'price', value: [null, 9.5]},
+        {id: 'tags', value: ['new', 'sale']},
+        {id: 'placedAt', value: {from: '2026-04-01'}},
+        {id: 'owner', value: {id: 7}},
+      ],
+    });
+
+    await waitFor(() => {
+      expect(lastParams().filters?.map((filter) => [filter.field, filter.operator])).toEqual([
+        ['name', 'contains'],
+        ['active', 'equals'],
+        ['stock', 'equals'],
+        ['price', 'between'],
+        ['tags', 'in'],
+        ['placedAt', 'between'],
+        ['owner', 'equals'],
+      ]);
+    });
+  });
+
+  it('reads the operator off the value for a custom filter and for a column it does not know', async () => {
+    renderPagination({
+      columns: [{id: 'owner', filterConfig: {type: 'custom'}}, {id: 'plain'}],
+      initialFilters: [
+        {id: 'owner', value: ['ada', 'noor']},
+        {id: 'plain', value: 'x'},
+        {id: 'elsewhere', value: true},
+      ],
+    });
+
+    await waitFor(() => {
+      expect(lastParams().filters?.map((filter) => filter.operator)).toEqual(['in', 'contains', 'equals']);
+    });
+  });
+
   it('omits an empty global filter instead of sending an empty string', async () => {
     renderPagination();
 

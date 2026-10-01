@@ -196,6 +196,7 @@ export function OrdersPage() {
   const table = useServerSidePagination<Order>({
     queryKey: ['orders'], // request params are appended to this for you
     queryFn: (params) => api.get('/orders', {params}).then((r) => r.data),
+    columns, // so each filter goes out with the operator its control means
     initialPageSize: 25,
     transformers: {
       // ServerSideParams is this package's vocabulary. Map it to your API's once, here.
