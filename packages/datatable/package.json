@@ -1,6 +1,6 @@
 {
   "name": "@vt-labs/datatable",
-  "version": "1.0.0-next.0",
+  "version": "1.0.0",
   "description": "Server-driven React data table built on TanStack Table and MUI",
   "license": "MIT",
   "type": "module",
