@@ -515,7 +515,7 @@ export const Exporting: Story = {
       await clickExport(canvasElement, 'Export JSON');
       // The spreadsheet writer is behind a dynamic import, so the file arrives a tick late.
       await clickExport(canvasElement, 'Export Excel');
-      await waitFor(() => expect(downloads.files).toHaveLength(3));
+      await waitFor(() => expect(downloads.files).toHaveLength(3), {timeout: 5000});
 
       await expect(downloads.files.map((file) => file.name)).toEqual(['orders.csv', 'orders.json', 'orders.xlsx']);
 

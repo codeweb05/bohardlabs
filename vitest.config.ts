@@ -83,16 +83,22 @@ export default defineConfig({
         '**/packages/form/src/maps.ts',
         '**/server.ts',
         '**/types.ts',
+        // Compile-time assertions that `tsc` checks and nothing ever executes.
+        '**/*.typetest.ts',
       ],
       // Per package, so a new package starts with a floor of its own instead of being
-      // averaged into the others. Datatable has none yet; adding one is its own change.
+      // averaged into the others.
       // Relative, unlike `include`: Vitest matches threshold globs against root-relative
       // paths, and an absolute key never applies.
-      // Image-editor's floor holds for the merged run (`pnpm test:cov`): its canvas, cropper
-      // and pixel paths run only in the stories, so a unit-only run lands under it.
+      // Every floor holds for the merged run (`pnpm test:cov`) and only for it: the canvas,
+      // cropper and pixel paths of image-editor, and a good part of the other two, run only
+      // in the stories, so a unit-only run lands under it.
+      // At 100 a line that cannot run is marked where it sits, with a `v8 ignore` comment
+      // that says why, instead of being absorbed by a lower number.
       thresholds: {
-        'packages/image-editor/src/**': {lines: 90, functions: 90, branches: 90, statements: 90},
-        'packages/form/src/**': {lines: 90, functions: 90, branches: 90, statements: 90},
+        'packages/datatable/src/**': {lines: 100, functions: 100, branches: 100, statements: 100},
+        'packages/image-editor/src/**': {lines: 100, functions: 100, branches: 100, statements: 100},
+        'packages/form/src/**': {lines: 100, functions: 100, branches: 100, statements: 100},
       },
     },
   },

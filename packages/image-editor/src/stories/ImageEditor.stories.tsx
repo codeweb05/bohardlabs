@@ -93,7 +93,9 @@ async function openEditor(canvasElement: HTMLElement, title = 'Edit image') {
   await userEvent.click(within(canvasElement).getByRole('button', {name: 'Edit photo'}));
   const dialog = await screen.findByRole('dialog', {name: title});
   const stage = await within(dialog).findByTestId('image-editor-stage');
-  await waitFor(() => expect(stage.querySelector('cropper-selection')).not.toBeNull());
+  // The first story to get here also pays for the cropper's dynamic import, which the
+  // default one second does not cover in a full run.
+  await waitFor(() => expect(stage.querySelector('cropper-selection')).not.toBeNull(), {timeout: 5000});
   return dialog;
 }
 

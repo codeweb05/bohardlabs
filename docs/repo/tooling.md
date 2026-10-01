@@ -125,6 +125,12 @@ The reason is coverage. Vitest scopes coverage to the run's root, so a story run
 here puts `packages/*/src` in scope, so `pnpm test:cov` reports the stories and the unit tests
 as one number instead of two that cannot be added together.
 
+The merged run is held at 100% of statements, branches, functions and lines for every
+package, by the `thresholds` block in the same file. A line that cannot run carries a
+`v8 ignore` comment saying why, so the exceptions are listed in the source rather than hidden
+in a lower floor. A unit-only or stories-only run reports less and is not what the floor
+measures.
+
 ### The Storybook panel's percentage is not that number
 
 `pnpm test:cov` is the repo's coverage. The percentage in Storybook's test panel is a
@@ -135,7 +141,7 @@ misconfiguration.
 (`dist/node/vitest.js`). That filter is hard-coded, so the run behind the panel contains the
 stories and nothing else. The package's unit tests never enter the process and never
 contribute a line. What the panel measures is how much of `packages/*/src` the story `play`
-functions reach on their own: about 62% of statements, against about 98% for the full run.
+functions reach on their own: about 62% of statements, against 100% for the full run.
 
 The gap is mostly deliberate. Inline editing, the column filter panel and the React Query
 hooks behind `/server` have no story at all, because a unit test covers them more precisely
