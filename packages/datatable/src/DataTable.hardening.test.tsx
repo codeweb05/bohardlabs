@@ -1,6 +1,7 @@
 import {ThemeProvider, createTheme} from '@mui/material';
 import {fireEvent, screen, waitFor} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import dayjs from 'dayjs';
 import {useState} from 'react';
 import {afterEach, describe, expect, it, vi} from 'vitest';
 
@@ -162,18 +163,93 @@ describe('exporting', () => {
     await exportAs(user, L.exportCsv);
 
     await waitFor(() => expect(content()).not.toBe(''));
-    expect(content().split('\n')[0]).toBe('"Guest, full name","Seen ""at""",Note');
+    expect(content().split('\n')[0]).toBe('\uFEFF"Guest, full name","Seen ""at""",Note');
   });
 
-  it('writes a date as a date and keeps a carriage return inside its cell', async () => {
+  it('writes a date with no cell of its own in the display format', async () => {
     const user = userEvent.setup();
     const content = captureDownload();
-    render(<DataTable columns={columns} data={visits} enableExport />);
+    render(<DataTable columns={columns} data={visits} enableExport dateFormats={{display: 'D MMM YYYY'}} />);
 
     await exportAs(user, L.exportCsv);
 
     await waitFor(() => expect(content()).not.toBe(''));
-    expect(content()).toContain('Noor,2026-04-02T09:30:00.000Z,"first\r\nsecond"');
+    const seen = dayjs(visits[0]?.seenAt).format('D MMM YYYY');
+    expect(content()).toContain(`Noor,${seen},"first\r\nsecond"`);
+  });
+
+  it('writes a cell the way its column draws it', async () => {
+    const user = userEvent.setup();
+    const content = captureDownload();
+    const drawn: DataTableColumnDef<Visit>[] = [
+      {id: 'guest', accessorKey: 'guest', header: 'Guest', cell: ({row}) => <strong>{row.original.guest}</strong>},
+      {
+        id: 'seenAt',
+        accessorKey: 'seenAt',
+        header: 'Seen',
+        cell: ({row}) => `week ${dayjs(row.original.seenAt).format('D')}`,
+      },
+      {
+        id: 'note',
+        accessorKey: 'note',
+        header: 'Note',
+        cell: ({row}) => (
+          <>
+            <em>note:</em> {row.original.note.length} {['chars']}
+          </>
+        ),
+      },
+    ];
+    render(<DataTable columns={drawn} data={visits.slice(1)} enableExport />);
+
+    await exportAs(user, L.exportCsv);
+
+    await waitFor(() => expect(content()).not.toBe(''));
+    const day = dayjs(visits[1]?.seenAt).format('D');
+    expect(content().split('\n')[1]).toBe(`Ada,week ${day},note: 5 chars`);
+  });
+
+  it('writes what a component draws, and the value under a cell that shows no text', async () => {
+    const user = userEvent.setup();
+    const content = captureDownload();
+    // The text is in a prop, not in the children: it only exists once the component is mounted.
+    function Badge({text}: Readonly<{text: string}>) {
+      return <mark>{text.toUpperCase()}</mark>;
+    }
+    function Counted({text}: Readonly<{text: string}>) {
+      const [length] = useState(text.length);
+      return `${length} letters`;
+    }
+    const drawn: DataTableColumnDef<Visit>[] = [
+      {id: 'guest', accessorKey: 'guest', header: 'Guest', cell: ({row}) => <Badge text={row.original.guest} />},
+      {id: 'note', accessorKey: 'note', header: 'Note', cell: ({row}) => <Counted text={row.original.note} />},
+      {id: 'flag', accessorFn: (row) => row.guest.length, header: 'Flag', cell: () => <svg aria-hidden="true" />},
+    ];
+    render(<DataTable columns={drawn} data={visits.slice(1)} enableExport />);
+
+    await exportAs(user, L.exportCsv);
+
+    await waitFor(() => expect(content()).not.toBe(''));
+    expect(content().split('\n')[1]).toBe('ADA,5 letters,3');
+    // The copy that was mounted to be read is gone again: only the cell on screen is left.
+    expect(screen.getAllByText('ADA')).toHaveLength(1);
+  });
+
+  it('leaves a hidden column out of what it draws', async () => {
+    const user = userEvent.setup();
+    const content = captureDownload();
+    const guestCell = vi.fn(() => 'drawn');
+    const drawn: DataTableColumnDef<Visit>[] = [
+      {id: 'guest', accessorKey: 'guest', header: 'Guest', cell: guestCell},
+      {id: 'note', accessorKey: 'note', header: 'Note', cell: ({row}) => `"${row.original.note}"`},
+    ];
+    render(<DataTable columns={drawn} data={visits.slice(1)} enableExport initialColumnVisibility={{guest: false}} />);
+
+    await exportAs(user, L.exportCsv);
+
+    await waitFor(() => expect(content()).not.toBe(''));
+    expect(content()).toBe('\uFEFFNote\n"""plain"""');
+    expect(guestCell).not.toHaveBeenCalled();
   });
 
   it('leaves the cell empty for a date that is not one', async () => {
@@ -186,6 +262,51 @@ describe('exporting', () => {
 
     await waitFor(() => expect(content()).not.toBe(''));
     expect(content().split('\n')[1]).toBe('Kit,,plain');
+  });
+
+  it('opens the file with a byte-order mark, so Excel reads it as UTF-8', async () => {
+    const user = userEvent.setup();
+    const content = captureDownload();
+    const accented: Visit[] = [{id: 'visit-1', guest: 'Zoë', seenAt: new Date('not a date'), note: 'café'}];
+    render(<DataTable columns={columns} data={accented} enableExport />);
+
+    await exportAs(user, L.exportCsv);
+
+    await waitFor(() => expect(content()).not.toBe(''));
+    expect(content().startsWith('\uFEFF')).toBe(true);
+    expect(content().split('\n')[1]).toBe('Zoë,,café');
+  });
+
+  it('stops a spreadsheet from running a cell as a formula', async () => {
+    const user = userEvent.setup();
+    const content = captureDownload();
+    const risky: Visit[] = [
+      {id: 'visit-1', guest: '=HYPERLINK("http://x")', seenAt: new Date('not a date'), note: '-5'},
+      {id: 'visit-2', guest: '@sum', seenAt: new Date('not a date'), note: '+44 20 7946'},
+      {id: 'visit-3', guest: '\tcmd', seenAt: new Date('not a date'), note: '-2+3'},
+    ];
+    render(<DataTable columns={columns} data={risky} enableExport />);
+
+    await exportAs(user, L.exportCsv);
+
+    await waitFor(() => expect(content()).not.toBe(''));
+    expect(content().split('\n').slice(1)).toEqual([
+      `"'=HYPERLINK(""http://x"")",,-5`,
+      `'@sum,,'+44 20 7946`,
+      `'\tcmd,,'-2+3`,
+    ]);
+  });
+
+  it('writes the cells untouched when the guard is switched off', async () => {
+    const user = userEvent.setup();
+    const content = captureDownload();
+    const risky: Visit[] = [{id: 'visit-1', guest: '=1+1', seenAt: new Date('not a date'), note: '@x'}];
+    render(<DataTable columns={columns} data={risky} enableExport enableCsvFormulaGuard={false} />);
+
+    await exportAs(user, L.exportCsv);
+
+    await waitFor(() => expect(content()).not.toBe(''));
+    expect(content().split('\n')[1]).toBe('=1+1,,@x');
   });
 
   it('exports the rows in the order they are sorted on screen', async () => {

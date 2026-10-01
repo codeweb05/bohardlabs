@@ -144,6 +144,7 @@ export function DataTable<TData extends RowData>(props: Readonly<DataTableProps<
     enableExport = false,
     exportFormats = ['csv'],
     exportFileName = 'export',
+    enableCsvFormulaGuard = true,
     onExport,
     onExportStart,
     onExportComplete,
@@ -370,6 +371,7 @@ export function DataTable<TData extends RowData>(props: Readonly<DataTableProps<
                 enableExport={enableExport}
                 exportFormats={exportFormats}
                 exportFileName={exportFileName}
+                enableCsvFormulaGuard={enableCsvFormulaGuard}
                 onExport={onExport}
                 onExportStart={onExportStart}
                 onExportComplete={onExportComplete}

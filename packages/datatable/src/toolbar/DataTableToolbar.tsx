@@ -68,6 +68,7 @@ interface DataTableToolbarProps<TData extends RowData> {
   readonly enableExport?: boolean;
   readonly exportFormats?: readonly ExportFormat[];
   readonly exportFileName?: string;
+  readonly enableCsvFormulaGuard?: boolean;
   readonly onExport?: (format: ExportFormat, data: TData[]) => void | Promise<void>;
   readonly onExportStart?: (format: ExportFormat) => void;
   readonly onExportComplete?: (format: ExportFormat, success: boolean) => void;
@@ -99,6 +100,7 @@ export function DataTableToolbar<TData extends RowData>({
   enableExport = false,
   exportFormats = ['csv'],
   exportFileName = 'export',
+  enableCsvFormulaGuard,
   onExport,
   onExportStart,
   onExportComplete,
@@ -316,6 +318,7 @@ export function DataTableToolbar<TData extends RowData>({
               table={table}
               formats={exportFormats}
               fileName={exportFileName}
+              enableCsvFormulaGuard={enableCsvFormulaGuard}
               onExport={onExport}
               onExportStart={onExportStart}
               onExportComplete={onExportComplete}

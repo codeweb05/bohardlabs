@@ -171,6 +171,12 @@ needs nothing installed:
 Listing `xlsx` without the peer installed fails at click time rather than at build time,
 which is the cost of it being optional.
 
+CSV and Excel write each cell the way the table shows it: a column with its own `cell`
+exports the text that cell draws, and a date exports in `dateFormats.display`. JSON writes the
+records untouched. A CSV cell that a spreadsheet would run as a formula (one that opens with
+`=`, `+`, `-` or `@`) gets a leading `'`; `enableCsvFormulaGuard={false}` turns that off when
+the file is read by a program.
+
 Export sends the rows the table currently holds, which in server mode is one page. Exporting
 everything means fetching everything, so `onExport` hands the whole thing to you: it is
 called instead of the built-in writer, with the format and the rows, and you decide whether

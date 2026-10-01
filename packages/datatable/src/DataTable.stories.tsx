@@ -494,6 +494,9 @@ async function clickExport(canvasElement: HTMLElement, itemName: string) {
  * What gets exported is the rows the table currently holds, after filtering, which in
  * server mode is one page. **Export handler** below is the way out of that.
  *
+ * CSV and Excel write each cell the way the table shows it: the status as its label, the
+ * total with its currency sign. JSON writes the records as they came in.
+ *
  * There is no import counterpart, and that is deliberate rather than missing. Reading a
  * file means parsing, mapping columns onto fields, validating each row, showing what
  * failed and letting someone fix it, then writing. All of that belongs to your data layer,
@@ -523,7 +526,8 @@ export const Exporting: Story = {
       const csv = await downloads.files[0].blob.text();
       const [header, firstRow] = csv.split('\n');
       await expect(header).toBe('Reference,Customer,Status,Items,Total,Placed');
-      await expect(firstRow).toBe('SW-1000,Amara Okafor,pending,1,9.5,2026-03-01');
+      // Status and total are written the way their cells draw them, not as the values underneath.
+      await expect(firstRow).toBe(`SW-1000,Amara Okafor,${STATUS_LABEL.pending},1,$9.50,2026-03-01`);
 
       const json: unknown = JSON.parse(await downloads.files[1].blob.text());
       await expect(json).toEqual(ORDERS);

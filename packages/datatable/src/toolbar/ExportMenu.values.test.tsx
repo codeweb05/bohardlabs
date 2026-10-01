@@ -288,7 +288,7 @@ describe('ExportMenu, a header that is not plain text', () => {
     await waitFor(() => {
       expect(download.getContent()).not.toBe('');
     });
-    expect(download.getContent().split('\n')).toEqual(['Total,paid', '42.5,true']);
+    expect(download.getContent().split('\n')).toEqual(['\uFEFFTotal,paid', '42.5,true']);
   });
 });
 

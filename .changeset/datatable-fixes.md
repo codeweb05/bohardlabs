@@ -44,7 +44,7 @@ Selection and bulk actions:
 Export:
 
 - The file follows the sort on screen. Rows used to come out in the order they were loaded.
-- A `Date` cell is written as an ISO string. It was an empty cell.
+- A `Date` cell is written as a date, in `dateFormats.display`. It was an empty cell.
 - CSV headings are quoted like cells, so a heading with a comma no longer shifts every
   column, and a cell holding a lone carriage return is quoted.
 - `onExportStart` and `onExportComplete` are called. They were accepted and never used. A

@@ -3,10 +3,13 @@ import DescriptionIcon from '@mui/icons-material/Description';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import TableChartIcon from '@mui/icons-material/TableChart';
 import {ListItemIcon, ListItemText, MenuItem} from '@mui/material';
-import type {Row, Table} from '@tanstack/react-table';
+import {flexRender} from '@tanstack/react-table';
+import type {Column, Row, Table} from '@tanstack/react-table';
+import dayjs from 'dayjs';
 import {useState} from 'react';
 
 import {AnchoredMenu} from '../AnchoredMenu';
+import {useDateFormats} from '../config/ConfigContext';
 import {createDataRow, createHeaderRow, writeExcelFile} from '../export/excel';
 import {useLabels} from '../i18n';
 import {ToolbarIconButton} from '../ToolbarIconButton';
@@ -16,6 +19,7 @@ interface ExportMenuProps<TData extends RowData> {
   readonly table: Table<TData>;
   readonly formats?: readonly ExportFormat[];
   readonly fileName?: string;
+  readonly enableCsvFormulaGuard?: boolean;
   readonly onExport?: (format: ExportFormat, data: TData[]) => void | Promise<void>;
   readonly onExportStart?: (format: ExportFormat) => void;
   readonly onExportComplete?: (format: ExportFormat, success: boolean) => void;
@@ -25,12 +29,15 @@ export function ExportMenu<TData extends RowData>({
   table,
   formats = ['csv'],
   fileName = 'export',
+  enableCsvFormulaGuard = true,
   onExport,
   onExportStart,
   onExportComplete,
 }: Readonly<ExportMenuProps<TData>>) {
   const labels = useLabels();
+  const {display: dateFormat} = useDateFormats();
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+  const [drawing, setDrawing] = useState<Drawing<TData> | null>(null);
 
   const handleExport = async (format: ExportFormat) => {
     setAnchorEl(null);
@@ -49,34 +56,61 @@ export function ExportMenu<TData extends RowData>({
 
   const runExport = async (format: ExportFormat) => {
     // The sorted model is the filtered one put in the order on screen, across every page.
-    const rows = leafRows(table.getSortedRowModel().rows).map((row) => row.original);
+    const rows = leafRows(table.getSortedRowModel().rows);
+    const records = rows.map((row) => row.original);
 
     if (onExport) {
-      await onExport(format, rows);
+      await onExport(format, records);
       return;
     }
 
     // Default export implementations
     const columns = table
       .getAllLeafColumns()
-      .filter((col) => col.id !== 'select' && col.id !== 'actions' && col.getIsVisible())
-      .map((col) => ({
-        id: col.id,
-        columnDef: col.columnDef as DataTableColumnDef<TData>,
-      }));
+      .filter((col) => col.id !== 'select' && col.id !== 'actions' && col.getIsVisible());
+    // TanStack gives every column a `cell`, so the columns as they were passed in are what
+    // says which ones draw themselves.
+    const ownCell = new Set(table.options.columns.filter((def) => typeof def.cell === 'function').map((def) => def.id));
+    const drawnIds = columns.filter((column) => ownCell.has(column.id)).map((column) => column.id);
+    const drawn = await drawCells(rows, drawnIds);
+    const sheet: Sheet = {
+      headers: columns.map(columnHeader),
+      rows: rows.map((row, index) =>
+        columns.map(
+          (column) => drawn[index]?.[drawnIds.indexOf(column.id)] || valueText(row, column, index, dateFormat),
+        ),
+      ),
+    };
 
     switch (format) {
       case 'csv':
-        exportToCsv(rows, columns, fileName);
+        exportToCsv(sheet, fileName, enableCsvFormulaGuard);
         break;
       case 'xlsx':
-        await exportToXlsx(rows, columns, fileName);
+        await exportToXlsx(sheet, fileName);
         break;
       case 'json':
-        exportToJson(rows, fileName);
+        exportToJson(records, fileName);
         break;
     }
   };
+
+  // What a cell shows is only known once it is mounted: a chip's label, a component's
+  // output, anything read from a hook. So the cells are mounted out of sight, read, and
+  // taken down again.
+  const drawCells = (rows: Row<TData>[], columnIds: string[]) =>
+    columnIds.length === 0
+      ? Promise.resolve<string[][]>([])
+      : new Promise<string[][]>((resolve) => {
+          setDrawing({
+            rows,
+            columnIds,
+            onRead: (text) => {
+              setDrawing(null);
+              resolve(text);
+            },
+          });
+        });
 
   const getFormatIcon = (format: ExportFormat) => {
     switch (format) {
@@ -119,6 +153,8 @@ export function ExportMenu<TData extends RowData>({
           </MenuItem>
         ))}
       </AnchoredMenu>
+
+      {drawing && <DrawnCells {...drawing} />}
     </>
   );
 }
@@ -128,78 +164,106 @@ function leafRows<TData extends RowData>(rows: readonly Row<TData>[]): Row<TData
   return rows.flatMap((row) => (row.getIsGrouped() ? leafRows(row.subRows) : [row]));
 }
 
-function toExportString(value: unknown): string {
+/** One line of headings and one line per row, already as text. CSV and Excel write the same thing. */
+interface Sheet {
+  readonly headers: string[];
+  readonly rows: string[][];
+}
+
+function toExportString(value: unknown, dateFormat: string): string {
   if (value == null) return '';
-  if (Array.isArray(value)) return value.map(toExportString).join(', ');
-  if (value instanceof Date) return Number.isNaN(value.getTime()) ? '' : value.toISOString();
+  if (Array.isArray(value)) return value.map((item) => toExportString(item, dateFormat)).join(', ');
+  if (value instanceof Date) return Number.isNaN(value.getTime()) ? '' : dayjs(value).format(dateFormat);
   if (typeof value === 'object') return '';
   if (typeof value === 'string') return value;
   if (typeof value === 'number' || typeof value === 'boolean') return String(value);
   return '';
 }
 
-function getColumnValue<TData extends RowData>(
-  columnDef: DataTableColumnDef<TData>,
-  row: TData,
-  index: number,
-): string {
-  if (columnDef.accessorFn) return toExportString(columnDef.accessorFn(row, index));
-  if (columnDef.accessorKey) return toExportString(row[columnDef.accessorKey]);
+interface Drawing<TData extends RowData> {
+  readonly rows: Row<TData>[];
+  readonly columnIds: string[];
+  readonly onRead: (text: string[][]) => void;
+}
+
+/**
+ * The cells of the columns that draw themselves, mounted where nobody sees them so their
+ * text can be read. Mounted inside the table, so a cell finds the same theme, labels and
+ * providers it has on screen.
+ */
+function DrawnCells<TData extends RowData>({rows, columnIds, onRead}: Readonly<Drawing<TData>>) {
+  // Rendered once and taken down, so there is no second render for the compiler to save.
+  'use no memo';
+  return (
+    <div
+      hidden
+      ref={(node) => {
+        if (node)
+          onRead(Array.from(node.children, (line) => Array.from(line.children, (cell) => cell.textContent.trim())));
+      }}
+    >
+      {rows.map((row) => (
+        <div key={row.id}>
+          {row
+            .getAllCells()
+            .filter((cell) => columnIds.includes(cell.column.id))
+            .map((cell) => (
+              <span key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</span>
+            ))}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/** The value under a cell, for a column with no `cell` of its own or one that draws no text. */
+function valueText<TData extends RowData>(row: Row<TData>, column: Column<TData>, index: number, dateFormat: string) {
+  const columnDef = column.columnDef as DataTableColumnDef<TData>;
+  if (columnDef.accessorFn) return toExportString(columnDef.accessorFn(row.original, index), dateFormat);
+  if (columnDef.accessorKey) return toExportString(row.original[columnDef.accessorKey], dateFormat);
   return '';
 }
 
-// Helper functions for default export implementations
-function columnHeaders<TData extends RowData>(
-  columns: Array<{id: string; columnDef: DataTableColumnDef<TData>}>,
-): string[] {
-  return columns.map((col) => {
-    const header = col.columnDef.header;
-    return typeof header === 'string' ? header : col.id;
-  });
+function columnHeader<TData extends RowData>(column: Column<TData>): string {
+  const header = (column.columnDef as DataTableColumnDef<TData>).header;
+  return typeof header === 'string' ? header : column.id;
 }
 
-function columnValues<TData extends RowData>(
-  data: TData[],
-  columns: Array<{id: string; columnDef: DataTableColumnDef<TData>}>,
-): string[][] {
-  return data.map((row, rowIndex) => columns.map((col) => getColumnValue(col.columnDef, row, rowIndex)));
+/**
+ * A spreadsheet runs a cell that opens with one of these as a formula, so a value typed by
+ * one user can execute on the machine of whoever opens the export. A leading quote makes it
+ * text. A plain number is left alone: `-5` is a value, `-5+cmd` is not.
+ */
+function guardFormula(value: string): string {
+  return /^[=+\-@\t\r]/.test(value) && !Number.isFinite(Number(value)) ? `'${value}` : value;
 }
 
 function toCsvCell(value: string): string {
   return /[",\r\n]/.test(value) ? `"${value.replaceAll('"', '""')}"` : value;
 }
 
-function exportToCsv<TData extends RowData>(
-  data: TData[],
-  columns: Array<{id: string; columnDef: DataTableColumnDef<TData>}>,
-  fileName: string,
-) {
-  // Headings are cells too: one with a comma in it would shift every column under it.
-  const lines = [columnHeaders(columns), ...columnValues(data, columns)].map((values) =>
-    values.map(toCsvCell).join(','),
-  );
+/** Without a byte-order mark Excel reads a UTF-8 file as the system code page and garbles accents. */
+const UTF8_BOM = '\uFEFF';
 
-  const csvContent = lines.join('\n');
-  downloadFile(csvContent, `${fileName}.csv`, 'text/csv;charset=utf-8;');
+function exportToCsv(sheet: Sheet, fileName: string, guardFormulas: boolean) {
+  const toCell = guardFormulas ? (value: string) => toCsvCell(guardFormula(value)) : toCsvCell;
+  // Headings are cells too: one with a comma in it would shift every column under it.
+  const lines = [sheet.headers, ...sheet.rows].map((values) => values.map(toCell).join(','));
+
+  downloadFile(UTF8_BOM + lines.join('\n'), `${fileName}.csv`, 'text/csv;charset=utf-8;');
 }
 
-async function exportToXlsx<TData extends RowData>(
-  data: TData[],
-  columns: Array<{id: string; columnDef: DataTableColumnDef<TData>}>,
-  fileName: string,
-) {
-  const headers = columnHeaders(columns);
-  const rowValues = columnValues(data, columns);
-  const rows = rowValues.map((values) => createDataRow(values));
+async function exportToXlsx(sheet: Sheet, fileName: string) {
+  const rows = sheet.rows.map((values) => createDataRow(values));
 
-  const colWidths = headers.map((header, i) => {
+  const colWidths = sheet.headers.map((header, i) => {
     // v8 ignore start: every row holds one value per header, so `row[i]` is always a string
-    const maxDataLen = rowValues.reduce((max, row) => Math.max(max, row[i]?.length ?? 0), 0);
+    const maxDataLen = sheet.rows.reduce((max, row) => Math.max(max, row[i]?.length ?? 0), 0);
     // v8 ignore stop
     return {width: Math.min(Math.max(header.length, maxDataLen) + 2, 50)};
   });
 
-  await writeExcelFile([createHeaderRow(headers), ...rows], {fileName: `${fileName}.xlsx`, columns: colWidths});
+  await writeExcelFile([createHeaderRow(sheet.headers), ...rows], {fileName: `${fileName}.xlsx`, columns: colWidths});
 }
 
 function exportToJson<TData>(data: TData[], fileName: string) {

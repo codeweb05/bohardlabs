@@ -59,6 +59,7 @@ function createMockTable(
     getSortedRowModel: () => ({
       rows: data.map((d) => ({original: d, getIsGrouped: () => false})),
     }),
+    options: {columns: []},
     getAllLeafColumns: () =>
       columns.map((col) => ({
         id: col.id,
@@ -181,7 +182,7 @@ describe('ExportMenu', () => {
       // Header row present, data row present but value is empty
       const lines = getContent().split('\n');
       expect(lines).toHaveLength(2);
-      expect(lines[0]).toBe('Name');
+      expect(lines[0]).toBe('\uFEFFName');
       expect(lines[1]).toBe('');
     });
 
@@ -201,7 +202,7 @@ describe('ExportMenu', () => {
       // Object values should be empty, not [object Object]
       const lines = getContent().split('\n');
       expect(lines).toHaveLength(2);
-      expect(lines[0]).toBe('Nested');
+      expect(lines[0]).toBe('\uFEFFNested');
       expect(lines[1]).toBe('');
     });
 
@@ -225,7 +226,7 @@ describe('ExportMenu', () => {
       await user.click(screen.getByText(/csv/i));
 
       const lines = getContent().split('\n');
-      expect(lines[0]).toBe('Tags');
+      expect(lines[0]).toBe('\uFEFFTags');
       // Array values joined with ", " and CSV-quoted because of the comma
       expect(lines[1]).toBe('"a, b, c"');
     });
@@ -323,6 +324,7 @@ describe('ExportMenu', () => {
 
       const table = {
         getSortedRowModel: () => ({rows: [{original: {id: '1', name: 'Test'}, getIsGrouped: () => false}]}),
+        options: {columns: []},
         getAllLeafColumns: () => [
           {id: 'select', getIsVisible: () => true, columnDef: {accessorKey: 'id', header: 'Select'}},
           {id: 'name', getIsVisible: () => true, columnDef: {accessorKey: 'name', header: 'Name'}},
@@ -350,6 +352,7 @@ describe('ExportMenu', () => {
         getSortedRowModel: () => ({
           rows: [{original: {id: '1', name: 'Test', email: 'test@test.com'}, getIsGrouped: () => false}],
         }),
+        options: {columns: []},
         getAllLeafColumns: () => [
           {id: 'name', getIsVisible: () => true, columnDef: {accessorKey: 'name', header: 'Name'}},
           {id: 'email', getIsVisible: () => false, columnDef: {accessorKey: 'email', header: 'Email'}},

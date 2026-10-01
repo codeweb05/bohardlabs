@@ -207,8 +207,9 @@ export interface DataTableColumnDef<TData extends RowData, TValue = unknown> ext
 
   /**
    * Compute the value instead of reading a field, for a column that is derived
-   * (`(row) => row.firstName + ' ' + row.lastName`). It feeds client-side sorting,
-   * filtering and export, so a display-only transform belongs in `cell` instead.
+   * (`(row) => row.firstName + ' ' + row.lastName`). It feeds client-side sorting and
+   * filtering, and export when `cell` gives it no text, so a display-only transform belongs
+   * in `cell` instead.
    */
   readonly accessorFn?: (row: TData, index: number) => TValue;
 
@@ -295,9 +296,15 @@ export interface DataTableColumnDef<TData extends RowData, TValue = unknown> ext
    * Render the cell yourself. `props.row.original` is the record, `props.getValue()` the
    * accessed value.
    *
-   * Presentation only: sorting, filtering and export read the accessor, not this. So a
+   * Presentation only for sorting and filtering, which read the accessor, not this. So a
    * `cell` that formats a number keeps sorting numeric, while a `cell` that invents a value
-   * out of nothing will sort and export as something else.
+   * out of nothing will sort as something else.
+   *
+   * CSV and Excel export write the text this cell shows, so the file matches the screen: a
+   * chip exports its label, a formatted amount exports formatted. A cell that shows no text
+   * (an icon, a switch) exports the accessor value instead. To read that text the export
+   * mounts the cell once for every row, hidden, so a cell that fetches on mount will fetch
+   * for every row.
    */
   readonly cell?: (props: CellContext<TData, TValue>) => ReactNode;
 
@@ -861,6 +868,18 @@ export interface DataTableProps<TData extends RowData> extends TableEventHandler
   readonly exportFormats?: readonly ExportFormat[];
   /** File name without extension. Defaults to the table's id, or `table`. */
   readonly exportFileName?: string;
+  /**
+   * Stop a spreadsheet from running an exported CSV cell as a formula. A cell that opens
+   * with `=`, `+`, `-`, `@`, a tab or a carriage return gets a leading `'`, which Excel and
+   * Sheets read as "this is text". Plain numbers such as `-5` are left alone.
+   *
+   * Switch it off when the file is read by a program rather than opened by a person, and
+   * the extra quote would be data. Excel and JSON exports are not affected: neither runs a
+   * text cell.
+   *
+   * @defaultValue `true`
+   */
+  readonly enableCsvFormulaGuard?: boolean;
   /**
    * Take over the export. Called instead of the built-in writer, with the format and the
    * rows currently held, which is the hook for "ask the server for the full file instead".
