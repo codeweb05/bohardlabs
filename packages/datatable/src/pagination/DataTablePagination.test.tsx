@@ -28,12 +28,19 @@ interface HarnessProps extends Omit<ComponentProps<typeof DataTablePagination<Te
   readonly data?: TestRole[];
   /** Off for the one test that reads the page off the table instead of the provider. */
   readonly provideState?: boolean;
+  /** Exercises TanStack's unknown-page-count (`-1`) server mode. */
+  readonly manualPagination?: boolean;
 }
 
 const thirtyRoles = generateTestRoles(30);
 const noRoles: TestRole[] = [];
 
-function Harness({data = thirtyRoles, provideState = true, ...paginationProps}: Readonly<HarnessProps>) {
+function Harness({
+  data = thirtyRoles,
+  provideState = true,
+  manualPagination = false,
+  ...paginationProps
+}: Readonly<HarnessProps>) {
   'use no memo';
   const [pagination, setPagination] = useState<PaginationState>({pageIndex: 0, pageSize: 10});
   const table = useReactTable({
@@ -45,6 +52,7 @@ function Harness({data = thirtyRoles, provideState = true, ...paginationProps}: 
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
+    ...(manualPagination && {manualPagination: true, pageCount: -1}),
   });
 
   return (
@@ -107,6 +115,12 @@ describe('DataTablePagination with only a table', () => {
     expect(screen.getByRole('combobox', {name: 'Rows per page'})).toHaveTextContent('25');
     expect(screen.getByText('Page 1 of 1')).toBeInTheDocument();
     expect(screen.getByText('0 row(s) total.')).toBeInTheDocument();
+  });
+
+  it('keeps the current page when a manual table does not know its page count', () => {
+    render(<Harness manualPagination />);
+
+    expect(screen.getByText('Page 1 of 1')).toBeInTheDocument();
   });
 });
 

@@ -147,7 +147,10 @@ export function useTableInstance<TData extends RowData>(options: UseTableInstanc
       // `data` array. A filter resets the page itself, a sort should not move it, and
       // rows that go away are handled below.
       autoResetPageIndex: false,
-      pageCount: totalRows ? Math.ceil(totalRows / state.pagination.pageSize) : undefined,
+      // Zero is a known server total too. Leaving it as `undefined` tells TanStack the
+      // page count is unknown (`-1`), which makes an empty result impossible to normalize.
+      // `== null` because a consumer's API types may hand over a `null` total.
+      pageCount: totalRows == null ? undefined : Math.ceil(totalRows / state.pagination.pageSize),
       onPaginationChange: state.handlePaginationChange as (
         updater: PaginationState | ((prev: PaginationState) => PaginationState),
       ) => void,
@@ -211,7 +214,8 @@ export function useTableInstance<TData extends RowData>(options: UseTableInstanc
 /**
  * When the table does the paging and the rows under the current page go away (a delete, a
  * refetch that returns fewer), show the last page that still has rows instead of an empty
- * one. A server-driven table is left alone: its page is the server's to answer.
+ * one. A server-driven table is not handled here: its pager moves it back once the server
+ * reports a total the page is beyond.
  */
 function useLastPageWithRows<TData extends RowData>(table: Table<TData>, pageIndex: number, pagesItsOwnRows: boolean) {
   'use no memo';

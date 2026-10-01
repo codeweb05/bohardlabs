@@ -15,6 +15,7 @@ import {
   useTheme,
 } from '@mui/material';
 import type {Table} from '@tanstack/react-table';
+import {useEffect} from 'react';
 
 import {useTableCore, useTableUI} from '../DataTableContext.hooks';
 import {useLabels} from '../i18n';
@@ -61,7 +62,23 @@ export function DataTablePagination<TData extends RowData>({
   const filteredRowCount = table.getFilteredRowModel().rows.length;
   const rowCount = isManualMode ? (totalRows ?? filteredRowCount) : filteredRowCount;
 
-  const currentPage = pageIndex + 1;
+  // A persisted page or a deletion can leave a server table beyond its new last page.
+  // Move it back so the next request asks for a page that exists. Clamp the values painted
+  // before the effect runs as well, so the footer never says e.g. "Page 5 of 2".
+  //
+  // Only a count above zero says where the last page is. Zero is also what a consumer passes
+  // before the first response (`totalRows={data?.meta?.total ?? 0}`), and moving the page
+  // then would throw away the one that was stored.
+  const hasPages = pageCount > 0;
+  const lastPageIndex = Math.max(pageCount - 1, 0);
+  const displayedPageIndex = hasPages ? Math.min(pageIndex, lastPageIndex) : pageIndex;
+  useEffect(() => {
+    if (table.options.manualPagination && hasPages && pageIndex > lastPageIndex) {
+      table.setPageIndex(lastPageIndex);
+    }
+  }, [table, hasPages, pageIndex, lastPageIndex]);
+
+  const currentPage = displayedPageIndex + 1;
   const totalPages = pageCount > 0 ? pageCount : 1;
 
   // Compute can navigate based on current page index and total pages
@@ -105,8 +122,9 @@ export function DataTablePagination<TData extends RowData>({
     : [...pageSizeOptions, pageSize].sort((a, b) => a - b);
 
   // Calculate showing range
-  const startRow = pageIndex * pageSize + 1;
-  const endRow = Math.min((pageIndex + 1) * pageSize, rowCount);
+  const emptyManualPage = Boolean(table.options.manualPagination) && filteredRowCount === 0;
+  const startRow = rowCount === 0 || emptyManualPage ? 0 : displayedPageIndex * pageSize + 1;
+  const endRow = startRow === 0 ? 0 : Math.min((displayedPageIndex + 1) * pageSize, rowCount);
 
   return (
     <Box

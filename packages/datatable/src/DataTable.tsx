@@ -278,12 +278,14 @@ export function DataTable<TData extends RowData>(props: Readonly<DataTableProps<
   // Which rows were selected the last time the consumer was told. Compared by id, not by
   // count: swapping one row for another is a change, and a new `onSelectionChange`
   // identity on its own is not.
-  const reportedSelectionRef = useRef('');
+  const reportedSelectionRef = useRef(JSON.stringify([]));
 
   // Notify about selection changes
   useEffect(() => {
     if (!onSelectionChange) return;
-    const selection = Object.keys(state.rowSelection).sort().join('\n');
+    // Serialize the array rather than joining with a delimiter: row ids are arbitrary
+    // strings, so an empty id or one containing the delimiter must remain distinct.
+    const selection = JSON.stringify(Object.keys(state.rowSelection).sort());
     if (selection !== reportedSelectionRef.current) {
       reportedSelectionRef.current = selection;
       onSelectionChange(selectedRows);

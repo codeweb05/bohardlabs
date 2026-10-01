@@ -5,6 +5,7 @@ import {afterEach, describe, expect, it, vi} from 'vitest';
 
 import {DataTable} from './DataTable';
 import {DEFAULT_LABELS as L} from './i18n';
+import {getTableStateStorageKey} from './storage/storageKey';
 import {render} from './test/test-utils';
 import type {DataTableColumnDef} from './types';
 
@@ -225,6 +226,34 @@ describe('DataTable fed one page at a time', () => {
 
     expect(screen.queryByRole('button', {name: L.nextPage})).not.toBeInTheDocument();
   });
+
+  it('moves a stored page past the new total back to the last page', async () => {
+    const tableId = 'empty-page-past-total';
+    localStorage.setItem(getTableStateStorageKey(tableId), JSON.stringify({pageIndex: 4, pageSize: 10}));
+
+    render(<DataTable columns={columns} data={[]} totalRows={12} manualPagination tableId={tableId} pageSize={10} />);
+
+    expect(await screen.findByText(L.pageOf(2, 2))).toBeInTheDocument();
+    expect(screen.getByText(L.rowsDisplayed(0, 0, 12))).toBeInTheDocument();
+  });
+
+  it('keeps a stored page while the total is still zero', async () => {
+    // `totalRows={data?.meta?.total ?? 0}` is zero until the first response arrives, so a
+    // zero cannot be read as "there is no page five".
+    const tableId = 'stored-page-before-first-response';
+    localStorage.setItem(getTableStateStorageKey(tableId), JSON.stringify({pageIndex: 4, pageSize: 10}));
+    const onServerStateChange = vi.fn();
+    const props = {columns, manualPagination: true, tableId, pageSize: 10, onServerStateChange};
+
+    const view = render(<DataTable {...props} data={[]} totalRows={0} />);
+    await waitFor(() => expect(onServerStateChange).toHaveBeenCalled());
+    view.rerender(<DataTable {...props} data={fruits(10)} totalRows={100} />);
+
+    expect(await screen.findByText(L.pageOf(5, 10))).toBeInTheDocument();
+    expect(onServerStateChange).not.toHaveBeenCalledWith(
+      expect.objectContaining({pagination: {pageIndex: 0, pageSize: 10}}),
+    );
+  });
 });
 
 describe('onSelectionChange', () => {
@@ -248,6 +277,19 @@ describe('onSelectionChange', () => {
 
     await user.click(second);
     expect(onSelectionChange).toHaveBeenLastCalledWith([expect.objectContaining({name: 'Apple'})]);
+  });
+
+  it('reports a selected row whose id is an empty string', async () => {
+    const user = userEvent.setup();
+    const onSelectionChange = vi.fn();
+    const row: Fruit = {id: '', name: 'Nameless', colour: 'green'};
+    render(<DataTable columns={columns} data={[row]} enableRowSelection onSelectionChange={onSelectionChange} />);
+
+    const [, checkbox] = screen.getAllByRole('checkbox');
+    if (!checkbox) throw new Error('Expected a checkbox for the row');
+    await user.click(checkbox);
+
+    expect(onSelectionChange).toHaveBeenLastCalledWith([row]);
   });
 });
 
