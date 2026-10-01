@@ -103,8 +103,8 @@ function settleDebounce(): Promise<void> {
   });
 }
 
-const minInput = () => screen.getByPlaceholderText('Min');
-const maxInput = () => screen.getByPlaceholderText('Max');
+const minInput = () => screen.getByPlaceholderText('From');
+const maxInput = () => screen.getByPlaceholderText('To');
 
 describe('NumberFilter — range mode', () => {
   it('commits both bounds as a tuple', async () => {
@@ -233,7 +233,7 @@ describe('NumberFilter — single mode', () => {
     render(<Harness showRange={false} />);
 
     expect(screen.getByPlaceholderText('Enter value')).toBeInTheDocument();
-    expect(screen.queryByPlaceholderText('Min')).not.toBeInTheDocument();
+    expect(screen.queryByPlaceholderText('From')).not.toBeInTheDocument();
   });
 
   it('prefers an explicit placeholder', () => {
@@ -312,14 +312,11 @@ describe('NumberFilter — documented gaps', () => {
     expect(minInput()).toHaveValue('999');
   });
 
-  it('labels the range inputs with hardcoded English', () => {
-    // "Min" / "Max" are literals in the component. Every other user-facing string in
-    // this repo comes from `src/lib/i18n/locales/en.json`; these two do not, so they
-    // will not translate. Recorded here so the fix is not forgotten.
+  it('labels the range inputs from the table labels, so they translate', () => {
     render(<Harness />);
 
-    expect(screen.getByPlaceholderText('Min')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('Max')).toBeInTheDocument();
+    expect(screen.getByRole('textbox', {name: 'From'})).toHaveAttribute('placeholder', 'From');
+    expect(screen.getByRole('textbox', {name: 'To'})).toHaveAttribute('placeholder', 'To');
   });
 });
 

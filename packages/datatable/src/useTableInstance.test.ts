@@ -73,6 +73,7 @@ function renderTable(options: HarnessOptions = {}) {
       manualSorting: false,
       enableMultiSort: false,
       enableFiltering: true,
+      enableGlobalFilter: true,
       manualFiltering: false,
       enableColumnPinning: true,
       enableColumnResizing: true,

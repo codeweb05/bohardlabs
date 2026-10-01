@@ -1,12 +1,15 @@
 import type {SelectChangeEvent} from '@mui/material';
 import {FormControl, MenuItem, Select} from '@mui/material';
 import type {Column} from '@tanstack/react-table';
-import {useEffect, useState} from 'react';
+import {useState} from 'react';
 
 import {useLabels} from '../i18n';
+import {useDebouncedCommit} from './useDebouncedCommit';
 
 interface BooleanFilterProps<TData> {
   readonly column: Column<TData>;
+  /** The column's name, which is what a screen reader calls the control. */
+  readonly label?: string;
   readonly trueLabel?: string;
   readonly falseLabel?: string;
   readonly debounceMs?: number;
@@ -20,6 +23,7 @@ function booleanToString(value: boolean | undefined): string {
 
 export function BooleanFilter<TData>({
   column,
+  label,
   trueLabel,
   falseLabel,
   debounceMs = 500,
@@ -43,9 +47,8 @@ export function BooleanFilter<TData>({
     setLocalValue(booleanToString(filterValue));
   }
 
-  // Debounce filter changes
-  useEffect(() => {
-    const timer = setTimeout(() => {
+  useDebouncedCommit(
+    () => {
       // Convert string back to boolean for filter
       const currentFilterValue = booleanToString(filterValue);
       if (localValue !== currentFilterValue) {
@@ -55,10 +58,10 @@ export function BooleanFilter<TData>({
           column.setFilterValue(localValue === 'true');
         }
       }
-    }, debounceMs);
-
-    return () => clearTimeout(timer);
-  }, [localValue, filterValue, column, debounceMs]);
+    },
+    localValue,
+    debounceMs,
+  );
 
   const handleChange = (event: SelectChangeEvent<string>) => {
     setLocalValue(event.target.value);
@@ -70,6 +73,7 @@ export function BooleanFilter<TData>({
         value={localValue}
         onChange={handleChange}
         displayEmpty
+        slotProps={{input: {'aria-label': label}}}
         sx={{
           '& .MuiSelect-select': {
             fontSize: '0.8125rem',

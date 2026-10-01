@@ -2,17 +2,20 @@ import ClearIcon from '@mui/icons-material/Clear';
 import SearchIcon from '@mui/icons-material/Search';
 import {IconButton, InputAdornment, TextField} from '@mui/material';
 import type {Column} from '@tanstack/react-table';
-import {useEffect, useState} from 'react';
+import {useState} from 'react';
 
 import {useLabels} from '../i18n';
+import {useDebouncedCommit} from './useDebouncedCommit';
 
 interface TextFilterProps<TData> {
   readonly column: Column<TData>;
+  /** The column's name, which is what a screen reader calls the box. */
+  readonly label?: string;
   readonly placeholder?: string;
   readonly debounceMs?: number;
 }
 
-export function TextFilter<TData>({column, placeholder, debounceMs = 500}: Readonly<TextFilterProps<TData>>) {
+export function TextFilter<TData>({column, label, placeholder, debounceMs = 500}: Readonly<TextFilterProps<TData>>) {
   // `useReactTable` hands back the same column object on every render, so the compiler
   // would cache `getFilterValue()` against it and this box would never hear about a
   // filter cleared from the toolbar. Rendering one text field costs nothing to repeat.
@@ -39,17 +42,16 @@ export function TextFilter<TData>({column, placeholder, debounceMs = 500}: Reado
     }
   }
 
-  // Debounce filter changes
-  useEffect(() => {
-    const timer = setTimeout(() => {
+  useDebouncedCommit(
+    () => {
       if (localValue !== (column.getFilterValue() ?? '')) {
         setCommitted(localValue);
         column.setFilterValue(localValue || undefined);
       }
-    }, debounceMs);
-
-    return () => clearTimeout(timer);
-  }, [localValue, column, debounceMs]);
+    },
+    localValue,
+    debounceMs,
+  );
 
   const handleClear = () => {
     setLocalValue('');
@@ -65,6 +67,7 @@ export function TextFilter<TData>({column, placeholder, debounceMs = 500}: Reado
       onChange={(e) => setLocalValue(e.target.value)}
       placeholder={placeholder ?? labels.search}
       slotProps={{
+        htmlInput: {'aria-label': label},
         input: {
           startAdornment: (
             <InputAdornment position="start">
@@ -73,7 +76,7 @@ export function TextFilter<TData>({column, placeholder, debounceMs = 500}: Reado
           ),
           endAdornment: localValue ? (
             <InputAdornment position="end">
-              <IconButton size="small" onClick={handleClear} edge="end">
+              <IconButton size="small" onClick={handleClear} edge="end" aria-label={labels.reset}>
                 <ClearIcon sx={{fontSize: '0.875rem'}} />
               </IconButton>
             </InputAdornment>

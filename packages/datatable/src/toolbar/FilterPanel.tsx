@@ -13,7 +13,7 @@ import {
   useTheme,
 } from '@mui/material';
 import type {Column, ColumnFiltersState, Table} from '@tanstack/react-table';
-import {useState} from 'react';
+import {useId, useState} from 'react';
 
 import {BooleanFilter} from '../filters/BooleanFilter';
 import {DateFilter} from '../filters/DateFilter';
@@ -43,6 +43,7 @@ export function FilterPanel<TData extends RowData>({
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [open, setOpen] = useState(false);
+  const titleId = useId();
 
   // Build a lookup of fresh columnDefs keyed by id so renderFilter sees latest
   // filterConfig (e.g. async-loaded select options) on each render. The table's
@@ -62,7 +63,7 @@ export function FilterPanel<TData extends RowData>({
   const activeFilterCount = columnFilters.length;
 
   // Render filter for a column based on its type
-  const renderFilter = (column: Column<TData>) => {
+  const renderFilter = (column: Column<TData>, label: string) => {
     const columnDef = (columnDefById.get(column.id) ?? column.columnDef) as DataTableColumnDef<TData>;
     const filterConfig = columnDef.filterConfig;
     const filterType = filterConfig?.type ?? 'text';
@@ -70,21 +71,27 @@ export function FilterPanel<TData extends RowData>({
     switch (filterType) {
       case 'select':
         return (
-          <SelectFilter column={column} options={filterConfig?.options ?? []} placeholder={filterConfig?.placeholder} />
+          <SelectFilter
+            column={column}
+            label={label}
+            options={filterConfig?.options ?? []}
+            placeholder={filterConfig?.placeholder}
+          />
         );
       case 'number':
         return (
           <NumberFilter
             column={column}
+            label={label}
             min={filterConfig?.min}
             max={filterConfig?.max}
             placeholder={filterConfig?.placeholder}
           />
         );
       case 'date':
-        return <DateFilter column={column} placeholder={filterConfig?.placeholder} />;
+        return <DateFilter column={column} label={label} placeholder={filterConfig?.placeholder} />;
       case 'boolean':
-        return <BooleanFilter column={column} />;
+        return <BooleanFilter column={column} label={label} />;
       case 'custom':
         if (filterConfig?.renderFilter) {
           return (
@@ -97,10 +104,10 @@ export function FilterPanel<TData extends RowData>({
             </>
           );
         }
-        return <TextFilter column={column} placeholder={filterConfig?.placeholder} />;
+        return <TextFilter column={column} label={label} placeholder={filterConfig?.placeholder} />;
       case 'text':
       default:
-        return <TextFilter column={column} placeholder={filterConfig?.placeholder} />;
+        return <TextFilter column={column} label={label} placeholder={filterConfig?.placeholder} />;
     }
   };
 
@@ -122,6 +129,7 @@ export function FilterPanel<TData extends RowData>({
             <CloseIcon fontSize="small" />
           </IconButton>
           <Typography
+            id={titleId}
             variant="subtitle1"
             sx={{
               fontWeight: 600,
@@ -165,7 +173,7 @@ export function FilterPanel<TData extends RowData>({
                 >
                   {label}
                 </Typography>
-                {renderFilter(column)}
+                {renderFilter(column, label)}
               </Box>
             );
           })}
@@ -207,6 +215,7 @@ export function FilterPanel<TData extends RowData>({
         onClose={() => setOpen(false)}
         slotProps={{
           paper: {
+            'aria-labelledby': titleId,
             sx: {
               width: isMobile ? '100%' : 320,
               maxHeight: isMobile ? '80vh' : '100%',

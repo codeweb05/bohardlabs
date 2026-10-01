@@ -46,7 +46,8 @@ function createMockColumn(filterValue?: unknown) {
 // ---------------------------------------------------------------------------
 
 function getPickerInputs() {
-  return screen.getAllByRole('group');
+  // The range wraps its two pickers in a group of its own, named after the column.
+  return screen.getAllByRole('group').filter((group) => !group.querySelector('[role="group"]'));
 }
 
 function getCalendarButtons() {

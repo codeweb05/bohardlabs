@@ -2,17 +2,20 @@ import ClearIcon from '@mui/icons-material/Clear';
 import type {SelectChangeEvent} from '@mui/material';
 import {Box, Chip, FormControl, IconButton, InputAdornment, MenuItem, Select} from '@mui/material';
 import type {Column} from '@tanstack/react-table';
-import {useEffect, useState} from 'react';
+import {useState} from 'react';
 
 import {useLabels} from '../i18n';
 import type {FilterOption} from '../types';
 import {optionMenuItems} from './optionMenuItems';
+import {useDebouncedCommit} from './useDebouncedCommit';
 
 type SelectFilterValue = string | number | (string | number)[];
 
 interface SelectFilterProps<TData> {
   readonly column: Column<TData>;
   readonly options: readonly FilterOption[];
+  /** The column's name, which is what a screen reader calls the control. */
+  readonly label?: string;
   readonly placeholder?: string;
   readonly multiple?: boolean;
   readonly debounceMs?: number;
@@ -21,6 +24,7 @@ interface SelectFilterProps<TData> {
 export function SelectFilter<TData>({
   column,
   options,
+  label,
   placeholder,
   multiple = false,
   debounceMs = 500,
@@ -48,9 +52,8 @@ export function SelectFilter<TData>({
     setLocalValue(computedValue);
   }
 
-  // Debounce filter changes
-  useEffect(() => {
-    const timer = setTimeout(() => {
+  useDebouncedCommit(
+    () => {
       if (multiple) {
         const arrayValue = localValue as (string | number)[];
         const currentValue = (filterValue as (string | number)[]) ?? [];
@@ -59,17 +62,18 @@ export function SelectFilter<TData>({
         if (hasChanged) {
           column.setFilterValue(arrayValue.length > 0 ? arrayValue : undefined);
         }
-      } else {
-        if (localValue !== filterValue) {
-          // Only the empty string means "no selection". A truthiness check drops the
-          // option whose value is 0, which is a real choice on numeric enums.
-          column.setFilterValue(localValue === '' ? undefined : localValue);
-        }
+        // Compared against what the control shows for the filter, not the raw filter: no
+        // filter is `undefined` and shows as `''`, and writing that back as a change resets
+        // the page for a drawer that was only opened.
+      } else if (localValue !== computedValue) {
+        // Only the empty string means "no selection". A truthiness check drops the
+        // option whose value is 0, which is a real choice on numeric enums.
+        column.setFilterValue(localValue === '' ? undefined : localValue);
       }
-    }, debounceMs);
-
-    return () => clearTimeout(timer);
-  }, [localValue, filterValue, column, multiple, debounceMs]);
+    },
+    localValue,
+    debounceMs,
+  );
 
   const handleChange = (event: SelectChangeEvent<SelectFilterValue>) => {
     setLocalValue(event.target.value);
@@ -88,6 +92,7 @@ export function SelectFilter<TData>({
         onChange={handleChange}
         multiple={multiple}
         displayEmpty
+        slotProps={{input: {'aria-label': label}}}
         renderValue={(selected) => {
           if (selected === '' || selected == null || (Array.isArray(selected) && selected.length === 0)) {
             return (
@@ -123,6 +128,7 @@ export function SelectFilter<TData>({
             <InputAdornment position="end" sx={{mr: 2}}>
               <IconButton
                 size="small"
+                aria-label={labels.reset}
                 onClick={(e) => {
                   e.stopPropagation();
                   handleClear();

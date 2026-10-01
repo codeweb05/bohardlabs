@@ -34,7 +34,7 @@ export function TableBody<TData extends RowData>({
 }: Readonly<TableBodyProps<TData>>) {
   // Use granular hooks instead of merged context (P0 fix: 1.1)
   const {dataVersion, columnsVersion} = useTableCore<TData>();
-  const {expanded, pagination, columnVisibility, columnOrder} = useTableUI();
+  const {expanded, pagination, columnVisibility, columnOrder, sorting} = useTableUI();
 
   // Compute rows from table's row model.
   // P0 fix (2.2): Removed rowSelection from deps — selection is a per-row rendering concern,
@@ -45,10 +45,13 @@ export function TableBody<TData extends RowData>({
   // `columnsVersion` is a dep for the same reason as `dataVersion`: the cell renderers come
   // off the column definitions, so a `columns` swap has to invalidate the rows too or the
   // body keeps rendering with the previous set's cells.
+  // `sorting` is a dep because a client-side sort reorders the rows and changes nothing
+  // else in this list. A filter needs no entry of its own: it resets the page, and that
+  // hands this memo a new `pagination`.
   // `table` is a stable identity; the rest of the list is the compiler-visible signature.
   // Held in a variable so the compiler cannot prove the callback ignores those inputs and
   // drop them. Inlining the array made column swaps and similar updates paint stale cells.
-  const rowDeps = [table, pagination, expanded, columnVisibility, columnOrder, dataVersion, columnsVersion];
+  const rowDeps = [table, pagination, expanded, columnVisibility, columnOrder, sorting, dataVersion, columnsVersion];
   // eslint-disable-next-line react-hooks/exhaustive-deps, react-hooks/use-memo
   const rows = useMemo(() => table.getRowModel().rows, rowDeps);
 

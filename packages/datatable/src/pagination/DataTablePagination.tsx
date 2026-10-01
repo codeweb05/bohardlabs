@@ -6,7 +6,7 @@ import type {SelectChangeEvent} from '@mui/material';
 import {Box, FormControl, IconButton, MenuItem, Select, Typography, useMediaQuery, useTheme} from '@mui/material';
 import type {Table} from '@tanstack/react-table';
 
-import {useTableUI} from '../DataTableContext.hooks';
+import {useTableCore, useTableUI} from '../DataTableContext.hooks';
 import {useLabels} from '../i18n';
 import type {RowData} from '../types';
 import {DEFAULT_PAGE_SIZE_OPTIONS} from '../types';
@@ -28,12 +28,18 @@ export function DataTablePagination<TData extends RowData>({
   showPageInfo = true,
   showFirstLastButtons = true,
 }: Readonly<DataTablePaginationProps<TData>>) {
+  // The page count and the row count are read off the table, which TanStack mutates in
+  // place. The compiler sees one stable `table` and would serve the counts from mount.
+  'use no memo';
   const labels = useLabels();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   // P0 fix (1.1): Use granular hook instead of merged context
   const {pagination} = useTableUI();
+  // Read for the subscription alone: rows arriving change the counts below and nothing
+  // else this component is given.
+  useTableCore<TData>();
 
   // Use pagination from context if available, otherwise fall back to table state
   const {pageIndex, pageSize} = pagination ?? table.getState().pagination;
@@ -81,6 +87,12 @@ export function DataTablePagination<TData extends RowData>({
       });
     }
   };
+
+  // A size that came from the `pageSize` prop or from storage may not be among the options,
+  // and a select whose value matches no item renders blank.
+  const sizes = pageSizeOptions.includes(pageSize)
+    ? pageSizeOptions
+    : [...pageSizeOptions, pageSize].sort((a, b) => a - b);
 
   // Calculate showing range
   const startRow = pageIndex * pageSize + 1;
@@ -157,7 +169,7 @@ export function DataTablePagination<TData extends RowData>({
                   },
                 }}
               >
-                {pageSizeOptions.map((size) => (
+                {sizes.map((size) => (
                   <MenuItem key={size} value={size}>
                     {size}
                   </MenuItem>

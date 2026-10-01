@@ -5,6 +5,8 @@ import {chromeColumn} from './chromeColumn';
 import {DataTableConfigProvider} from './config/ConfigContext';
 import {TableContainer} from './core/TableContainer';
 import {DataTableProvider} from './DataTableContext';
+import {DATE_API_FORMAT} from './filters/dateFormats';
+import {defaultFilterFn} from './filters/filterFns';
 import {useIdentityVersion} from './hooks/useIdentityVersion';
 import {DataTableLabelsProvider} from './i18n';
 import {CardView} from './mobile/CardView';
@@ -196,6 +198,8 @@ export function DataTable<TData extends RowData>(props: Readonly<DataTableProps<
     data,
   });
 
+  const valueFormat = dateFormats?.value ?? DATE_API_FORMAT;
+
   // Build columns with selection column if enabled
   const tableColumns = useMemo(() => {
     const cols: DataTableColumnDef<TData>[] = [];
@@ -208,14 +212,20 @@ export function DataTable<TData extends RowData>(props: Readonly<DataTableProps<
       cols.push(chromeColumn<TData>('select', 48));
     }
 
-    const columnsWithDefaults = columns.map((col) => ({
-      ...col,
-      size: col.size ?? 150,
-      minSize: col.minSize ?? 50,
-      maxSize: col.maxSize ?? 500,
-      enableResizing: col.enableResizing !== false,
-      enableHiding: col.enableHiding !== false,
-    }));
+    const columnsWithDefaults = columns.map((col) => {
+      // Only where the column brought none of its own. Spread in rather than assigned,
+      // because an explicit `filterFn: undefined` switches TanStack's automatic choice off.
+      const filterFn = col.filterFn ?? defaultFilterFn<TData>(col.filterConfig?.type, valueFormat);
+      return {
+        ...col,
+        ...(filterFn && {filterFn}),
+        size: col.size ?? 150,
+        minSize: col.minSize ?? 50,
+        maxSize: col.maxSize ?? 500,
+        enableResizing: col.enableResizing !== false,
+        enableHiding: col.enableHiding !== false,
+      };
+    });
     cols.push(...columnsWithDefaults);
 
     if (rowActions && rowActions.length > 0) {
@@ -223,7 +233,7 @@ export function DataTable<TData extends RowData>(props: Readonly<DataTableProps<
     }
 
     return cols;
-  }, [columns, enableExpanding, enableRowSelection, rowActions]);
+  }, [columns, enableExpanding, enableRowSelection, rowActions, valueFormat]);
 
   // A counter over `tableColumns` identity, mirroring `dataVersion` in useDataTableState.
   // Headers and cell renderers both come off the column definitions and are read through
@@ -244,6 +254,7 @@ export function DataTable<TData extends RowData>(props: Readonly<DataTableProps<
     manualSorting,
     enableMultiSort,
     enableFiltering,
+    enableGlobalFilter,
     manualFiltering,
     enableColumnPinning,
     enableColumnResizing,
@@ -261,15 +272,17 @@ export function DataTable<TData extends RowData>(props: Readonly<DataTableProps<
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [table, state.rowSelection, needsSelectedRows]);
 
-  // Track previous selection size to detect changes efficiently
-  const prevSelectionSizeRef = useRef(0);
+  // Which rows were selected the last time the consumer was told. Compared by id, not by
+  // count: swapping one row for another is a change, and a new `onSelectionChange`
+  // identity on its own is not.
+  const reportedSelectionRef = useRef('');
 
   // Notify about selection changes
   useEffect(() => {
     if (!onSelectionChange) return;
-    const currentSize = Object.keys(state.rowSelection).length;
-    if (currentSize !== prevSelectionSizeRef.current) {
-      prevSelectionSizeRef.current = currentSize;
+    const selection = Object.keys(state.rowSelection).sort().join('\n');
+    if (selection !== reportedSelectionRef.current) {
+      reportedSelectionRef.current = selection;
       onSelectionChange(selectedRows);
     }
   }, [state.rowSelection, selectedRows, onSelectionChange]);
@@ -283,6 +296,10 @@ export function DataTable<TData extends RowData>(props: Readonly<DataTableProps<
   // Determine what to render
   const showMobileView = isMobile && enableMobileCardView;
   const hasData = data.length > 0;
+  // A server page can come back empty while the table is not: the last row of the last
+  // page was deleted, or a stored page index points past the end. The pager is then the
+  // only way back.
+  const hasOtherPages = manualPagination && (state.pagination.pageIndex > 0 || (totalRows ?? 0) > 0);
   const hasSelection = Object.keys(state.rowSelection).length > 0;
   const showBulkActions = bulkActions && bulkActions.length > 0 && hasSelection && selectedRows.length > 0;
 
@@ -432,7 +449,7 @@ export function DataTable<TData extends RowData>(props: Readonly<DataTableProps<
             </Box>
 
             {/* Pagination */}
-            {showPagination && enablePagination && hasData && !isLoading && !isError && (
+            {showPagination && enablePagination && (hasData || hasOtherPages) && !isLoading && !isError && (
               <DataTablePagination table={table} totalRows={totalRows} pageSizeOptions={pageSizeOptions} />
             )}
           </Paper>

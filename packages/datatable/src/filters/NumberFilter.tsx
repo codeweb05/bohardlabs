@@ -7,6 +7,8 @@ import {useLabels} from '../i18n';
 
 interface NumberFilterProps<TData> {
   readonly column: Column<TData>;
+  /** The column's name, which is what a screen reader calls the control. */
+  readonly label?: string;
   readonly placeholder?: string;
   readonly min?: number;
   readonly max?: number;
@@ -58,6 +60,11 @@ function commitFilterValue<TData>(column: Column<TData>, next: NumberFilterValue
   }
 }
 
+/** A filter value as something two renders can compare. */
+function keyOf(value: NumberFilterValue): string {
+  return JSON.stringify(value ?? null);
+}
+
 /** Returns the local display string for a synced numeric field, preserving partial inputs like "1." */
 function syncedField(localValue: string, externalValue: number | null): string {
   if (externalValue == null) return '';
@@ -88,6 +95,7 @@ function getSyncedValues(
 
 export function NumberFilter<TData>({
   column,
+  label,
   placeholder,
   min: minLimit,
   debounceMs = 500,
@@ -132,12 +140,21 @@ export function NumberFilter<TData>({
     isRangeModeRef.current = isRangeMode;
   });
 
+  const filterValueKey = keyOf(filterValue);
+
+  // The last value this filter pushed out. Anything else arriving in `filterValue` came
+  // from somewhere else (a toolbar reset, a restored URL) and is the only thing allowed to
+  // overwrite the boxes: echoing our own debounced commit back into them drops the digit
+  // typed while that commit was in flight.
+  const [committedKey, setCommittedKey] = useState(filterValueKey);
+
   // Flush pending value immediately — used on blur and on unmount
   const flushFilter = () => {
     const next = isRangeModeRef.current
       ? toRangeValue(localMinRef.current, localMaxRef.current)
       : (toBound(localSingleRef.current) ?? undefined);
 
+    setCommittedKey(keyOf(next));
     commitFilterValue(columnRef.current, next);
   };
 
@@ -149,15 +166,16 @@ export function NumberFilter<TData>({
   // Sync local values with filter value (handles external clears and URL state restores).
   // Uses "adjusting state during render" pattern (React-recommended) instead of useEffect
   // to avoid set-state-in-effect. Preserves partial inputs (e.g. "1.") that parse to the same number.
-  const filterValueKey = JSON.stringify(filterValue ?? null);
   const [prevFilterValueKey, setPrevFilterValueKey] = useState(filterValueKey);
 
-  if (filterValueKey !== prevFilterValueKey) {
-    setPrevFilterValueKey(filterValueKey);
+  const changed = filterValueKey !== prevFilterValueKey;
+  if (changed) setPrevFilterValueKey(filterValueKey);
+  if (changed && filterValueKey !== committedKey) {
+    setCommittedKey(filterValueKey);
     const synced = getSyncedValues(filterValue, localMin, localMax, localSingle);
-    if (synced.min !== localMin) setLocalMin(synced.min);
-    if (synced.max !== localMax) setLocalMax(synced.max);
-    if (synced.single !== localSingle) setLocalSingle(synced.single);
+    setLocalMin(synced.min);
+    setLocalMax(synced.max);
+    setLocalSingle(synced.single);
   }
 
   // Debounce filter changes for range mode.
@@ -168,7 +186,9 @@ export function NumberFilter<TData>({
     if (!isRangeMode) return;
 
     const timer = setTimeout(() => {
-      commitFilterValue(columnRef.current, toRangeValue(localMin, localMax));
+      const next = toRangeValue(localMin, localMax);
+      setCommittedKey(keyOf(next));
+      commitFilterValue(columnRef.current, next);
     }, debounceMs);
 
     return () => clearTimeout(timer);
@@ -180,7 +200,9 @@ export function NumberFilter<TData>({
     if (isRangeMode) return;
 
     const timer = setTimeout(() => {
-      commitFilterValue(columnRef.current, toBound(localSingle) ?? undefined);
+      const next = toBound(localSingle) ?? undefined;
+      setCommittedKey(keyOf(next));
+      commitFilterValue(columnRef.current, next);
     }, debounceMs);
 
     return () => clearTimeout(timer);
@@ -190,6 +212,7 @@ export function NumberFilter<TData>({
     setLocalMin('');
     setLocalMax('');
     setLocalSingle('');
+    setCommittedKey(keyOf(undefined));
     column.setFilterValue(undefined);
   };
 
@@ -209,10 +232,11 @@ export function NumberFilter<TData>({
         onBlur={flushFilter}
         placeholder={placeholder ?? labels.enterValue}
         slotProps={{
+          htmlInput: {'aria-label': label},
           input: {
             endAdornment: hasValue ? (
               <InputAdornment position="end">
-                <IconButton size="small" onClick={handleClear} edge="end">
+                <IconButton size="small" onClick={handleClear} edge="end" aria-label={labels.reset}>
                   <ClearIcon sx={{fontSize: '0.875rem'}} />
                 </IconButton>
               </InputAdornment>
@@ -230,7 +254,7 @@ export function NumberFilter<TData>({
   }
 
   return (
-    <Box sx={{display: 'flex', gap: 1, alignItems: 'center'}}>
+    <Box role="group" aria-label={label} sx={{display: 'flex', gap: 1, alignItems: 'center'}}>
       <TextField
         size="small"
         type="text"
@@ -240,7 +264,8 @@ export function NumberFilter<TData>({
           if (isValidPartialNumber(e.target.value)) setLocalMin(e.target.value);
         }}
         onBlur={flushFilter}
-        placeholder="Min"
+        placeholder={labels.from}
+        slotProps={{htmlInput: {'aria-label': labels.from}}}
         sx={{
           flex: 1,
           '& .MuiInputBase-input': {
@@ -259,7 +284,8 @@ export function NumberFilter<TData>({
           if (isValidPartialNumber(e.target.value)) setLocalMax(e.target.value);
         }}
         onBlur={flushFilter}
-        placeholder="Max"
+        placeholder={labels.to}
+        slotProps={{htmlInput: {'aria-label': labels.to}}}
         sx={{
           flex: 1,
           '& .MuiInputBase-input': {
@@ -269,7 +295,7 @@ export function NumberFilter<TData>({
         }}
       />
       {hasValue && (
-        <IconButton size="small" onClick={handleClear}>
+        <IconButton size="small" onClick={handleClear} aria-label={labels.reset}>
           <ClearIcon sx={{fontSize: '0.875rem'}} />
         </IconButton>
       )}

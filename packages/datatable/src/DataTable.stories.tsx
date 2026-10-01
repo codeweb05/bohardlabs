@@ -266,18 +266,6 @@ const filterTypeColumns: DataTableColumnDef<Order>[] = [
 export const FilterTypes: Story = {
   parameters: {
     ...showcase('enableFiltering', 'initialFilters'),
-    // The play function leaves the drawer open, so axe sees it, and it finds two gaps in the
-    // table itself: the drawer has no accessible name, and neither do the select and boolean
-    // dropdowns (the column name above each is plain text, not a label). Both need a source
-    // change. These two rules are off for this story until then, and only for this story.
-    a11y: {
-      config: {
-        rules: [
-          {id: 'aria-dialog-name', enabled: false},
-          {id: 'aria-input-field-name', enabled: false},
-        ],
-      },
-    },
   },
   args: {
     columns: filterTypeColumns,
@@ -305,10 +293,12 @@ export const FilterTypes: Story = {
       await expect(drawer.getByText(heading)).toBeInTheDocument();
     }
     await expect(drawer.getByPlaceholderText('Customer name')).toBeInTheDocument();
-    await expect(drawer.getByPlaceholderText('Min')).toBeInTheDocument();
-    await expect(drawer.getByPlaceholderText('Max')).toBeInTheDocument();
-    // Status and "Has a note" are the two dropdowns.
-    await expect(drawer.getAllByRole('combobox')).toHaveLength(2);
+    // Every control answers to its column's name; a range adds which end.
+    const items = within(drawer.getByRole('group', {name: 'Items'}));
+    await expect(items.getByRole('textbox', {name: 'From'})).toBeInTheDocument();
+    await expect(items.getByRole('textbox', {name: 'To'})).toBeInTheDocument();
+    await expect(drawer.getByRole('combobox', {name: 'Status'})).toBeInTheDocument();
+    await expect(drawer.getByRole('combobox', {name: 'Has a note'})).toBeInTheDocument();
     // One picker for "Placed", which holds a single date, and a from/to pair for "Due".
     await expect(drawer.getAllByRole('button', {name: /choose date/i})).toHaveLength(3);
     await expect(drawer.getByRole('button', {name: /selected date is Mar 5, 2026/i})).toBeInTheDocument();

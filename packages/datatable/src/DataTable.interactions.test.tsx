@@ -521,7 +521,7 @@ describe('DataTable – Feature Interactions', () => {
   // =========================================================================
 
   describe('Pagination + Sorting', () => {
-    it('sorting preserves current page position (client-side)', async () => {
+    it('sorting returns to the first page (client-side)', async () => {
       const data = makePagedData(25);
       render(<DataTable columns={testColumns} data={data} enablePagination enableSorting pageSize={10} />);
 
@@ -531,12 +531,11 @@ describe('DataTable – Feature Interactions', () => {
         expect(screen.getByText(/page 2/i)).toBeInTheDocument();
       });
 
-      // Sort by name – page should stay on 2
+      // Sort by name: the order changed under the page, so the table shows the top of it
       await userEvent.click(screen.getByText('Name'));
 
-      // Should still be on page 2 (TanStack Table preserves page on client sort)
       await waitFor(() => {
-        expect(screen.getByText(/page 2/i)).toBeInTheDocument();
+        expect(screen.getByText(/page 1 of/i)).toBeInTheDocument();
       });
     });
 

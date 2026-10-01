@@ -1,4 +1,5 @@
 import type {
+  ColumnFiltersState,
   ExpandedState,
   PaginationState,
   Row,
@@ -23,6 +24,9 @@ import type {useDataTableState} from './useDataTableState';
 
 type DataTableState = ReturnType<typeof useDataTableState>;
 
+/** What the table filters by when column filters are off: stored ones stay unapplied. */
+const NO_FILTERS: ColumnFiltersState = [];
+
 export interface UseTableInstanceOptions<TData extends RowData> {
   readonly data: readonly TData[];
   readonly tableColumns: readonly DataTableColumnDef<TData>[];
@@ -38,6 +42,7 @@ export interface UseTableInstanceOptions<TData extends RowData> {
   readonly enableMultiSort: boolean;
 
   readonly enableFiltering: boolean;
+  readonly enableGlobalFilter: boolean;
   readonly manualFiltering: boolean;
 
   readonly enableColumnPinning: boolean;
@@ -64,6 +69,7 @@ export function useTableInstance<TData extends RowData>(options: UseTableInstanc
     manualSorting,
     enableMultiSort,
     enableFiltering,
+    enableGlobalFilter,
     manualFiltering,
     enableColumnPinning,
     enableColumnResizing,
@@ -82,9 +88,11 @@ export function useTableInstance<TData extends RowData>(options: UseTableInstanc
     () => (enableSorting && !manualSorting ? getSortedRowModel() : undefined),
     [enableSorting, manualSorting],
   );
+  // The search box is a filter too, and it stays on screen when column filters are off.
+  const filters = enableFiltering || enableGlobalFilter;
   const filteredRowModel = useMemo(
-    () => (enableFiltering && !manualFiltering ? getFilteredRowModel() : undefined),
-    [enableFiltering, manualFiltering],
+    () => (filters && !manualFiltering ? getFilteredRowModel() : undefined),
+    [filters, manualFiltering],
   );
   const expandedRowModel = useMemo(() => getExpandedRowModel(), []);
   const groupedRowModel = useMemo(() => (enableGrouping ? getGroupedRowModel() : undefined), [enableGrouping]);
@@ -117,7 +125,7 @@ export function useTableInstance<TData extends RowData>(options: UseTableInstanc
     columns: tableColumns as DataTableColumnDef<TData>[],
     state: {
       sorting: state.sorting,
-      columnFilters: state.columnFilters,
+      columnFilters: enableFiltering ? state.columnFilters : NO_FILTERS,
       globalFilter: state.globalFilter,
       pagination: state.pagination,
       columnOrder,
@@ -150,7 +158,7 @@ export function useTableInstance<TData extends RowData>(options: UseTableInstanc
       ) => void,
     }),
 
-    ...(enableFiltering && {
+    ...(filters && {
       getFilteredRowModel: filteredRowModel,
       manualFiltering,
       onColumnFiltersChange: state.handleFiltersChange,

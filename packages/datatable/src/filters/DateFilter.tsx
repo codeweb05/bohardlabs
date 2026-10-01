@@ -5,13 +5,22 @@ import {DatePicker} from '@mui/x-date-pickers';
 import type {Column} from '@tanstack/react-table';
 import type {Dayjs} from 'dayjs';
 import dayjs from 'dayjs';
-import {useEffect, useState} from 'react';
+import customParseFormat from 'dayjs/plugin/customParseFormat.js';
+import {useState} from 'react';
 
 import {useDateFormats} from '../config/ConfigContext';
 import {useLabels} from '../i18n';
+import {useDebouncedCommit} from './useDebouncedCommit';
+
+// Reading a stored value back needs the format it was written in. dayjs only honours a
+// format argument with this plugin, and extending twice is a no-op, so it does not matter
+// that the pickers' own adapter loads it too.
+dayjs.extend(customParseFormat);
 
 interface DateFilterProps<TData> {
   readonly column: Column<TData>;
+  /** The column's name, which is what a screen reader calls the control. */
+  readonly label?: string;
   readonly placeholder?: string;
   readonly showRange?: boolean;
   readonly debounceMs?: number;
@@ -37,8 +46,12 @@ const pickerSlotProps = {
   },
 };
 
-function toDayjs(value: string | undefined | null): Dayjs | null {
-  return value ? dayjs(value) : null;
+/**
+ * Parsed with the format the value was written in. Left to guess, dayjs reads `03/04/2025`
+ * as the 4th of March whatever `dateFormats.value` says, and cannot read `25/04/2025` at all.
+ */
+function toDayjs(value: string | undefined | null, format: string): Dayjs | null {
+  return value ? dayjs(value, format) : null;
 }
 
 function formatDayjs(value: Dayjs | null, format: string): string | undefined {
@@ -50,9 +63,10 @@ function formatDayjs(value: Dayjs | null, format: string): string | undefined {
 // ---------------------------------------------------------------------------
 
 function ClearButton({visible, onClear}: Readonly<{visible: boolean; onClear: () => void}>) {
+  const labels = useLabels();
   if (!visible) return null;
   return (
-    <IconButton size="small" onClick={onClear}>
+    <IconButton size="small" onClick={onClear} aria-label={labels.reset}>
       <ClearIcon sx={{fontSize: '0.875rem'}} />
     </IconButton>
   );
@@ -64,29 +78,30 @@ function ClearButton({visible, onClear}: Readonly<{visible: boolean; onClear: ()
 
 function SingleDateFilter<TData>({
   column,
+  label,
   filterValue,
   debounceMs,
-}: Readonly<{column: Column<TData>; filterValue: string | undefined; debounceMs: number}>) {
+}: Readonly<{column: Column<TData>; label?: string; filterValue: string | undefined; debounceMs: number}>) {
   const formats = useDateFormats();
-  const [local, setLocal] = useState<Dayjs | null>(toDayjs(filterValue));
+  const [local, setLocal] = useState<Dayjs | null>(toDayjs(filterValue, formats.value));
 
   // Sync from external filter value (React "adjust state during render" pattern)
   const [prev, setPrev] = useState(filterValue);
   if (prev !== filterValue) {
     setPrev(filterValue);
-    setLocal(toDayjs(filterValue));
+    setLocal(toDayjs(filterValue, formats.value));
   }
 
-  // Debounce local → column
-  useEffect(() => {
-    const timer = setTimeout(() => {
+  useDebouncedCommit(
+    () => {
       const str = formatDayjs(local, formats.value);
       if (str !== filterValue) {
         column.setFilterValue(str);
       }
-    }, debounceMs);
-    return () => clearTimeout(timer);
-  }, [local, filterValue, column, debounceMs, formats.value]);
+    },
+    local,
+    debounceMs,
+  );
 
   const handleClear = () => {
     setLocal(null);
@@ -99,7 +114,7 @@ function SingleDateFilter<TData>({
         value={local}
         onChange={setLocal}
         format={formats.display}
-        slotProps={pickerSlotProps}
+        slotProps={{...pickerSlotProps, textField: {...pickerSlotProps.textField, 'aria-label': label}}}
         sx={{flex: 1}}
       />
       <ClearButton visible={local !== null} onClear={handleClear} />
@@ -113,25 +128,25 @@ function SingleDateFilter<TData>({
 
 function RangeDateFilter<TData>({
   column,
+  label,
   filterValue,
   debounceMs,
-}: Readonly<{column: Column<TData>; filterValue: DateRangeValue | undefined; debounceMs: number}>) {
+}: Readonly<{column: Column<TData>; label?: string; filterValue: DateRangeValue | undefined; debounceMs: number}>) {
   const labels = useLabels();
   const formats = useDateFormats();
-  const [localFrom, setLocalFrom] = useState<Dayjs | null>(toDayjs(filterValue?.from));
-  const [localTo, setLocalTo] = useState<Dayjs | null>(toDayjs(filterValue?.to));
+  const [localFrom, setLocalFrom] = useState<Dayjs | null>(toDayjs(filterValue?.from, formats.value));
+  const [localTo, setLocalTo] = useState<Dayjs | null>(toDayjs(filterValue?.to, formats.value));
 
   // Sync from external filter value (React "adjust state during render" pattern)
   const [prev, setPrev] = useState(filterValue);
   if (prev !== filterValue) {
     setPrev(filterValue);
-    setLocalFrom(toDayjs(filterValue?.from));
-    setLocalTo(toDayjs(filterValue?.to));
+    setLocalFrom(toDayjs(filterValue?.from, formats.value));
+    setLocalTo(toDayjs(filterValue?.to, formats.value));
   }
 
-  // Debounce local → column
-  useEffect(() => {
-    const timer = setTimeout(() => {
+  useDebouncedCommit(
+    () => {
       const fromStr = formatDayjs(localFrom, formats.value);
       const toStr = formatDayjs(localTo, formats.value);
 
@@ -142,9 +157,11 @@ function RangeDateFilter<TData>({
       } else if (filterValue !== undefined) {
         column.setFilterValue(undefined);
       }
-    }, debounceMs);
-    return () => clearTimeout(timer);
-  }, [localFrom, localTo, filterValue, column, debounceMs, formats.value]);
+    },
+    // One value that changes when either end does.
+    `${localFrom?.valueOf()}|${localTo?.valueOf()}`,
+    debounceMs,
+  );
 
   const handleClear = () => {
     setLocalFrom(null);
@@ -155,7 +172,7 @@ function RangeDateFilter<TData>({
   const hasValue = localFrom !== null || localTo !== null;
 
   return (
-    <Box sx={{display: 'flex', gap: 0.5, alignItems: 'center'}}>
+    <Box role="group" aria-label={label} sx={{display: 'flex', gap: 0.5, alignItems: 'center'}}>
       <DatePicker
         value={localFrom}
         onChange={setLocalFrom}
@@ -200,7 +217,12 @@ function RangeDateFilter<TData>({
 // Public component — delegates to Single or Range
 // ---------------------------------------------------------------------------
 
-export function DateFilter<TData>({column, showRange = true, debounceMs = 500}: Readonly<DateFilterProps<TData>>) {
+export function DateFilter<TData>({
+  column,
+  label,
+  showRange = true,
+  debounceMs = 500,
+}: Readonly<DateFilterProps<TData>>) {
   // `useReactTable` hands back the same column object on every render, so the compiler
   // would cache `getFilterValue()` against it and the sync below would never see a filter
   // set or cleared from elsewhere. Rendering one small control costs nothing to repeat.
@@ -211,9 +233,9 @@ export function DateFilter<TData>({column, showRange = true, debounceMs = 500}: 
 
   if (!isRangeMode) {
     const singleValue = typeof filterValue === 'string' ? filterValue : undefined;
-    return <SingleDateFilter column={column} filterValue={singleValue} debounceMs={debounceMs} />;
+    return <SingleDateFilter column={column} label={label} filterValue={singleValue} debounceMs={debounceMs} />;
   }
 
   const rangeValue = typeof filterValue === 'object' ? filterValue : undefined;
-  return <RangeDateFilter column={column} filterValue={rangeValue} debounceMs={debounceMs} />;
+  return <RangeDateFilter column={column} label={label} filterValue={rangeValue} debounceMs={debounceMs} />;
 }
