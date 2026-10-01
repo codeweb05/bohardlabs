@@ -136,8 +136,7 @@ export const Default: Story = {
     await expect(canvas.getByText('SW-1000')).toBeInTheDocument();
 
     // Sorting is a header click, and it changes which row comes first rather than only
-    // painting an arrow. Every sortable header carries the same `Sort ascending` label,
-    // so the column has to be found by its own text first.
+    // painting an arrow.
     await userEvent.click(canvas.getByRole('columnheader', {name: /total/i}));
     const firstRow = canvasElement.querySelector('tbody tr');
     await expect(firstRow).toHaveTextContent('$9.50');
@@ -956,6 +955,7 @@ const HINDI_LABELS: DataTableLabels = {
   resizeColumn: 'स्तंभ की चौड़ाई बदलें',
   sortAsc: 'आरोही क्रम में लगाएँ',
   sortDesc: 'अवरोही क्रम में लगाएँ',
+  sortBy: (column, action) => `${column}: ${action}`,
 
   expandAll: 'सभी विस्तृत करें',
   expandAllTooltip: 'सभी पंक्तियाँ विस्तृत करें',
@@ -968,6 +968,7 @@ const HINDI_LABELS: DataTableLabels = {
   exportJson: 'JSON निर्यात करें',
 
   selectAll: 'सभी पंक्तियाँ चुनें',
+  selectRow: (id) => `पंक्ति ${id} चुनें`,
   selected: 'चयनित',
 
   rowsPerPage: 'प्रति पृष्ठ पंक्तियाँ',

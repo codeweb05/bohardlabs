@@ -20,7 +20,7 @@ import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 
 import {DataTable} from '../DataTable';
 import {DataTableProvider} from '../DataTableContext';
-import {DEFAULT_LABELS} from '../i18n';
+import {DataTableLabelsProvider, DEFAULT_LABELS} from '../i18n';
 import type {TestRole} from '../test/test-utils';
 import {generateTestRoles, render, screen} from '../test/test-utils';
 import type {DataTableColumnDef, RowAction} from '../types';
@@ -777,5 +777,15 @@ describe('CardView and CardItem, with only the required props', () => {
     expect(screen.getByText('SUPER_ADMIN')).toBeInTheDocument();
     expect(screen.getByRole('checkbox', {name: 'Select row role-1'})).not.toBeChecked();
     expect(screen.queryByRole('button')).not.toBeInTheDocument();
+  });
+
+  it("names a card's checkbox through the labels", () => {
+    render(
+      <DataTableLabelsProvider labels={{selectRow: (id) => `Zeile ${id} auswählen`}}>
+        <SingleCard />
+      </DataTableLabelsProvider>,
+    );
+
+    expect(screen.getByRole('checkbox', {name: 'Zeile role-1 auswählen'})).toBeInTheDocument();
   });
 });

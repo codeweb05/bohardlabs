@@ -224,9 +224,9 @@ describe('DataTable, resizing a column without a mouse', () => {
     render(<DataTable columns={resizableColumns} data={data} enableColumnResizing />);
     fireEvent.keyDown(handles()[0], {key: 'ArrowRight'});
 
-    await user.click(screen.getByRole('button', {name: 'Sort ascending'}));
+    await user.click(screen.getByRole('button', {name: 'Name, Sort ascending'}));
 
-    expect(screen.getByRole('button', {name: 'Sort descending'})).toBeInTheDocument();
+    expect(screen.getByRole('button', {name: 'Name, Sort descending'})).toBeInTheDocument();
     expect(announcedWidth(handles()[0])).toBe(158);
     expect(screen.getByRole('cell', {name: 'Role 1'})).toHaveStyle({width: '158px'});
   });
@@ -309,8 +309,8 @@ describe('DataTable, a label that changes after mount', () => {
     expect(screen.getByRole('columnheader', {name: 'Aktionen'})).toBeInTheDocument();
     expect(screen.queryByRole('columnheader', {name: 'Actions'})).not.toBeInTheDocument();
 
-    await user.click(screen.getAllByRole('button', {name: 'Sort ascending'})[0]);
+    await user.click(screen.getAllByRole('button', {name: /, Sort ascending$/})[0]);
 
-    expect(screen.getByRole('button', {name: 'Sort descending'})).toBeInTheDocument();
+    expect(screen.getByRole('button', {name: /, Sort descending$/})).toBeInTheDocument();
   });
 });

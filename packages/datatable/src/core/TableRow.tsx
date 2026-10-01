@@ -167,7 +167,7 @@ export function TableRow<TData extends RowData>({
                     sx={{p: 0, m: '-4px'}}
                     slotProps={{
                       input: {
-                        'aria-label': `Select row ${row.id}`,
+                        'aria-label': labels.selectRow(row.id),
                       },
                     }}
                   />

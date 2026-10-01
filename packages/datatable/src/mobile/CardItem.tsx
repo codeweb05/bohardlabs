@@ -123,7 +123,7 @@ export function CardItem<TData extends RowData>({
                     sx={{p: 0.25}}
                     slotProps={{
                       input: {
-                        'aria-label': `Select row ${row.id}`,
+                        'aria-label': labels.selectRow(row.id),
                       },
                     }}
                   />

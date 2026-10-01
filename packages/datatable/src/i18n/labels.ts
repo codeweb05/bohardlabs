@@ -84,6 +84,11 @@ export interface DataTableLabels {
   readonly resizeColumn: string;
   readonly sortAsc: string;
   readonly sortDesc: string;
+  /**
+   * The accessible name of a column's sort button. `action` is what the next click does,
+   * already translated: `sortAsc`, `sortDesc` or `clearSort`.
+   */
+  readonly sortBy: (column: string, action: string) => string;
 
   // Expansion
   readonly expandAll: string;
@@ -99,6 +104,8 @@ export interface DataTableLabels {
 
   // Selection
   readonly selectAll: string;
+  /** The accessible name of one row's checkbox. `id` is the row's id. */
+  readonly selectRow: (id: string) => string;
   readonly selected: string;
 
   // Pagination
@@ -172,6 +179,7 @@ export const DEFAULT_LABELS: DataTableLabels = {
   resizeColumn: 'Resize column',
   sortAsc: 'Sort ascending',
   sortDesc: 'Sort descending',
+  sortBy: (column, action) => `${column}, ${action}`,
 
   expandAll: 'Expand All',
   expandAllTooltip: 'Expand all rows',
@@ -184,6 +192,7 @@ export const DEFAULT_LABELS: DataTableLabels = {
   exportJson: 'Export JSON',
 
   selectAll: 'Select all rows',
+  selectRow: (id) => `Select row ${id}`,
   selected: 'selected',
 
   rowsPerPage: 'Rows per page',

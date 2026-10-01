@@ -124,11 +124,38 @@ describe('TableHeader, sort labels', () => {
       <DataTable columns={roleColumns} data={roles} initialSorting={[{id: 'name', desc: false}]} labels={{sortDesc}} />
     );
     const {rerender} = render(table('Sort Z to A'));
-    expect(screen.getByRole('button', {name: 'Sort Z to A'})).toBeInTheDocument();
+    expect(screen.getByRole('button', {name: 'Name, Sort Z to A'})).toBeInTheDocument();
 
     rerender(table('Trier de Z à A'));
 
-    expect(screen.getByRole('button', {name: 'Trier de Z à A'})).toBeInTheDocument();
-    expect(screen.queryByRole('button', {name: 'Sort Z to A'})).not.toBeInTheDocument();
+    expect(screen.getByRole('button', {name: 'Name, Trier de Z à A'})).toBeInTheDocument();
+    expect(screen.queryByRole('button', {name: 'Name, Sort Z to A'})).not.toBeInTheDocument();
+  });
+
+  it('names each sort button after its column, so two of them can be told apart', () => {
+    const columns: DataTableColumnDef<TestRole>[] = [
+      ...roleColumns,
+      {id: 'roleType', accessorKey: 'roleType', header: () => 'Type', enableSorting: true},
+    ];
+    render(<DataTable columns={columns} data={roles} initialSorting={[{id: 'name', desc: true}]} />);
+
+    expect(screen.getByRole('button', {name: 'Name, Clear sort'})).toBeInTheDocument();
+    // A header that is not plain text has no name to read, so the column's id stands in.
+    expect(screen.getByRole('button', {name: 'roleType, Sort ascending'})).toBeInTheDocument();
+  });
+
+  it('lets a translation put the column where its grammar wants it', () => {
+    const sortBy = (column: string, action: string) => `${action}: ${column}`;
+    render(<DataTable columns={roleColumns} data={roles} labels={{sortBy, sortAsc: 'Aufsteigend sortieren'}} />);
+
+    expect(screen.getByRole('button', {name: 'Aufsteigend sortieren: Name'})).toBeInTheDocument();
+  });
+
+  it('names a row checkbox through the labels', () => {
+    const selectRow = (id: string) => `Zeile ${id} auswählen`;
+    render(<DataTable columns={roleColumns} data={roles} enableRowSelection labels={{selectRow}} />);
+
+    expect(screen.getByRole('checkbox', {name: 'Zeile role-1 auswählen'})).toBeInTheDocument();
+    expect(screen.queryByRole('checkbox', {name: /Select row/})).not.toBeInTheDocument();
   });
 });

@@ -78,15 +78,17 @@ function SortIcon({isSorted}: SortIconProps) {
 // Sortable header button component
 interface SortableHeaderProps {
   readonly children: React.ReactNode;
+  /** What the column is called, so one sort button can be told from the next. */
+  readonly columnName: string;
   readonly isSorted: false | SortDirection;
   readonly onClick: ((event: unknown) => void) | undefined;
 }
 
-function SortableHeader({children, isSorted, onClick}: SortableHeaderProps) {
+function SortableHeader({children, columnName, isSorted, onClick}: SortableHeaderProps) {
   const labels = useLabels();
 
-  // Determine aria-label based on current sort state
-  const getAriaLabel = () => {
+  // What the next click does, which depends on the current sort state
+  const getAction = () => {
     if (isSorted === 'asc') return labels.sortDesc;
     if (isSorted === 'desc') return labels.clearSort;
     return labels.sortAsc;
@@ -124,7 +126,7 @@ function SortableHeader({children, isSorted, onClick}: SortableHeaderProps) {
         },
         transition: 'color 0.15s ease',
       }}
-      aria-label={getAriaLabel()}
+      aria-label={labels.sortBy(columnName, getAction())}
     >
       <Box component="span" sx={{fontWeight: isSorted ? 600 : 'inherit', minWidth: 0, flex: 1}}>
         {children}
@@ -701,6 +703,7 @@ function RegularHeaderCell<TData extends RowData>({
           overflowMode={overflowMode}
           isTruncated={isTruncated}
           canSort={canSort}
+          columnName={typeof columnDef.header === 'string' ? columnDef.header : header.column.id}
           isSorted={isSorted}
           onSortClick={header.column.getToggleSortingHandler()}
         />
@@ -728,6 +731,7 @@ function RegularHeaderContent({
   overflowMode,
   isTruncated,
   canSort,
+  columnName,
   isSorted,
   onSortClick,
 }: Readonly<{
@@ -736,6 +740,7 @@ function RegularHeaderContent({
   overflowMode: CellOverflowMode;
   isTruncated: boolean;
   canSort: boolean;
+  columnName: string;
   isSorted: false | SortDirection;
   onSortClick: ((event: unknown) => void) | undefined;
 }>) {
@@ -764,7 +769,7 @@ function RegularHeaderContent({
 
   if (canSort) {
     return (
-      <SortableHeader isSorted={isSorted} onClick={onSortClick}>
+      <SortableHeader columnName={columnName} isSorted={isSorted} onClick={onSortClick}>
         {wrappedContent}
       </SortableHeader>
     );
