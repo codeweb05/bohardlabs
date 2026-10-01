@@ -39,7 +39,7 @@ export function FieldShell({
 
   const helper = (
     <FormHelperText id={binding.helperId} error={hasError} sx={{mx: 0}}>
-      {binding.error ?? description ?? '​'}
+      {binding.error ?? (description || '​')}
     </FormHelperText>
   );
 

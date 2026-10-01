@@ -46,4 +46,15 @@ describe('PasswordField', () => {
     await user.click(screen.getByRole('button', {name: 'Submit'}));
     expect(screen.getByLabelText('Submitted value')).toHaveTextContent('"s3cret!"');
   });
+
+  it('renders a value that was never set as an empty input, and warns', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    render(
+      <FieldHarness defaultValue={undefined}>
+        <PasswordField label="Password" />
+      </FieldHarness>,
+    );
+    expect(screen.getByLabelText('Password')).toHaveValue('');
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('expects a string'));
+  });
 });

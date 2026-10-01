@@ -15,6 +15,7 @@ import {useFieldBinding} from '../core/useFieldBinding.js';
 import type {FieldBinding} from '../core/useFieldBinding.js';
 import {SCALAR_ARRAY} from '../core/valueChecks.js';
 import {findOption} from './optionLookup.js';
+import {useHeldOptions} from './useHeldOptions.js';
 
 export interface MultiSelectFieldProps<V extends string | number> extends CommonFieldProps {
   readonly options: readonly Option<V>[];
@@ -156,12 +157,13 @@ function SearchableMulti<V extends string | number>({
   selected,
 }: VariantProps<V>) {
   const {labels} = useFormConfig();
+  const held = useHeldOptions(selected);
   return (
     <Autocomplete<Option<V>, true>
       multiple
       id={binding.inputId}
       options={withSelected(options, selected)}
-      value={[...selected]}
+      value={held}
       onChange={(_event, chosen) => binding.setValue(chosen.map((option) => option.value))}
       onBlur={binding.onBlur}
       getOptionLabel={(option) => option.label}

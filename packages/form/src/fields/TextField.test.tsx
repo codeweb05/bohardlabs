@@ -23,6 +23,16 @@ describe('TextField', () => {
     expect(screen.getByLabelText('Submitted value')).toHaveTextContent('"a@b.co"');
   });
 
+  it('keeps the helper row when the description is an empty string', () => {
+    render(
+      <FieldHarness defaultValue="">
+        <TextField label="Email" description="" />
+      </FieldHarness>,
+    );
+    // A zero-width space holds the line, so the form does not jump when an error appears.
+    expect(screen.getByLabelText('Email')).toHaveAccessibleDescription('\u200b');
+  });
+
   it('marks required with aria-required and a hidden asterisk', () => {
     render(
       <FieldHarness defaultValue="">
@@ -111,6 +121,23 @@ describe('TextField', () => {
     );
     expect(warn).toHaveBeenCalledTimes(1);
     expect(warn.mock.calls[0]?.[0]).toContain('"value"');
+  });
+
+  it('renders a stored null as an empty input, and stores what is typed over it', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const user = userEvent.setup();
+    render(
+      <FieldHarness defaultValue={null}>
+        <TextField label="Name" />
+      </FieldHarness>,
+    );
+    const input = screen.getByLabelText('Name');
+    expect(input).toHaveValue('');
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('holds null'));
+
+    await user.type(input, 'Ada');
+    await user.click(screen.getByRole('button', {name: 'Submit'}));
+    expect(screen.getByLabelText('Submitted value')).toHaveTextContent('"Ada"');
   });
 });
 

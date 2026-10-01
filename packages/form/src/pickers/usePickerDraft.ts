@@ -54,7 +54,9 @@ export function usePickerDraft(
   const settle = (error: unknown) => {
     if (error !== null || rejected === null) return;
     const next = toString(adapter, draft);
+    /* v8 ignore start: never true, `change` sets draft and `rejected` together and leaves the value null */
     if (next !== rejected || next === value) return;
+    /* v8 ignore stop */
     setRejected(null);
     setShownValue(next);
     onChange(next);

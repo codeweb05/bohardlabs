@@ -1,6 +1,7 @@
 import {render, screen, waitFor, within} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
+import type {Option} from '../core/types.js';
 import {FieldHarness} from '../test/FieldHarness.js';
 import {SelectField} from './SelectField.js';
 
@@ -126,5 +127,31 @@ describe('SelectField', () => {
     );
     await user.tab();
     expect(screen.getByRole('button', {name: 'More information'})).toHaveFocus();
+  });
+
+  it('stores null, never undefined, for an option that arrived without a value', async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn();
+    // What a consumer gets from an API row with a missing id: the compiler cannot see it.
+    const partial = JSON.parse('[{"label": "Untitled"}]') as Option<number>[];
+    render(
+      <FieldHarness defaultValue={1} onSubmit={onSubmit}>
+        <SelectField label="Role" options={[...ROLES, ...partial]} />
+      </FieldHarness>,
+    );
+    await choose(user, /Role/, 'Untitled');
+    await user.click(screen.getByRole('button', {name: 'Submit'}));
+    expect(onSubmit).toHaveBeenCalledWith(null);
+  });
+
+  it('renders a stored array as nothing chosen, and warns', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    render(
+      <FieldHarness defaultValue={[1, 2]}>
+        <SelectField label="Role" options={ROLES} placeholder="Pick a role" />
+      </FieldHarness>,
+    );
+    expect(screen.getByRole('combobox', {name: /Role/})).toHaveTextContent('Pick a role');
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('holds an array'));
   });
 });

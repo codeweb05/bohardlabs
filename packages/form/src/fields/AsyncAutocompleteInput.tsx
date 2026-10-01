@@ -70,7 +70,7 @@ export function AsyncAutocompleteInput<T>({
   const muiValue = useMemo(() => (multiple ? [...current] : (current[0] ?? null)), [multiple, current]);
   const loadedIds = new Set(options.map(getOptionValue));
   const merged = [...current.filter((item) => !loadedIds.has(getOptionValue(item))), ...options];
-  const searching = query !== '' && query.length >= minQueryLength;
+  const searching = query !== '' && query.trim().length >= minQueryLength;
   const shown = (all: T[]) => (searching ? all.filter((item) => loadedIds.has(getOptionValue(item))) : all);
   const text = autocompleteText(labels);
 

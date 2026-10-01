@@ -11,6 +11,7 @@ import {useFieldBinding} from '../core/useFieldBinding.js';
 import type {ValueExpectation} from '../core/valueChecks.js';
 import {AsyncAutocompleteInput} from '../fields/AsyncAutocompleteInput.js';
 import {TextField} from '../fields/TextField.js';
+import {clearServerError} from '../serverErrors.js';
 import type {Address, PlaceSuggestion, PlacesProvider} from './types.js';
 import {usePlaceSearch} from './usePlaceSearch.js';
 
@@ -125,7 +126,12 @@ interface AddressPartProps {
 
 /** Mounts `<parent>.<name>` as a real field and renders `TextField` inside it. */
 function AddressPart({parent, name, label, required, autoComplete, disabled}: Readonly<AddressPartProps>) {
-  const field = useField({form: parent.form, name: `${parent.name}.${name}`});
+  const field = useField({
+    form: parent.form,
+    name: `${parent.name}.${name}`,
+    // A server error on the address as a whole answers the parts that were submitted.
+    listeners: {onChange: () => clearServerError(parent)},
+  });
   return (
     <fieldContext.Provider value={field}>
       <TextField label={label} required={required} autoComplete={autoComplete} disabled={disabled} />

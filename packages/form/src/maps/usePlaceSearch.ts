@@ -66,8 +66,14 @@ export function usePlaceSearch(provider: PlacesProvider, {onResolved, onCleared}
   };
 
   const inputProps: SearchInputProps = {
+    /* v8 ignore start: an array only arrives in `multiple` mode, which neither maps field turns on */
     onChange: (next) => void pick(Array.isArray(next) ? (next[0] ?? null) : next),
-    onInputChange: () => setFailedAt(null),
+    /* v8 ignore stop */
+    onInputChange: () => {
+      // Typing replaces a pick that is still being looked up, so its answer writes nothing.
+      latestPick.current += 1;
+      setFailedAt(null);
+    },
     loadOptions: (query, {signal}) => provider.suggest(query, {signal, session: session.current()}),
     getOptionValue: (suggestion) => suggestion.id,
     getOptionLabel: (suggestion) => suggestion.label,

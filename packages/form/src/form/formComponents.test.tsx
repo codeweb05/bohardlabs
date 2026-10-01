@@ -1,4 +1,4 @@
-import {render, screen, waitFor} from '@testing-library/react';
+import {act, render, screen, waitFor} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import {createAppForm} from '../createAppForm.js';
@@ -113,5 +113,43 @@ describe('CancelButton', () => {
     await user.click(screen.getByRole('button', {name: 'Cancel'}));
 
     await waitFor(() => expect(onCancel).toHaveBeenCalledTimes(1));
+  });
+
+  it('stays put when the confirm rejects, without an unhandled rejection', async () => {
+    const user = userEvent.setup();
+    const onCancel = vi.fn();
+    const confirm = vi.fn(() => Promise.reject(new Error('dialog unmounted')));
+    render(<Editor onCancel={onCancel} confirm={confirm} />);
+
+    await user.type(screen.getByLabelText('Name'), 'Ada');
+    await user.click(screen.getByRole('button', {name: 'Cancel'}));
+
+    expect(confirm).toHaveBeenCalledTimes(1);
+    expect(onCancel).not.toHaveBeenCalled();
+  });
+
+  it('asks once when Cancel is clicked again while the confirm is still open', async () => {
+    const user = userEvent.setup();
+    const onCancel = vi.fn();
+    let answer: (leave: boolean) => void = () => {};
+    const confirm = vi.fn(
+      () =>
+        new Promise<boolean>((resolve) => {
+          answer = resolve;
+        }),
+    );
+    render(<Editor onCancel={onCancel} confirm={confirm} />);
+
+    await user.type(screen.getByLabelText('Name'), 'Ada');
+    await user.click(screen.getByRole('button', {name: 'Cancel'}));
+    await user.click(screen.getByRole('button', {name: 'Cancel'}));
+    await act(async () => answer(true));
+
+    expect(confirm).toHaveBeenCalledTimes(1);
+    expect(onCancel).toHaveBeenCalledTimes(1);
+
+    // A second cancel after the first one settled asks again.
+    await user.click(screen.getByRole('button', {name: 'Cancel'}));
+    expect(confirm).toHaveBeenCalledTimes(2);
   });
 });

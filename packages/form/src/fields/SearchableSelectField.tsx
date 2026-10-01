@@ -8,6 +8,7 @@ import type {CommonFieldProps, Option} from '../core/types.js';
 import {useFieldBinding} from '../core/useFieldBinding.js';
 import {NULLABLE_SCALAR} from '../core/valueChecks.js';
 import {findOption} from './optionLookup.js';
+import {useHeldOptions} from './useHeldOptions.js';
 
 export interface SearchableSelectFieldProps<V extends string | number> extends CommonFieldProps {
   readonly options: readonly Option<V>[];
@@ -27,6 +28,8 @@ export function SearchableSelectField<V extends string | number>({
 }: Readonly<SearchableSelectFieldProps<V>>) {
   const binding = useFieldBinding<V | null>({required, expect: NULLABLE_SCALAR});
   const {labels} = useFormConfig();
+  const found = findOption(options, binding.value);
+  const [held = null] = useHeldOptions(found ? [found] : []);
 
   return (
     <FieldShell
@@ -40,7 +43,7 @@ export function SearchableSelectField<V extends string | number>({
       <Autocomplete<Option<V>>
         id={binding.inputId}
         options={options}
-        value={findOption(options, binding.value) ?? null}
+        value={held}
         onChange={(_event, option) => binding.setValue(option?.value ?? null)}
         onBlur={binding.onBlur}
         getOptionLabel={(option) => option.label}

@@ -61,4 +61,14 @@ describe.each([
   it('writes an invalid date as null', () => {
     expect(dateToString(adapter, adapter.date('not a date'))).toBeNull();
   });
+
+  it('writes a cleared or invalid time as null', () => {
+    expect(timeToString(adapter, null)).toBeNull();
+    expect(timeToString(adapter, adapter.date('not a time'))).toBeNull();
+  });
+
+  it('reads a time that is not on the clock as null', () => {
+    expect(timeFromString(adapter, '24:00')).toBeNull();
+    expect(timeFromString(adapter, null)).toBeNull();
+  });
 });

@@ -223,4 +223,77 @@ describe('LocationSearchField', () => {
     );
     expect(screen.getByRole('combobox', {name: 'Pickup'})).toHaveValue('Unter den Linden 1, Berlin');
   });
+
+  it('shows no failure when an earlier lookup fails after a newer pick has landed', async () => {
+    const user = userEvent.setup();
+    const {provider} = createFakePlaces([BERLIN, PUNE]);
+    let failBerlin: () => void = () => {};
+    const flaky: PlacesProvider = {
+      ...provider,
+      resolve: (id, options) =>
+        id === 'berlin'
+          ? new Promise((_resolve, reject) => {
+              failBerlin = () => reject(new Error('timed out'));
+            })
+          : provider.resolve(id, options),
+    };
+    render(
+      <FieldHarness defaultValue={null}>
+        <LocationSearchField label="Pickup" provider={flaky} debounceMs={0} />
+      </FieldHarness>,
+    );
+    const input = await pickPlace(user, 'unter', 'Unter den Linden 1, Berlin');
+    await user.clear(input);
+    await pickPlace(user, 'pune', 'FC Road, Pune');
+
+    await act(async () => failBerlin());
+
+    expect(screen.queryByText(FAILED)).not.toBeInTheDocument();
+    expect(input).toHaveAttribute('aria-invalid', 'false');
+    await user.click(screen.getByRole('button', {name: 'Submit'}));
+    expect(screen.getByLabelText('Submitted value')).toHaveTextContent('"id":"pune"');
+  });
+
+  it('drops a slow lookup once the user has started typing something else', async () => {
+    const user = userEvent.setup();
+    const {provider} = createFakePlaces([BERLIN, PUNE]);
+    let answerBerlin: () => void = () => {};
+    const slow: PlacesProvider = {
+      ...provider,
+      resolve: (id, options) =>
+        new Promise((resolve, reject) => {
+          answerBerlin = () => provider.resolve(id, options).then(resolve, reject);
+        }),
+    };
+    render(
+      <FieldHarness defaultValue={null}>
+        <LocationSearchField label="Pickup" provider={slow} debounceMs={0} />
+      </FieldHarness>,
+    );
+    const input = await pickPlace(user, 'unter', 'Unter den Linden 1, Berlin');
+    await user.clear(input);
+    await user.type(input, 'pun');
+
+    await act(async () => answerBerlin());
+
+    expect(input).toHaveValue('pun');
+    await user.click(screen.getByRole('button', {name: 'Submit'}));
+    expect(screen.getByLabelText('Submitted value')).toHaveTextContent('null');
+  });
+
+  it.each([
+    ['a string', 'Unter den Linden 1, Berlin'],
+    ['a place with no coordinates', {id: 'berlin', label: 'Unter den Linden 1, Berlin'}],
+  ])('renders a stored %s as empty, and warns', (_name, stored) => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const {provider} = createFakePlaces([]);
+    render(
+      <FieldHarness defaultValue={stored}>
+        <LocationSearchField label="Pickup" provider={provider} />
+      </FieldHarness>,
+    );
+    expect(screen.getByRole('combobox', {name: 'Pickup'})).toHaveValue('');
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn.mock.calls[0]?.[0]).toContain('"value"');
+  });
 });

@@ -152,4 +152,26 @@ describe('DurationField', () => {
     );
     expect(screen.getByRole('combobox', {name: /Minutes/})).toBeInTheDocument();
   });
+
+  it('counts the hours as zero when the minutes are picked first', async () => {
+    const user = userEvent.setup();
+    render(
+      <FieldHarness defaultValue={null}>
+        <DurationField label="Estimate" />
+      </FieldHarness>,
+    );
+    await pick(user, 'Minutes', '45');
+    expect(screen.getByRole('combobox', {name: /Hours/})).toHaveTextContent(/^0$/);
+    await user.click(screen.getByRole('button', {name: 'Submit'}));
+    expect(screen.getByLabelText('Submitted value')).toHaveTextContent(/^45$/);
+  });
+
+  it('puts autoFocus on the hours, the first of the two selects', () => {
+    render(
+      <FieldHarness defaultValue={null}>
+        <DurationField label="Estimate" autoFocus />
+      </FieldHarness>,
+    );
+    expect(screen.getByRole('combobox', {name: /Hours/})).toHaveFocus();
+  });
 });

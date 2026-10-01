@@ -184,6 +184,29 @@ describe.each(ADAPTERS)('pickers under %s', (_name, Adapter) => {
       await user.keyboard('1745');
       expect(await submitted(user)).toBe('"17:45"');
     });
+
+    it.each([
+      ['a value that was never set', undefined],
+      ['a number', 930],
+      ['a time that does not exist', '25:00'],
+    ])('renders %s as empty, and warns', (_case, stored) => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      renderPicker(<TimePickerField label="Opens at" ampm={false} />, {defaultValue: stored});
+      expect(hiddenInput(screen.getByRole('group', {name: 'Opens at'}))).toHaveValue('');
+      expect(warn).toHaveBeenCalledTimes(1);
+      expect(warn.mock.calls[0]?.[0]).toContain("expects an 'HH:mm' string or null");
+    });
+
+    it('keeps a half-typed time on screen while the form holds null', async () => {
+      const user = userEvent.setup();
+      renderPicker(<TimePickerField label="Opens at" ampm={false} />, {defaultValue: null});
+      const group = screen.getByRole('group', {name: 'Opens at'});
+      await user.click(firstSection(group));
+      await user.keyboard('17');
+      expect(hiddenInput(group)).toHaveValue('17:mm');
+      expect(await submitted(user)).toBe('null');
+      expect(hiddenInput(group)).toHaveValue('17:mm');
+    });
   });
 
   describe('DateRangeField', () => {
@@ -290,6 +313,24 @@ describe.each(ADAPTERS)('pickers under %s', (_name, Adapter) => {
       await user.click(firstSection(within(stay).getByRole('group', {name: 'End'})));
       await user.keyboard('04202026');
       expect(await submitted(user)).toBe('{"start":"2026-05-01","end":null}');
+    });
+
+    it.each([
+      ['null', null],
+      ['a single date', '2026-05-01'],
+    ])('renders a stored %s as two empty ends, warns, and stores a range on the first edit', async (_case, stored) => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const user = userEvent.setup();
+      renderPicker(<DateRangeField label="Stay" />, {defaultValue: stored});
+      const stay = screen.getByRole('group', {name: 'Stay'});
+      const start = within(stay).getByRole('group', {name: 'Start'});
+      expect(hiddenInput(start)).toHaveValue('');
+      expect(hiddenInput(within(stay).getByRole('group', {name: 'End'}))).toHaveValue('');
+      expect(warn).toHaveBeenCalledTimes(1);
+
+      await user.click(firstSection(start));
+      await user.keyboard('05022026');
+      expect(await submitted(user)).toBe('{"start":"2026-05-02","end":null}');
     });
   });
 });

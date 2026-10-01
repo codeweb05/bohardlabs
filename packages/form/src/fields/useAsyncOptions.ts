@@ -54,7 +54,8 @@ export function useAsyncOptions<T>(
   });
 
   const [answer, setAnswer] = useState<{query: string; result: Result<T>} | null>(null);
-  const shouldLoad = active && query.length >= minQueryLength;
+  // Trimmed, so spaces alone never reach a loader that may bill per request.
+  const shouldLoad = active && query.trim().length >= minQueryLength;
 
   useEffect(() => {
     if (!shouldLoad) return;

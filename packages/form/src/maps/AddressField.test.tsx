@@ -106,4 +106,26 @@ describe('AddressField', () => {
     expect(screen.queryByText('We do not deliver there')).not.toBeInTheDocument();
     expect(screen.getByLabelText('Postal code')).toHaveAttribute('aria-invalid', 'false');
   });
+
+  it('drops a server error on the address itself once the user corrects a part', async () => {
+    const user = userEvent.setup();
+    const formRef = createRef<AnyFormApi>();
+    const onSubmit = vi.fn();
+    const {provider} = createFakePlaces([]);
+    render(
+      <FieldHarness defaultValue={BERLIN.address} formRef={formRef} onSubmit={onSubmit}>
+        <AddressField label="Address" provider={provider} />
+      </FieldHarness>,
+    );
+    act(() => {
+      if (formRef.current) applyServerErrors(formRef.current, {fields: {value: 'We cannot deliver to this address'}});
+    });
+    expect(screen.getByText('We cannot deliver to this address')).toBeInTheDocument();
+
+    await user.type(screen.getByLabelText('Postal code'), '9');
+
+    expect(screen.queryByText('We cannot deliver to this address')).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', {name: 'Submit'}));
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+  });
 });

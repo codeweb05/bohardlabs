@@ -143,4 +143,19 @@ describe('NumberField', () => {
     act(() => formRef.current?.setFieldValue('value', 2));
     expect(input).toHaveValue('2,');
   });
+
+  it('stores null, not Infinity, for digits too long to be a number', async () => {
+    const user = userEvent.setup();
+    render(
+      <FieldHarness defaultValue={null}>
+        <NumberField label="Price" />
+      </FieldHarness>,
+    );
+    const input = screen.getByLabelText('Price');
+    const digits = '9'.repeat(400);
+    await user.click(input);
+    await user.paste(digits);
+    expect(input).toHaveValue(digits);
+    expect(await submitted(user)).toBe('null');
+  });
 });

@@ -1,6 +1,7 @@
 import {render, screen, waitFor} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
+import type {Option} from '../core/types.js';
 import {FieldHarness} from '../test/FieldHarness.js';
 import {RadioGroupField} from './RadioGroupField.js';
 
@@ -38,5 +39,29 @@ describe('RadioGroupField', () => {
     expect(group).toHaveAttribute('aria-invalid', 'true');
     expect(group).toHaveAccessibleDescription('Choose a plan');
     await waitFor(() => expect(screen.getByRole('radio', {name: 'Free'})).toHaveFocus());
+  });
+
+  it('puts autoFocus on the first radio only', () => {
+    render(
+      <FieldHarness defaultValue={null}>
+        <RadioGroupField label="Plan" options={PLANS} autoFocus />
+      </FieldHarness>,
+    );
+    expect(screen.getByRole('radio', {name: 'Free'})).toHaveFocus();
+  });
+
+  it('stores null, never undefined, for an option that arrived without a value', async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn();
+    // What a consumer gets from an API row with a missing id: the compiler cannot see it.
+    const partial = JSON.parse('[{"label": "Untitled"}]') as Option<string>[];
+    render(
+      <FieldHarness defaultValue="free" onSubmit={onSubmit}>
+        <RadioGroupField label="Plan" options={[...PLANS, ...partial]} />
+      </FieldHarness>,
+    );
+    await user.click(screen.getByRole('radio', {name: 'Untitled'}));
+    await user.click(screen.getByRole('button', {name: 'Submit'}));
+    expect(onSubmit).toHaveBeenCalledWith(null);
   });
 });

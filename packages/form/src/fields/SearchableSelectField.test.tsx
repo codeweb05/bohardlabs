@@ -27,6 +27,28 @@ describe('SearchableSelectField', () => {
     expect(screen.getByLabelText('Submitted value')).toHaveTextContent('"fr"');
   });
 
+  it('keeps what the user is typing when the options are rebuilt on a re-render', async () => {
+    const user = userEvent.setup();
+    // A consumer usually maps options inline, so the array and its objects are new each render.
+    const field = (description: string) => (
+      <FieldHarness defaultValue="in">
+        <SearchableSelectField
+          label="Country"
+          description={description}
+          options={COUNTRIES.map((country) => ({...country}))}
+        />
+      </FieldHarness>
+    );
+    const {rerender} = render(field('Where you live'));
+    const input = screen.getByRole('combobox', {name: 'Country'});
+    await user.tripleClick(input);
+    await user.keyboard('fra');
+
+    rerender(field('Where you live now'));
+
+    expect(input).toHaveValue('fra');
+  });
+
   it('shows the label of a value set before render', () => {
     render(
       <FieldHarness defaultValue="in">
@@ -60,5 +82,21 @@ describe('SearchableSelectField', () => {
     const input = screen.getByRole('combobox', {name: 'Country'});
     expect(input).toHaveAttribute('aria-invalid', 'true');
     expect(input).toHaveAccessibleDescription('Pick a country');
+  });
+
+  it('stores null when the choice is cleared', async () => {
+    const user = userEvent.setup();
+    render(
+      <FieldHarness defaultValue="in">
+        <SearchableSelectField label="Country" options={COUNTRIES} />
+      </FieldHarness>,
+    );
+    const combobox = screen.getByRole('combobox', {name: 'Country'});
+    await user.click(combobox);
+    await user.click(screen.getByRole('button', {name: 'Clear'}));
+    expect(combobox).toHaveValue('');
+
+    await user.click(screen.getByRole('button', {name: 'Submit'}));
+    expect(screen.getByLabelText('Submitted value')).toHaveTextContent(/^null$/);
   });
 });

@@ -1,8 +1,9 @@
 import type {AnyFormApi} from '@tanstack/react-form';
-import {act, render, screen, within} from '@testing-library/react';
+import {act, fireEvent, render, screen, within} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {createRef} from 'react';
 
+import type {Option} from '../core/types.js';
 import {FieldHarness} from '../test/FieldHarness.js';
 import {MultiSelectField} from './MultiSelectField.js';
 
@@ -57,6 +58,22 @@ describe('MultiSelectField', () => {
     await user.keyboard('{Backspace}');
     await user.click(screen.getByRole('button', {name: 'Submit'}));
     expect(screen.getByLabelText('Submitted value')).toHaveTextContent('[2]');
+  });
+
+  it('keeps what the user is typing in the search box when the field re-renders', async () => {
+    const user = userEvent.setup();
+    const field = (description: string) => (
+      <FieldHarness defaultValue={[2]}>
+        <MultiSelectField label="Tags" description={description} options={TAGS} searchable />
+      </FieldHarness>
+    );
+    const {rerender} = render(field('Pick any'));
+    const input = screen.getByRole('combobox', {name: 'Tags'});
+    await user.type(input, 'bu');
+
+    rerender(field('Pick any that apply'));
+
+    expect(input).toHaveValue('bu');
   });
 
   it('keeps a stored value that is not in the options when another is toggled', async () => {
@@ -191,5 +208,80 @@ describe('MultiSelectField', () => {
     expect(combobox).toHaveAttribute('aria-invalid', 'true');
     expect(combobox).toBeRequired();
     expect(combobox).toHaveAccessibleDescription('Pick a tag');
+  });
+
+  it.each([
+    ['null', null],
+    ['a single value', 'a'],
+  ])('renders a stored %s as nothing picked, warns, and stores an array on the first pick', async (_name, stored) => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const user = userEvent.setup();
+    render(
+      <FieldHarness defaultValue={stored}>
+        <MultiSelectField label="Tags" options={LETTERS} placeholder="Pick tags" />
+      </FieldHarness>,
+    );
+    const combobox = screen.getByRole('combobox', {name: /Tags/});
+    expect(combobox).toHaveTextContent('Pick tags');
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('expects an array of strings or numbers'));
+
+    await user.click(combobox);
+    await user.click(within(screen.getByRole('listbox')).getByRole('option', {name: 'b'}));
+    await user.keyboard('{Escape}');
+    await user.click(screen.getByRole('button', {name: 'Submit'}));
+    expect(screen.getByLabelText('Submitted value')).toHaveTextContent('["b"]');
+  });
+
+  it('drops stored entries that are not a string or a number', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const user = userEvent.setup();
+    render(
+      <FieldHarness defaultValue={['a', null, {id: 7}]}>
+        <MultiSelectField label="Tags" options={LETTERS} />
+      </FieldHarness>,
+    );
+    const combobox = screen.getByRole('combobox', {name: /Tags/});
+    expect(within(combobox).getByText('a')).toBeInTheDocument();
+    expect(combobox).not.toHaveTextContent(/null|object/);
+    expect(warn).toHaveBeenCalledTimes(1);
+
+    await user.click(combobox);
+    await user.click(within(screen.getByRole('listbox')).getByRole('option', {name: 'b'}));
+    await user.keyboard('{Escape}');
+    await user.click(screen.getByRole('button', {name: 'Submit'}));
+    expect(screen.getByLabelText('Submitted value')).toHaveTextContent('["a","b"]');
+  });
+
+  it('stores a value the browser autofills into the hidden input, with its type', async () => {
+    const user = userEvent.setup();
+    render(
+      <FieldHarness defaultValue={[]}>
+        <MultiSelectField label="Tags" options={TAGS} />
+      </FieldHarness>,
+    );
+    // Autofill writes the native input MUI keeps under the select, and the value arrives as
+    // one string instead of the array a click produces. The input is aria-hidden.
+    const native = screen.getByRole('textbox', {hidden: true});
+    fireEvent.change(native, {target: {value: '2'}});
+
+    expect(within(screen.getByRole('combobox', {name: /Tags/})).getByText('Billing')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', {name: 'Submit'}));
+    expect(screen.getByLabelText('Submitted value')).toHaveTextContent('[2]');
+  });
+
+  it('leaves an option that arrived without a value out of the stored array', async () => {
+    const user = userEvent.setup();
+    // What a consumer gets from an API row with a missing id: the compiler cannot see it.
+    const partial = JSON.parse('[{"label": "Untitled"}]') as Option<string>[];
+    render(
+      <FieldHarness defaultValue={['a']}>
+        <MultiSelectField label="Tags" options={[...LETTERS, ...partial]} />
+      </FieldHarness>,
+    );
+    await user.click(screen.getByRole('combobox', {name: /Tags/}));
+    await user.click(within(screen.getByRole('listbox')).getByRole('option', {name: 'Untitled'}));
+    await user.keyboard('{Escape}');
+    await user.click(screen.getByRole('button', {name: 'Submit'}));
+    expect(screen.getByLabelText('Submitted value')).toHaveTextContent('["a"]');
   });
 });
