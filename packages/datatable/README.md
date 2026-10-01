@@ -35,7 +35,7 @@ pnpm add react react-dom @mui/material @mui/icons-material @emotion/react @emoti
 | `@tanstack/react-table` ^8.21                | yes      | the table engine (rows, columns, sorting model)      |
 | `@mui/x-date-pickers` ^8, `dayjs` ^1.11      | yes      | the date filter, imported statically by the panel    |
 | `@tanstack/react-query` ^5                   | optional | only `useServerSidePagination`, behind its own entry |
-| `write-excel-file` ^3                        | optional | only `xlsx` export, and only when a user clicks it   |
+| `write-excel-file` ^4                        | optional | only `xlsx` export, and only when a user clicks it   |
 
 The last two are the only genuinely optional ones, and they are the two marked `optional` in
 `peerDependenciesMeta`. `@mui/x-date-pickers` and `dayjs` look conditional but are not: the

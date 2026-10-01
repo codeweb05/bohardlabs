@@ -45,7 +45,7 @@
     "dayjs": "^1.11.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "write-excel-file": "^3.0.0 || ^4.0.0"
+    "write-excel-file": "^4.0.0"
   },
   "peerDependenciesMeta": {
     "@tanstack/react-query": {
