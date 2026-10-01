@@ -86,3 +86,84 @@ describe('useColumnOrdering — cancelling a drag', () => {
     expect(result.current.isDragging).toBe(false);
   });
 });
+
+/**
+ * `moveColumn` is the half of the hook a consumer can call directly, from a keyboard
+ * shortcut or a "move left" menu item, so it has to hold up against ids it was not built
+ * around: the column it is already on, one that does not exist, and a table whose pinning
+ * state was restored from storage without a `left` list.
+ */
+describe('useColumnOrdering, moving a column by id', () => {
+  it('reports the new order, starting from the declared one when none is stored', () => {
+    const {result, onOrderChange} = renderColumnOrdering();
+
+    act(() => {
+      result.current.moveColumn('quantity', 'name');
+    });
+
+    expect(onOrderChange).toHaveBeenCalledExactlyOnceWith(['quantity', 'name']);
+  });
+
+  it('does nothing when a column is moved onto itself', () => {
+    const {result, onOrderChange} = renderColumnOrdering();
+
+    act(() => {
+      result.current.moveColumn('name', 'name');
+    });
+
+    expect(onOrderChange).not.toHaveBeenCalled();
+  });
+
+  it('does nothing for a column the table does not have', () => {
+    // A stored shortcut can outlive the column it pointed at.
+    const {result, onOrderChange} = renderColumnOrdering();
+
+    act(() => {
+      result.current.moveColumn('retired', 'name');
+    });
+    act(() => {
+      result.current.moveColumn('name', 'retired');
+    });
+
+    expect(onOrderChange).not.toHaveBeenCalled();
+  });
+
+  it('still reorders when the pinning state carries no left list', () => {
+    const onOrderChange = vi.fn<(order: string[]) => void>();
+    const {result} = renderHook(() => {
+      const table = useReactTable({
+        data,
+        columns,
+        initialState: {columnPinning: {}},
+        getCoreRowModel: getCoreRowModel(),
+      });
+      return useColumnOrdering<Item>(table, {onOrderChange});
+    });
+
+    act(() => {
+      result.current.moveColumn('quantity', 'name');
+    });
+
+    expect(onOrderChange).toHaveBeenCalledExactlyOnceWith(['quantity', 'name']);
+  });
+});
+
+describe('useColumnOrdering, a drag-over with no drag in progress', () => {
+  it('marks no drop target', () => {
+    // A file dragged in from the desktop fires `dragover` on the headers too. Marking a
+    // target for it would commit a move on the next real drag.
+    const {result, onOrderChange} = renderColumnOrdering();
+
+    act(() => {
+      result.current.handleDragOver('quantity');
+    });
+
+    expect(result.current.dragOverColumn).toBeNull();
+
+    act(() => {
+      result.current.handleDragEnd();
+    });
+
+    expect(onOrderChange).not.toHaveBeenCalled();
+  });
+});

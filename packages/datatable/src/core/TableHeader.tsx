@@ -313,21 +313,27 @@ function useHeaderTruncation(
   useEffect(() => {
     if (overflowMode !== 'ellipsis' && overflowMode !== 'truncate') return;
     const node = headerRef.current;
+    // v8 ignore start: the ref is attached before any effect runs
     if (!node) return;
+    // v8 ignore stop
 
     const checkTruncation = () => {
       const element = node.querySelector('.header-content');
+      // v8 ignore start: the header always renders its `.header-content` box
       if (element) {
         setIsTruncated(element.scrollWidth > element.clientWidth);
       }
+      // v8 ignore stop
     };
 
     const timeoutId = setTimeout(checkTruncation, 0);
     const initialElement = node.querySelector('.header-content');
 
+    // v8 ignore start: the header always renders its `.header-content` box
     if (!initialElement) {
       return () => clearTimeout(timeoutId);
     }
+    // v8 ignore stop
 
     const resizeObserver = new ResizeObserver(checkTruncation);
     resizeObserver.observe(initialElement);
@@ -567,10 +573,12 @@ function RegularHeaderCell<TData extends RowData>({
   onColumnDragOver,
   onColumnDragEnd,
   sortingState,
+  // v8 ignore start: `HeaderCell`, the only caller, passes all three
   defaultOverflow = 'ellipsis',
   stickyHeader = false,
   densityConfig,
   headerCase = DEFAULT_HEADER_CASE,
+  // v8 ignore stop
   pinnedInfo,
   pinnedSx,
 }: Readonly<RegularHeaderCellProps<TData>>) {
@@ -750,9 +758,13 @@ function getHeaderTooltipText({
   if (typeof cellContent === 'string') return cellContent;
   if (typeof cellContent === 'number') return String(cellContent);
   const node = headerRef.current;
+  // v8 ignore start: only called while rendering a mounted, truncated header, whose ref is attached
   if (!node) return '';
+  // v8 ignore stop
   const element = node.querySelector('.header-content');
+  // v8 ignore start: a truncated header always holds its `.header-content` box
   return element?.textContent ?? '';
+  // v8 ignore stop
 }
 
 function HeaderCell<TData extends RowData>(props: Readonly<HeaderCellProps<TData>>) {
@@ -761,11 +773,13 @@ function HeaderCell<TData extends RowData>(props: Readonly<HeaderCellProps<TData
   const {
     header,
     table,
+    // v8 ignore start: `TableHeader`, the only caller, has these defaults itself and passes all five
     stickyHeader = false,
     pageIndex = 0,
     pageSize = 0,
     selectionSignature = 0,
     expansionSignature = '',
+    // v8 ignore stop
   } = props;
 
   const columnId = header.column.id;

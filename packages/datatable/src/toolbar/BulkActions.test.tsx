@@ -8,6 +8,7 @@
  * The block at the bottom guards a bug that has since been fixed; it is kept as a
  * regression test.
  */
+import {ThemeProvider, alpha, createTheme} from '@mui/material';
 import type {ColumnDef, RowSelectionState} from '@tanstack/react-table';
 import {getCoreRowModel, getFilteredRowModel, useReactTable} from '@tanstack/react-table';
 import {act, screen, waitFor} from '@testing-library/react';
@@ -15,11 +16,12 @@ import userEvent from '@testing-library/user-event';
 import {useState} from 'react';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 
+import {DataTableConfigProvider} from '../config/ConfigContext';
 import {DEFAULT_LABELS} from '../i18n';
 import {DataTableLabelsProvider} from '../i18n';
 import type {DataTableLabels} from '../i18n';
-import {render} from '../test/test-utils';
-import type {BulkAction} from '../types';
+import {parentOf, render} from '../test/test-utils';
+import type {BulkAction, DataTableConfirmProps} from '../types';
 import {BulkActions} from './BulkActions';
 
 interface Item {
@@ -226,5 +228,104 @@ describe('the clear-selection button is labelled from `labels`', () => {
     renderBulkActions([deleteAction()], {'row-1': true}, {clearSelection: 'Effacer la selection'});
 
     expect(screen.getByRole('button', {name: 'Effacer la selection'})).toBeInTheDocument();
+  });
+});
+
+describe('BulkActions, colours', () => {
+  it('colours the confirm button after a destructive action', async () => {
+    // MUI paints a contained button through CSS variables jsdom does not resolve, so the
+    // colour is read off the class MUI documents for it.
+    renderBulkActions([deleteAction({color: 'error', confirmMessage: 'Delete these rows?'})]);
+
+    await userEvent.click(screen.getByRole('button', {name: 'Delete'}));
+
+    expect(await screen.findByRole('button', {name: DEFAULT_LABELS.confirm})).toHaveClass('MuiButton-colorError');
+  });
+
+  it('keeps the confirm button in the primary colour for any other action', async () => {
+    renderBulkActions([deleteAction({color: 'warning', confirmMessage: 'Archive these rows?'})]);
+
+    await userEvent.click(screen.getByRole('button', {name: 'Delete'}));
+
+    expect(await screen.findByRole('button', {name: DEFAULT_LABELS.confirm})).toHaveClass('MuiButton-colorPrimary');
+  });
+
+  it('tints the bar a little stronger under a dark theme', () => {
+    // 6% of the primary colour disappears against a dark paper, so dark mode uses 8%.
+    const dark = createTheme({palette: {mode: 'dark'}});
+    function DarkHarness() {
+      'use no memo';
+      const table = useReactTable({
+        data,
+        columns,
+        state: {rowSelection: {'row-1': true}},
+        enableRowSelection: true,
+        getRowId: (row) => row.id,
+        getCoreRowModel: getCoreRowModel(),
+        getFilteredRowModel: getFilteredRowModel(),
+      });
+      return (
+        <ThemeProvider theme={dark}>
+          <BulkActions table={table} actions={[deleteAction()]} />
+        </ThemeProvider>
+      );
+    }
+    render(<DarkHarness />);
+
+    expect(parentOf(screen.getByRole('button', {name: DEFAULT_LABELS.clearSelection}))).toHaveStyle({
+      backgroundColor: alpha(dark.palette.primary.main, 0.08),
+    });
+  });
+});
+
+describe('BulkActions, a consumer dialog that confirms with nothing pending', () => {
+  // A dialog passed through `slots.confirmDialog` is the consumer's to build, and one that
+  // keeps its confirm button mounted while closed can call `onConfirm` at any time: a double
+  // click as it closes, or a keyboard shortcut it listens for.
+  function AlwaysMountedConfirm({open, onConfirm, title}: Readonly<DataTableConfirmProps>) {
+    return (
+      <button type="button" onClick={() => void onConfirm()}>
+        {open ? `Confirm ${title}` : 'Nothing to confirm'}
+      </button>
+    );
+  }
+
+  function Harness() {
+    const [rowSelection, setRowSelection] = useState<RowSelectionState>({'row-1': true});
+    const table = useReactTable({
+      data,
+      columns,
+      state: {rowSelection},
+      onRowSelectionChange: setRowSelection,
+      enableRowSelection: true,
+      getRowId: (row) => row.id,
+      getCoreRowModel: getCoreRowModel(),
+      getFilteredRowModel: getFilteredRowModel(),
+    });
+    return (
+      <DataTableConfigProvider slots={{confirmDialog: AlwaysMountedConfirm}}>
+        <BulkActions table={table} actions={[deleteAction({confirmMessage: 'Delete these rows?'})]} />
+      </DataTableConfigProvider>
+    );
+  }
+
+  it('runs nothing and keeps the selection', async () => {
+    render(<Harness />);
+
+    await userEvent.click(screen.getByRole('button', {name: 'Nothing to confirm'}));
+
+    expect(onClick).not.toHaveBeenCalled();
+    expect(screen.getByText('1 selected')).toBeInTheDocument();
+  });
+
+  it('runs the action once it has been asked for', async () => {
+    render(<Harness />);
+    await userEvent.click(screen.getByRole('button', {name: 'Delete'}));
+
+    await userEvent.click(screen.getByRole('button', {name: 'Confirm Delete'}));
+
+    await waitFor(() => {
+      expect(onClick).toHaveBeenCalledWith([data[0]]);
+    });
   });
 });

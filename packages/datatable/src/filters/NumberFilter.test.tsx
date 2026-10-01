@@ -172,6 +172,14 @@ describe('NumberFilter — range mode', () => {
     expect(minInput()).toHaveValue('12');
   });
 
+  it('rejects the same characters in the upper bound', async () => {
+    render(<Harness />);
+
+    await userEvent.type(maxInput(), '9z9');
+
+    expect(maxInput()).toHaveValue('99');
+  });
+
   it('keeps a half-typed decimal in the box', async () => {
     // With type="number" the browser reports '' for "5.", which used to wipe the
     // input mid-typing. The text input plus partial-number regex is what prevents it.
@@ -259,6 +267,25 @@ describe('NumberFilter — single mode', () => {
     await waitFor(() => {
       expect(filterState()).toEqual([]);
     });
+  });
+
+  it('removes the filter when the number is erased by hand', async () => {
+    // Backspacing the value out is the same request as the clear button.
+    render(<Harness showRange={false} initial={[{id: 'amount', value: 42}]} />);
+
+    await userEvent.clear(screen.getByRole('textbox'));
+
+    await waitFor(() => {
+      expect(filterState()).toEqual([]);
+    });
+  });
+
+  it('rejects characters that are not part of a number', async () => {
+    render(<Harness showRange={false} />);
+
+    await userEvent.type(screen.getByRole('textbox'), '4x2');
+
+    expect(screen.getByRole('textbox')).toHaveValue('42');
   });
 
   it('stays in single mode even though the filter value is a number', () => {
@@ -459,5 +486,35 @@ describe('NumberFilter — an external change to the filter reaches the inputs',
 
     expect(minInput()).toHaveValue('');
     expect(maxInput()).toHaveValue('');
+  });
+});
+
+describe('NumberFilter, an external change reaches the single input', () => {
+  function ControlledSingle({filters}: Readonly<{filters: ColumnFiltersState}>) {
+    const table = useReactTable({
+      data,
+      columns: singleColumns,
+      state: {columnFilters: filters},
+      getCoreRowModel: getCoreRowModel(),
+    });
+    const column = table.getColumn('amount');
+    return column ? <NumberFilter column={column} showRange={false} debounceMs={NO_AUTO_COMMIT} /> : null;
+  }
+
+  it('follows the column when the value is replaced from elsewhere', () => {
+    // A saved view or a "this month" preset sets the filter without touching the box.
+    const {rerender} = render(<ControlledSingle filters={[{id: 'amount', value: 42}]} />);
+
+    rerender(<ControlledSingle filters={[{id: 'amount', value: 7}]} />);
+
+    expect(screen.getByRole('textbox')).toHaveValue('7');
+  });
+
+  it('empties the box when the filter is cleared from elsewhere', () => {
+    const {rerender} = render(<ControlledSingle filters={[{id: 'amount', value: 42}]} />);
+
+    rerender(<ControlledSingle filters={[]} />);
+
+    expect(screen.getByRole('textbox')).toHaveValue('');
   });
 });

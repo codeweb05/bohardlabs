@@ -161,6 +161,18 @@ describe('DataTableContext — reading state', () => {
     expect(setDensity).toHaveBeenCalledExactlyOnceWith('spacious');
   });
 
+  it('hands back the same density pair while the density is unchanged', () => {
+    // A consumer lists this object in an effect's dependencies. The provider re-renders
+    // on every selection or page change, and a fresh object each time would re-run
+    // that effect for changes that have nothing to do with density.
+    const {result, rerender} = renderUnderProvider(() => useTableDensity());
+    const first = result.current.result;
+
+    rerender();
+
+    expect(result.current.result).toBe(first);
+  });
+
   it('narrows to the mobile flag', () => {
     const {result} = renderUnderProvider(() => useTableMobile(), {isMobile: true});
 

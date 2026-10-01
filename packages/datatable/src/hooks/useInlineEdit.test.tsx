@@ -187,6 +187,29 @@ describe('useInlineEdit', () => {
     expect(result.current.edit.editingData).toMatchObject({name: 'Bleach'});
   });
 
+  it('hands onError an Error when the save rejects with a bare string', async () => {
+    // Some transports reject with the response body. The handler is typed to receive an
+    // `Error`, so it gets one, carrying the same message the table shows.
+    onSave.mockRejectedValue('Server said no');
+    const {result} = renderInlineEdit();
+
+    act(() => {
+      result.current.edit.startEdit(result.current.rows[0]);
+    });
+    act(() => {
+      result.current.edit.updateField('name', 'Bleach');
+    });
+    await act(async () => {
+      await result.current.edit.saveEdit().catch(() => undefined);
+    });
+
+    await waitFor(() => {
+      expect(result.current.edit.error).toBe('Server said no');
+    });
+    expect(onError).toHaveBeenCalledExactlyOnceWith(expect.any(Error), 'item-1');
+    expect(onError.mock.calls[0]?.[0]).toHaveProperty('message', 'Server said no');
+  });
+
   it('discards the draft on cancel', () => {
     const {result} = renderInlineEdit();
 

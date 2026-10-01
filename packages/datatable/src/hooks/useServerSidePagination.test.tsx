@@ -391,6 +391,121 @@ describe('useServerSidePagination — response handling', () => {
   });
 });
 
+describe('useServerSidePagination, defaults and stable inputs', () => {
+  /** Mounts the hook with options that keep their identity across renders, as a module-level key does. */
+  function renderStable(options: Partial<UseServerSidePaginationOptions<Item>> = {}) {
+    const {wrapper} = createTestWrapper();
+    keyCounter += 1;
+    const queryKey = ['items', keyCounter];
+    const mount = (extra: Partial<UseServerSidePaginationOptions<Item>> = {}) =>
+      renderHook(
+        (props: Partial<UseServerSidePaginationOptions<Item>>) =>
+          useServerSidePagination<Item>({queryKey, queryFn, ...props}),
+        {wrapper, initialProps: {...options, ...extra}},
+      );
+    return {mount};
+  }
+
+  it('sends an ascending sort as asc', async () => {
+    renderPagination({initialSorting: [{id: 'name', desc: false}]});
+
+    await waitFor(() => {
+      expect(lastParams()).toMatchObject({sortBy: 'name', sortOrder: 'asc'});
+    });
+  });
+
+  it('waits 300ms after the last keystroke when no debounce is given', async () => {
+    const {mount} = renderStable();
+    const {result} = mount();
+    await waitFor(() => {
+      expect(queryFn).toHaveBeenCalledTimes(1);
+    });
+
+    act(() => {
+      result.current.setGlobalFilter('acme');
+    });
+    await new Promise((resolve) => {
+      setTimeout(resolve, 150);
+    });
+
+    // Half way through the wait nothing has gone out yet.
+    expect(queryFn).toHaveBeenCalledTimes(1);
+
+    await waitFor(() => {
+      expect(lastParams().globalFilter).toBe('acme');
+    });
+    expect(queryFn).toHaveBeenCalledTimes(2);
+  });
+
+  it('does not ask again when the component re-renders with the same inputs', async () => {
+    const {mount} = renderStable();
+    const {result, rerender} = mount();
+    await waitFor(() => {
+      expect(result.current.data).toHaveLength(1);
+    });
+
+    rerender({});
+    rerender({});
+
+    expect(queryFn).toHaveBeenCalledTimes(1);
+    expect(result.current.data).toEqual([{id: 'item-1', name: 'Detergent'}]);
+  });
+
+  it('serves a second table on the same key from the cache while the data is fresh', async () => {
+    // The default 30 seconds: two tables showing the same list cost one request.
+    const {mount} = renderStable();
+    const {result: firstTable} = mount();
+    await waitFor(() => {
+      expect(firstTable.current.data).toHaveLength(1);
+    });
+
+    const {result: secondTable} = mount();
+
+    await waitFor(() => {
+      expect(secondTable.current.data).toHaveLength(1);
+    });
+    expect(queryFn).toHaveBeenCalledTimes(1);
+  });
+
+  it('asks again for a second table when the consumer wants no caching', async () => {
+    const {mount} = renderStable({staleTime: 0});
+    const {result: firstTable} = mount();
+    await waitFor(() => {
+      expect(firstTable.current.data).toHaveLength(1);
+    });
+
+    mount();
+
+    await waitFor(() => {
+      expect(queryFn).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  it('applies a transformer swapped in after mount to the next request', async () => {
+    const byOffset = {
+      transformParams: (params: ServerSideParams) => ({offset: (params.page - 1) * params.pageSize}),
+    };
+    const byCursor = {
+      transformParams: (params: ServerSideParams) => ({cursor: `page-${params.page}`}),
+    };
+    const {mount} = renderStable();
+    const {rerender} = mount({transformers: byOffset});
+    await waitFor(() => {
+      expect(lastParams()).toEqual({offset: 0});
+    });
+
+    // Same transformer on a re-render: the params object is reused, so nothing is refetched.
+    rerender({transformers: byOffset});
+    expect(queryFn).toHaveBeenCalledTimes(1);
+
+    rerender({transformers: byCursor});
+
+    await waitFor(() => {
+      expect(lastParams()).toEqual({cursor: 'page-1'});
+    });
+  });
+});
+
 // ===========================================================================
 // REGRESSION — hooks/useServerSidePagination.ts
 //

@@ -198,4 +198,28 @@ describe('useTableMutation', () => {
     });
     expect(result.current.error).toBeNull();
   });
+
+  it('keeps mutate and clearError stable across re-renders with the same options', async () => {
+    // Both end up in effect dependency lists and in memoised row actions.
+    const {wrapper} = createTestWrapper();
+    const onSuccess = vi.fn();
+    const options = {mutationFn: (id: string) => Promise.resolve({id}), onSuccess};
+
+    const {result, rerender} = renderHook(() => useTableMutation<Item, string>(options), {wrapper});
+    const {mutate, clearError} = result.current;
+
+    rerender();
+
+    expect(result.current.mutate).toBe(mutate);
+    expect(result.current.clearError).toBe(clearError);
+
+    act(() => {
+      result.current.mutate('item-9');
+    });
+
+    await waitFor(() => {
+      expect(result.current.data).toEqual({id: 'item-9'});
+    });
+    expect(onSuccess).toHaveBeenCalledTimes(1);
+  });
 });

@@ -54,7 +54,9 @@ export function DataTableConfigProvider({
  * from a memoized context value.
  */
 export function ConfirmSlot(props: Readonly<DataTableConfirmProps>) {
+  // v8 ignore start: both the default config and the provider resolve `slots.confirmDialog`, so the fallback never runs
   return createElement(useContext(ConfigContext).slots.confirmDialog ?? ConfirmDialog, props);
+  // v8 ignore stop
 }
 
 /** Resolved dayjs format strings for the date filter. Never partial at this point. */

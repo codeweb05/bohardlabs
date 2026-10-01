@@ -20,7 +20,7 @@ import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 
 import {DEFAULT_LABELS} from '../i18n';
 import {render} from '../test/test-utils';
-import type {DataTableColumnDef, RowData} from '../types';
+import type {DataTableColumnDef, ExportFormat, RowData} from '../types';
 import {ExportMenu} from './ExportMenu';
 
 interface Order extends RowData {
@@ -84,10 +84,22 @@ function setupDownloadMocks() {
   return {getContent: () => lastBlobContent, getLink: () => lastLink};
 }
 
-function Harness() {
+interface HarnessProps {
+  readonly tableColumns?: DataTableColumnDef<Order>[];
+  readonly formats?: ExportFormat[];
+  readonly fileName?: string;
+  readonly onExport?: (format: ExportFormat, rows: Order[]) => void;
+}
+
+function Harness({
+  tableColumns = columns,
+  formats = ['csv', 'json'],
+  fileName = 'orders',
+  onExport,
+}: Readonly<HarnessProps>) {
   'use no memo';
-  const table = useReactTable({data: orders, columns, getCoreRowModel: getCoreRowModel()});
-  return <ExportMenu table={table} formats={['csv', 'json']} fileName="orders" />;
+  const table = useReactTable({data: orders, columns: tableColumns, getCoreRowModel: getCoreRowModel()});
+  return <ExportMenu table={table} formats={formats} fileName={fileName} onExport={onExport} />;
 }
 
 async function exportAs(label: string) {
@@ -214,5 +226,85 @@ describe('ExportMenu — dismissing the menu', () => {
       expect(screen.queryByRole('menuitem', {name: DEFAULT_LABELS.exportCsv})).not.toBeInTheDocument();
     });
     expect(download.getContent()).toBe('');
+  });
+});
+
+describe('ExportMenu, props that change after mount', () => {
+  it('names the file after the latest fileName', async () => {
+    // A page that puts the date range in the file name changes it while the menu is closed.
+    const download = setupDownloadMocks();
+    const {rerender} = render(<Harness fileName="orders" />);
+
+    rerender(<Harness fileName="orders-2024" />);
+    await exportAs(DEFAULT_LABELS.exportCsv);
+
+    await waitFor(() => {
+      expect(download.getLink()).not.toBeNull();
+    });
+    expect(download.getLink()).toHaveAttribute('download', 'orders-2024.csv');
+  });
+
+  it('offers a format added after mount', async () => {
+    const {rerender} = render(<Harness formats={['csv']} />);
+
+    rerender(<Harness formats={['csv', 'xlsx']} />);
+    await userEvent.click(screen.getByRole('button', {name: DEFAULT_LABELS.exportLabel}));
+
+    expect(await screen.findByRole('menuitem', {name: DEFAULT_LABELS.exportExcel})).toBeInTheDocument();
+    expect(screen.getAllByRole('menuitem')).toHaveLength(2);
+  });
+});
+
+describe('ExportMenu, a parent that re-renders', () => {
+  it('keeps an open menu open and still exports once', async () => {
+    // A page that polls re-renders the toolbar with the same props every few seconds.
+    const onExport = vi.fn();
+    const formats: ExportFormat[] = ['csv', 'json'];
+    const {rerender} = render(<Harness formats={formats} onExport={onExport} />);
+    await userEvent.click(screen.getByRole('button', {name: DEFAULT_LABELS.exportLabel}));
+    const csv = await screen.findByRole('menuitem', {name: DEFAULT_LABELS.exportCsv});
+
+    rerender(<Harness formats={formats} onExport={onExport} />);
+
+    expect(screen.getByRole('menuitem', {name: DEFAULT_LABELS.exportCsv})).toBe(csv);
+    await userEvent.click(csv);
+    expect(onExport).toHaveBeenCalledTimes(1);
+    expect(onExport).toHaveBeenCalledWith('csv', expect.any(Array));
+  });
+});
+
+describe('ExportMenu, a header that is not plain text', () => {
+  it('heads the column with its id', async () => {
+    // A header rendered from a function has no text to put in a file.
+    const download = setupDownloadMocks();
+    const tableColumns: DataTableColumnDef<Order>[] = [
+      {id: 'total', accessorKey: 'total', header: 'Total'},
+      {id: 'paid', accessorKey: 'paid', header: () => <strong>Paid</strong>},
+    ];
+    render(<Harness tableColumns={tableColumns} />);
+
+    await exportAs(DEFAULT_LABELS.exportCsv);
+
+    await waitFor(() => {
+      expect(download.getContent()).not.toBe('');
+    });
+    expect(download.getContent().split('\n')).toEqual(['Total,paid', '42.5,true']);
+  });
+});
+
+describe('ExportMenu, a format it does not know', () => {
+  it('still lists it and hands it to onExport', async () => {
+    // `onExport` takes over every format, so a plain-JS consumer can pass one of its own.
+    // The type rejects that, so the extra entry is merged in the way untyped code would.
+    const onExport = vi.fn<(format: ExportFormat, rows: Order[]) => void>();
+    const formats = Object.assign(['csv'] satisfies ExportFormat[], {1: 'pdf'});
+    render(<Harness formats={formats} onExport={onExport} />);
+    await userEvent.click(screen.getByRole('button', {name: DEFAULT_LABELS.exportLabel}));
+    const items = await screen.findAllByRole('menuitem');
+    expect(items).toHaveLength(2);
+
+    await userEvent.click(items[1]);
+
+    expect(onExport).toHaveBeenCalledExactlyOnceWith('pdf', orders);
   });
 });

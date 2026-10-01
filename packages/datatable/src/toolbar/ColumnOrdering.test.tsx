@@ -11,6 +11,7 @@
  * It is tested here because it is exported from the package surface: either it gets
  * reconciled with the hook, or it gets deleted before this ships.
  */
+import {ThemeProvider, createTheme} from '@mui/material';
 import type {ColumnDef, ColumnOrderState, ColumnPinningState} from '@tanstack/react-table';
 import {getCoreRowModel, useReactTable} from '@tanstack/react-table';
 import {fireEvent, screen, waitFor, within} from '@testing-library/react';
@@ -347,6 +348,62 @@ describe('KNOWN ISSUE — applying an order must respect system columns and pinn
 
     // What `orderWithPinned` produces: leading system columns, then the frozen block,
     // then everything else, then the trailing actions column.
+    expect(screen.getByText('order: select,quantity,name,actions')).toBeInTheDocument();
+  });
+});
+
+describe('ColumnOrdering, outside the usual harness', () => {
+  interface StandaloneProps {
+    readonly onOrderChange?: (order: string[]) => void;
+    readonly dark?: boolean;
+  }
+
+  function Standalone({onOrderChange: report, dark = false}: Readonly<StandaloneProps>) {
+    'use no memo';
+    const table = useReactTable({
+      data,
+      columns: baseColumns,
+      getRowId: (row) => row.id,
+      getCoreRowModel: getCoreRowModel(),
+    });
+    return (
+      <ThemeProvider theme={createTheme({palette: {mode: dark ? 'dark' : 'light'}})}>
+        <ColumnOrdering table={table} onOrderChange={report} />
+      </ThemeProvider>
+    );
+  }
+
+  it('reports to the handler passed most recently', async () => {
+    // A parent that builds the handler inline hands over a new one on every render.
+    const first = vi.fn<(order: string[]) => void>();
+    const second = vi.fn<(order: string[]) => void>();
+    const {rerender} = render(<Standalone onOrderChange={first} />);
+    await userEvent.click(screen.getByRole('button', {name: REORDER_LABEL}));
+
+    rerender(<Standalone onOrderChange={second} />);
+    await userEvent.click(screen.getByRole('button', {name: DEFAULT_LABELS.apply}));
+
+    expect(second).toHaveBeenCalledExactlyOnceWith(['select', 'name', 'quantity', 'actions']);
+    expect(first).not.toHaveBeenCalled();
+  });
+
+  it('separates the rows with a light line under a dark theme', async () => {
+    render(<Standalone dark />);
+    await userEvent.click(screen.getByRole('button', {name: REORDER_LABEL}));
+    const [row] = within(screen.getByRole('dialog')).getAllByRole('listitem');
+
+    expect(row).toHaveStyle({borderBottom: '1px solid rgba(255, 255, 255, 0.05)'});
+  });
+});
+
+describe('ColumnOrdering, a pinning state with no left block', () => {
+  it('applies the order as if nothing were pinned', async () => {
+    // `{}` is a valid `ColumnPinningState`, and what a table that never pinned anything holds.
+    await openDialog({pinning: {}});
+    dragRow(0, 1);
+
+    await userEvent.click(screen.getByRole('button', {name: DEFAULT_LABELS.apply}));
+
     expect(screen.getByText('order: select,quantity,name,actions')).toBeInTheDocument();
   });
 });

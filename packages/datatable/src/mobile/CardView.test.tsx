@@ -24,6 +24,7 @@ import {DEFAULT_LABELS} from '../i18n';
 import type {TestRole} from '../test/test-utils';
 import {generateTestRoles, render, screen} from '../test/test-utils';
 import type {DataTableColumnDef, RowAction} from '../types';
+import {CardItem} from './CardItem';
 import {CardView} from './CardView';
 
 const testData = generateTestRoles(3);
@@ -647,5 +648,134 @@ describe('CardView — no rows', () => {
 
     expect(screen.queryAllByText(/^Role \d+$/)).toHaveLength(0);
     expect(screen.getByText(DEFAULT_LABELS.noData)).toBeInTheDocument();
+  });
+});
+
+describe('CardItem, fields on a card', () => {
+  it('renders a one-column table as a title with nothing under it', () => {
+    render(<DataTable columns={[testColumns[0]]} data={testData} />);
+
+    expect(cardTitles()).toHaveLength(CARD_COUNT);
+    expect(screen.queryByText(/:$/)).not.toBeInTheDocument();
+  });
+
+  it('labels a field by its column id when the header is not plain text', () => {
+    // A header rendered from a function has no text to reuse, and an unlabelled value on
+    // a card is unreadable. `mobileLabel` is the way to give it a proper one.
+    render(
+      <DataTable
+        columns={[testColumns[0], {...testColumns[1], header: () => <strong>Type</strong>}]}
+        data={testData}
+      />,
+    );
+
+    expect(screen.getAllByText('roleType:')).toHaveLength(CARD_COUNT);
+    expect(screen.queryByText('Type:')).not.toBeInTheDocument();
+  });
+
+  it('wraps a long value by default and cuts it to one line when asked to', () => {
+    const {unmount} = render(<DataTable columns={testColumns.slice(0, 2)} data={testData} />);
+    expect(screen.getByText('SUPER_ADMIN')).toHaveStyle({wordBreak: 'break-word'});
+    expect(screen.getByText('SUPER_ADMIN')).not.toHaveStyle({textOverflow: 'ellipsis'});
+    unmount();
+
+    render(<DataTable columns={[testColumns[0], {...testColumns[1], mobileOverflow: 'ellipsis'}]} data={testData} />);
+
+    expect(screen.getByText('SUPER_ADMIN')).toHaveStyle({
+      overflow: 'hidden',
+      textOverflow: 'ellipsis',
+      whiteSpace: 'nowrap',
+    });
+  });
+
+  it('opens and closes a panel whose content is plain text', async () => {
+    // The same string comes back for every row and every render, so nothing about the
+    // content changes between open and closed. Only the open flag does.
+    render(
+      <DataTable
+        columns={testColumns}
+        data={testData}
+        enableExpanding
+        renderExpandedRow={() => 'No further details'}
+      />,
+    );
+    expect(screen.queryByText('No further details')).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getAllByRole('button', {name: 'Expand row'})[0]);
+
+    expect(await screen.findByText('No further details')).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', {name: 'Collapse row'}));
+
+    await waitFor(() => {
+      expect(screen.queryByText('No further details')).not.toBeInTheDocument();
+    });
+  });
+});
+
+// `DataTable` hands `CardView` and `CardItem` every flag and never mounts the list for an
+// empty table, so what they do with only the required props is visible only from here.
+describe('CardView and CardItem, with only the required props', () => {
+  const plainColumns = testColumns as ColumnDef<TestRole>[];
+
+  function Direct({data = testData, ariaLabel}: Readonly<{data?: TestRole[]; ariaLabel?: string}>) {
+    'use no memo';
+    const table = useReactTable({
+      data,
+      columns: plainColumns,
+      getRowId: (row) => String(row.id),
+      getCoreRowModel: getCoreRowModel(),
+    });
+
+    return (
+      <DataTableProvider table={table} density="comfortable" setDensity={() => {}} isMobile>
+        <CardView table={table} ariaLabel={ariaLabel} />
+      </DataTableProvider>
+    );
+  }
+
+  function SingleCard() {
+    'use no memo';
+    const table = useReactTable({
+      data: testData,
+      columns: plainColumns,
+      getRowId: (row) => String(row.id),
+      getCoreRowModel: getCoreRowModel(),
+    });
+
+    return <CardItem row={table.getRowModel().rows[0]} table={table} />;
+  }
+
+  it('lists one plain card per row, with nothing to expand', () => {
+    render(<Direct ariaLabel="Roles" />);
+
+    expect(screen.getByRole('list', {name: 'Roles'})).toBeInTheDocument();
+    expect(screen.getAllByRole('listitem')).toHaveLength(CARD_COUNT);
+    expect(screen.queryByRole('button', {name: 'Expand row'})).not.toBeInTheDocument();
+  });
+
+  it('renames the list when only its label changes', () => {
+    const {rerender} = render(<Direct ariaLabel="Roles" />);
+
+    rerender(<Direct ariaLabel="Rôles" />);
+
+    expect(screen.getByRole('list', {name: 'Rôles'})).toBeInTheDocument();
+    expect(cardTitles()).toHaveLength(CARD_COUNT);
+  });
+
+  it('renders no list at all for a table with no rows', () => {
+    render(<Direct data={[]} />);
+
+    expect(screen.queryByRole('list')).not.toBeInTheDocument();
+  });
+
+  it('renders a card that is neither selected nor expandable', () => {
+    // A bare TanStack table allows selection, so the box is there. It starts unticked.
+    render(<SingleCard />);
+
+    expect(screen.getByText('Role 1')).toBeInTheDocument();
+    expect(screen.getByText('SUPER_ADMIN')).toBeInTheDocument();
+    expect(screen.getByRole('checkbox', {name: 'Select row role-1'})).not.toBeChecked();
+    expect(screen.queryByRole('button')).not.toBeInTheDocument();
   });
 });

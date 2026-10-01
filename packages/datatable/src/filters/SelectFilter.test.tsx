@@ -155,6 +155,15 @@ describe('SelectFilter — multiple', () => {
     expect(within(combobox).getByText('Pending')).toBeInTheDocument();
   });
 
+  it('shows the raw value on a chip when no option matches it', () => {
+    // A saved filter can outlive the option it pointed at. An empty chip would hide that
+    // the list is still being filtered by it.
+    render(<Harness multiple initial={[{id: 'status', value: ['ACTIVE', 'ARCHIVED']}]} />);
+
+    expect(screen.getByText('Active')).toBeInTheDocument();
+    expect(screen.getByText('ARCHIVED')).toBeInTheDocument();
+  });
+
   it('does not offer an All entry, which would be indistinguishable from an empty selection', async () => {
     render(<Harness multiple />);
 

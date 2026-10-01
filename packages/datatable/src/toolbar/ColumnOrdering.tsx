@@ -123,7 +123,9 @@ export function ColumnOrdering<TData extends RowData>({table, onOrderChange}: Re
   // Get column label
   const getColumnLabel = (columnId: string): string => {
     const column = columns.find((c) => c.id === columnId);
+    // v8 ignore start: `localOrder` only ever holds ids taken from `columns`
     if (!column) return columnId;
+    // v8 ignore stop
     const columnDef = column.columnDef as DataTableColumnDef<TData>;
     return typeof columnDef.header === 'string' ? columnDef.header : columnId;
   };
@@ -189,7 +191,9 @@ export function ColumnOrdering<TData extends RowData>({table, onOrderChange}: Re
                   key={columnId}
                   draggable
                   onDragStart={() => handleDragStart(index)}
+                  /* v8 ignore start: compiler cache check for the handler, which never changes without `handleDragEnd` changing first */
                   onDragOver={(e) => handleDragOver(e, index)}
+                  /* v8 ignore stop */
                   onDragEnd={handleDragEnd}
                   sx={{
                     cursor: 'grab',

@@ -19,7 +19,9 @@ export function useTableQuery<TData, TQueryKey extends readonly unknown[] = read
   options: UseQueryOptions<TData, Error, TData, TQueryKey>,
 ) {
   const query = useQuery(options);
+  // v8 ignore start: compiler cache check. React Query builds a new result object on every render, so the operand after `query` is never compared
   return {...query, error: query.error ? getErrorMessage(query.error) : null};
+  // v8 ignore stop
 }
 
 export function useTableMutation<TData = unknown, TVariables = void, TContext = unknown>(

@@ -508,3 +508,66 @@ describe('useTableStatePersistence — flushing nothing', () => {
     expect(localStorageMock.setItem).not.toHaveBeenCalled();
   });
 });
+
+// ===========================================================================
+// Two paths the blocks above leave out: a saved column filter coming back on load, and
+// a reset that lands while a debounced write is still waiting.
+//
+// The second is the one a user can see. "Reset to default" clears storage, and a write
+// queued 100ms earlier would otherwise fire after the clear and put the old layout
+// straight back, so the reset appears to work until the next page load.
+// ===========================================================================
+describe('useTableStatePersistence, filters and a reset during a pending write', () => {
+  beforeEach(() => {
+    localStorageMock.clear();
+    vi.clearAllMocks();
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.runAllTimers();
+    vi.useRealTimers();
+  });
+
+  it('restores persisted column filters', () => {
+    const state: PersistedTableState = {columnFilters: [{id: 'status', value: 'active'}]};
+    localStorageMock.setItem(getTableStateStorageKey('filter-table'), JSON.stringify(state));
+    const {result} = renderHook(() => useTableStatePersistence('filter-table'));
+
+    expect(result.current.loadPersistedState()).toEqual(state);
+  });
+
+  it('writes only the latest whole state when two arrive inside the debounce', () => {
+    // A sort followed straight away by a page-size change: one write, holding the second.
+    const {result} = renderHook(() => useTableStatePersistence('burst-table'));
+
+    act(() => {
+      result.current.persistWholeState({pageSize: 25, density: 'compact'});
+      vi.advanceTimersByTime(50);
+      result.current.persistWholeState({pageSize: 50});
+      vi.advanceTimersByTime(1000);
+    });
+
+    const writes = localStorageMock.setItem.mock.calls.filter(
+      ([key]) => key === getTableStateStorageKey('burst-table'),
+    );
+    expect(writes).toHaveLength(1);
+    expect(result.current.loadPersistedState()).toEqual({pageSize: 50});
+  });
+
+  it('drops a queued write when the state is cleared', () => {
+    const {result} = renderHook(() => useTableStatePersistence('reset-table'));
+    act(() => {
+      result.current.updatePersistedField('density', 'compact');
+    });
+    localStorageMock.setItem.mockClear();
+
+    act(() => {
+      result.current.clearPersistedState();
+      vi.advanceTimersByTime(1000);
+    });
+
+    expect(localStorageMock.setItem).not.toHaveBeenCalled();
+    expect(result.current.loadPersistedState()).toBeNull();
+  });
+});

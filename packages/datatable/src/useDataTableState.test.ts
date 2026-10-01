@@ -213,3 +213,97 @@ describe('useDataTableState — column sizing', () => {
     expect(result.current.columnSizing).toEqual({name: 240, email: 120});
   });
 });
+
+// ===========================================================================
+// The change handlers accept both shapes TanStack hands out: an updater function while
+// the table drives the change, and a plain value when something sets the state outright
+// (`table.setPageIndex`, `table.setSorting([...])`, a consumer holding the instance).
+// The component tests only ever produce one shape per handler, so the other one, and
+// the parent notification that hangs off it, is pinned here.
+// ===========================================================================
+describe('useDataTableState, updater shapes', () => {
+  it('applies a plain pagination object', () => {
+    const {result} = renderHook(() => useDataTableState(baseOptions()));
+
+    act(() => {
+      result.current.handlePaginationChange({pageIndex: 3, pageSize: 50});
+    });
+
+    expect(result.current.pagination).toEqual({pageIndex: 3, pageSize: 50});
+  });
+
+  it('applies a plain sorting array', () => {
+    const {result} = renderHook(() => useDataTableState(baseOptions()));
+
+    act(() => {
+      result.current.handleSortingChange([{id: 'name', desc: true}]);
+    });
+
+    expect(result.current.sorting).toEqual([{id: 'name', desc: true}]);
+  });
+
+  it('applies a filter updater against the current filters and returns to the first page', () => {
+    // A filter narrows the result set, so the page the user was on may no longer exist.
+    const {result} = renderHook(() =>
+      useDataTableState(baseOptions({initialFilters: [{id: 'status', value: 'active'}]})),
+    );
+    act(() => {
+      result.current.handlePaginationChange({pageIndex: 4, pageSize: 25});
+    });
+
+    act(() => {
+      result.current.handleFiltersChange((prev) => [...prev, {id: 'name', value: 'soap'}]);
+    });
+
+    expect(result.current.columnFilters).toEqual([
+      {id: 'status', value: 'active'},
+      {id: 'name', value: 'soap'},
+    ]);
+    expect(result.current.pagination.pageIndex).toBe(0);
+  });
+
+  it('applies a column order updater and reports the result to the parent', () => {
+    const onColumnOrderChange = vi.fn();
+    const {result} = renderHook(() =>
+      useDataTableState(baseOptions({initialColumnOrder: ['name', 'email'], onColumnOrderChange})),
+    );
+
+    act(() => {
+      result.current.handleColumnOrderChange((prev) => prev.toReversed());
+    });
+
+    expect(result.current.columnOrder).toEqual(['email', 'name']);
+    expect(onColumnOrderChange).toHaveBeenCalledWith(['email', 'name']);
+  });
+
+  it('applies a plain row selection and reports it to the parent', () => {
+    const onRowSelectionChange = vi.fn();
+    const {result} = renderHook(() => useDataTableState(baseOptions({onRowSelectionChange})));
+
+    act(() => {
+      result.current.handleRowSelectionChange({'row-2': true});
+    });
+
+    expect(result.current.rowSelection).toEqual({'row-2': true});
+    expect(onRowSelectionChange).toHaveBeenCalledWith({'row-2': true});
+  });
+});
+
+// ===========================================================================
+// React StrictMode runs every mount effect twice in development. The mount sync is
+// guarded by a ref for exactly that case: without the guard a consumer's
+// `onColumnOrderChange` fires twice on every page load in dev, which reads as a bug in
+// their own state handling.
+// ===========================================================================
+describe('useDataTableState, under StrictMode', () => {
+  it('reports the persisted layout once even though the mount effect runs twice', () => {
+    persist({columnOrder: ['email', 'name']});
+    const onColumnOrderChange = vi.fn();
+
+    renderHook(() => useDataTableState(baseOptions({tableId: TABLE_ID, onColumnOrderChange})), {
+      reactStrictMode: true,
+    });
+
+    expect(onColumnOrderChange).toHaveBeenCalledTimes(1);
+  });
+});

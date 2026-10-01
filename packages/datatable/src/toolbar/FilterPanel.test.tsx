@@ -464,3 +464,84 @@ describe('KNOWN ISSUE — clearing every filter must empty the fields', () => {
     expect(within(panel).getByRole('textbox')).toHaveValue('');
   });
 });
+
+describe('FilterPanel, with only the required props', () => {
+  function Bare({columns}: Readonly<{columns: readonly DataTableColumnDef<Item>[]}>) {
+    'use no memo';
+    const table = useReactTable({
+      data,
+      columns: columns as ColumnDef<Item>[],
+      getRowId: (row) => row.id,
+      getCoreRowModel: getCoreRowModel(),
+      getFilteredRowModel: getFilteredRowModel(),
+    });
+    return <FilterPanel table={table} columns={columns} />;
+  }
+
+  it('shows no count on the trigger when it is not told what is filtered', () => {
+    render(<Bare columns={[nameColumn]} />);
+
+    expect(screen.getByRole('button', {name: FILTERS_LABEL})).toHaveTextContent('');
+  });
+
+  it('keeps the drawer open, with what was typed, through a parent re-render', async () => {
+    // A table above the panel re-renders on every fetch. None of the panel's inputs change
+    // when it does, and the drawer must not shut or lose the half-typed filter.
+    const stableColumns = [nameColumn];
+    const {rerender} = render(<Bare columns={stableColumns} />);
+    await userEvent.click(screen.getByRole('button', {name: FILTERS_LABEL}));
+    const panel = await screen.findByRole('presentation');
+    await userEvent.type(within(panel).getByRole('textbox'), 'det');
+
+    rerender(<Bare columns={stableColumns} />);
+
+    expect(within(screen.getByRole('presentation')).getByRole('textbox')).toHaveValue('det');
+  });
+});
+
+describe('FilterPanel, a column the definitions cannot be matched to', () => {
+  it('falls back to the definition the table holds for a column with no id', async () => {
+    // Untyped code can leave `id` out and let TanStack derive it from `accessorKey`. The
+    // type requires it, so the id is blanked the way a spread from a partial object would.
+    const withoutId = Object.assign(
+      {...nameColumn, filterConfig: {type: 'text', placeholder: 'Find a product'}},
+      {
+        id: undefined,
+      },
+    );
+    const panel = await openPanel({columns: [withoutId]});
+
+    expect(within(panel).getByText('Name')).toBeInTheDocument();
+    expect(within(panel).getByPlaceholderText('Find a product')).toBeInTheDocument();
+  });
+
+  it('leaves out a column whose own definition opts out, when the list passed in lacks it', async () => {
+    // `columns` and the table are separate props, so they can disagree: here the table has
+    // a second column the list does not mention.
+    function Mismatched() {
+      'use no memo';
+      const tableColumns: DataTableColumnDef<Item>[] = [
+        nameColumn,
+        {id: 'status', accessorKey: 'status', header: 'Status', enableFiltering: false},
+        {id: 'quantity', accessorKey: 'quantity', header: () => <span>Qty</span>},
+      ];
+      const table = useReactTable({
+        data,
+        columns: tableColumns as ColumnDef<Item>[],
+        getRowId: (row) => row.id,
+        getCoreRowModel: getCoreRowModel(),
+        getFilteredRowModel: getFilteredRowModel(),
+      });
+      return <FilterPanel table={table} columns={[nameColumn]} />;
+    }
+    render(<Mismatched />);
+    await userEvent.click(screen.getByRole('button', {name: FILTERS_LABEL}));
+    const panel = await screen.findByRole('presentation');
+
+    expect(within(panel).getByText('Name')).toBeInTheDocument();
+    expect(within(panel).queryByText('Status')).not.toBeInTheDocument();
+    // The third column has no text header, so it is labelled by its id.
+    expect(within(panel).getByText('quantity')).toBeInTheDocument();
+    expect(within(panel).getAllByRole('textbox')).toHaveLength(2);
+  });
+});

@@ -170,7 +170,9 @@ async function exportToXlsx<TData extends RowData>(
   const rows = rowValues.map((values) => createDataRow(values));
 
   const colWidths = headers.map((header, i) => {
+    // v8 ignore start: every row holds one value per header, so `row[i]` is always a string
     const maxDataLen = rowValues.reduce((max, row) => Math.max(max, row[i]?.length ?? 0), 0);
+    // v8 ignore stop
     return {width: Math.min(Math.max(header.length, maxDataLen) + 2, 50)};
   });
 

@@ -90,5 +90,15 @@ export function generateTestRoles(count: number): TestRole[] {
   }));
 }
 
+/**
+ * The element wrapping `element`, for an assertion on a wrapper that has no role, name or
+ * text of its own to query by: a menu's paper, a scroll container, an icon slot.
+ */
+export function parentOf(element: HTMLElement): HTMLElement {
+  const parent = element.parentElement;
+  if (!parent) throw new Error('Expected the element to have a parent');
+  return parent;
+}
+
 export {fireEvent, screen, waitFor} from '@testing-library/react';
 export {customRender as render};

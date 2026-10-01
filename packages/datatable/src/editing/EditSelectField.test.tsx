@@ -94,6 +94,35 @@ describe('EditSelectField', () => {
     expect(screen.getByRole('combobox')).toHaveTextContent('Active');
   });
 
+  it('leaves focus where it was when told not to take it', () => {
+    // A custom editor that renders several fields picks which one starts focused.
+    render(
+      <>
+        <button type="button">Elsewhere</button>
+        <EditSelectField value="ACTIVE" onChange={onChange} options={options} autoFocus={false} />
+      </>,
+    );
+    const elsewhere = screen.getByRole('button', {name: 'Elsewhere'});
+    elsewhere.focus();
+
+    expect(elsewhere).toHaveFocus();
+    expect(screen.getByRole('combobox')).not.toHaveFocus();
+  });
+
+  it('keeps explaining the error while the value changes under it', async () => {
+    const {rerender} = render(
+      <EditSelectField value="ACTIVE" onChange={onChange} options={options} error="Not allowed here" />,
+    );
+
+    rerender(<EditSelectField value="PENDING" onChange={onChange} options={options} error="Not allowed here" />);
+    await userEvent.hover(screen.getByRole('combobox'));
+
+    expect(screen.getByRole('combobox')).toHaveTextContent('Pending');
+    await waitFor(() => {
+      expect(screen.getByRole('tooltip')).toHaveTextContent('Not allowed here');
+    });
+  });
+
   it('keeps keystrokes off the row', () => {
     // The row underneath listens for keyboard shortcuts (Escape to cancel, Enter to
     // save the row). Typing inside the select must not reach them, or picking an option

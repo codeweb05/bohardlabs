@@ -35,9 +35,11 @@ export function GlobalSearch({
 
   const checkOverflow = () => {
     const el = helperTextRef.current;
+    // v8 ignore start: the handler sits on the element that holds the ref
     if (el) {
       setIsOverflowing(el.scrollWidth > el.clientWidth);
     }
+    // v8 ignore stop
   };
 
   // Debounce the onChange callback

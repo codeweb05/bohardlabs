@@ -300,6 +300,167 @@ describe('EditableCell — re-rendering', () => {
 });
 
 // ===========================================================================
+// The editing context changes for reasons that have nothing to do with a given cell:
+// `isSaving` flips while the request is out, another field of the draft is typed into.
+// The cell re-renders each time, and has to come back with the same field and the same
+// draft value, or follow the draft when it is this field that changed.
+// ===========================================================================
+describe('EditableCell, context changes while a row is being edited', () => {
+  const numberColumn: DataTableColumnDef<Item> = {
+    id: 'quantity',
+    accessorKey: 'quantity',
+    header: 'Qty',
+    enableEditing: true,
+    editConfig: {type: 'number'},
+  };
+  const selectColumn: DataTableColumnDef<Item> = {
+    id: 'status',
+    accessorKey: 'status',
+    header: 'Status',
+    enableEditing: true,
+    editConfig: {
+      type: 'select',
+      options: [
+        {value: 'ACTIVE', label: 'Active'},
+        {value: 'PENDING', label: 'Pending'},
+      ],
+    },
+  };
+  const customColumn: DataTableColumnDef<Item> = {
+    ...textColumn,
+    editConfig: {type: 'text', renderEdit: ({value}) => <output>{String(value)}</output>},
+  };
+
+  /** One element and one columns array for the whole test, so only the context moves. */
+  function mount(column: DataTableColumnDef<Item>) {
+    const cell = <Harness columns={[column]} columnId={column.id} />;
+    const view = render(<TableEditingContext.Provider value={editingContext()}>{cell}</TableEditingContext.Provider>);
+    return (overrides: Partial<TableEditingContextValue<RowData>>) => {
+      view.rerender(
+        <TableEditingContext.Provider value={editingContext(overrides)}>{cell}</TableEditingContext.Provider>,
+      );
+    };
+  }
+
+  it('keeps the text field and its draft while the row is saving', () => {
+    const update = mount(textColumn);
+
+    update({isSaving: true});
+
+    expect(screen.getByRole('textbox')).toHaveValue('Bleach');
+  });
+
+  it('keeps the number field and its draft while the row is saving', () => {
+    const update = mount(numberColumn);
+
+    update({isSaving: true});
+
+    expect(screen.getByRole('spinbutton')).toHaveValue(9);
+  });
+
+  it('keeps the select and its draft while the row is saving', () => {
+    const update = mount(selectColumn);
+
+    update({isSaving: true});
+
+    expect(screen.getByRole('combobox')).toHaveTextContent('Pending');
+  });
+
+  it('keeps a custom editor and its draft while the row is saving', () => {
+    const update = mount(customColumn);
+
+    update({isSaving: true});
+
+    expect(screen.getByRole('status')).toHaveTextContent('Bleach');
+  });
+
+  it('follows the draft when this field changes', () => {
+    const update = mount(textColumn);
+
+    update({editingData: {...draft, name: 'Softener'}});
+
+    expect(screen.getByRole('textbox')).toHaveValue('Softener');
+  });
+
+  it('follows the draft in a number field, a select and a custom editor too', () => {
+    const updateNumber = mount(numberColumn);
+    updateNumber({editingData: {...draft, quantity: 12}});
+    expect(screen.getByRole('spinbutton')).toHaveValue(12);
+
+    const updateSelect = mount(selectColumn);
+    updateSelect({editingData: {...draft, status: 'ACTIVE'}});
+    expect(screen.getByRole('combobox')).toHaveTextContent('Active');
+
+    const updateCustom = mount(customColumn);
+    updateCustom({editingData: {...draft, name: 'Softener'}});
+    expect(screen.getByRole('status')).toHaveTextContent('Softener');
+  });
+
+  it('writes through the handler it is given after the context swaps it', async () => {
+    // A provider that rebuilds its callbacks must not leave the field calling the old one.
+    const nextUpdate = vi.fn();
+    const update = mount(textColumn);
+
+    update({updateEditField: nextUpdate});
+    await userEvent.type(screen.getByRole('textbox'), 'X');
+
+    expect(nextUpdate).toHaveBeenCalledExactlyOnceWith('name', 'BleachX');
+    expect(updateEditField).not.toHaveBeenCalled();
+  });
+});
+
+describe('EditableCell, partial data', () => {
+  it('writes nothing for a computed column, which has no key to write under', async () => {
+    renderCell(
+      [{id: 'name', accessorFn: (row) => row.name, header: 'Name', enableEditing: true, editConfig: {type: 'text'}}],
+      'name',
+    );
+
+    await userEvent.type(screen.getByRole('textbox'), 'X');
+
+    expect(updateEditField).not.toHaveBeenCalled();
+  });
+
+  it('shows an empty text field when the draft has no value for the column', () => {
+    // A draft seeded from a row the server sent without this field.
+    renderCell([textColumn], 'name', {editingData: {id: 'row-1'}});
+
+    expect(screen.getByRole('textbox')).toHaveValue('');
+  });
+
+  it('shows an empty select when the draft has no value for the column', () => {
+    renderCell(
+      [
+        {
+          id: 'status',
+          accessorKey: 'status',
+          header: 'Status',
+          enableEditing: true,
+          editConfig: {type: 'select', options: [{value: 'ACTIVE', label: 'Active'}]},
+        },
+      ],
+      'status',
+      {editingData: {id: 'row-1'}},
+    );
+
+    expect(screen.getByRole('combobox')).not.toHaveTextContent('Active');
+  });
+
+  it('renders a select with nothing to pick when the column declares no options', async () => {
+    renderCell(
+      [{id: 'status', accessorKey: 'status', header: 'Status', enableEditing: true, editConfig: {type: 'select'}}],
+      'status',
+      {editingData: {id: 'row-1'}},
+    );
+
+    await userEvent.click(screen.getByRole('combobox'));
+
+    expect(screen.getByRole('listbox')).toBeInTheDocument();
+    expect(screen.queryByRole('option')).not.toBeInTheDocument();
+  });
+});
+
+// ===========================================================================
 // REGRESSION — core/TableCell.tsx:99 (EditableCell was never rendered)
 //
 //   const content =

@@ -102,7 +102,9 @@ export function TableCell<TData extends RowData>({
   useEffect(() => {
     if (!truncate && overflowMode !== 'ellipsis' && overflowMode !== 'truncate') return;
     const node = cellRef.current;
+    // v8 ignore start: the ref is attached before any effect runs
     if (!node) return;
+    // v8 ignore stop
 
     // Deferred a tick so the read happens against a settled layout rather than cascading a
     // second render out of the commit. The tick is shared: every cell mounted in the same
@@ -110,9 +112,11 @@ export function TableCell<TData extends RowData>({
     // a single render instead of one per cell.
     return scheduleMeasure(() => {
       const element = node.querySelector('.cell-content');
+      // v8 ignore start: the cell always renders its `.cell-content` box, so the lookup never misses
       if (element) {
         setMayOverflow(element.scrollWidth > element.clientWidth);
       }
+      // v8 ignore stop
     });
   }, [truncate, overflowMode, cellValue, cellWidth, density]);
 

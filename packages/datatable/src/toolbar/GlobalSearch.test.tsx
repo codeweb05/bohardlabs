@@ -11,7 +11,7 @@
 import {waitFor} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {useState} from 'react';
-import {beforeEach, describe, expect, it, vi} from 'vitest';
+import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 
 import {DEFAULT_LABELS} from '../i18n';
 import {DataTableLabelsProvider} from '../i18n';
@@ -185,5 +185,29 @@ describe('KNOWN ISSUE — the helper text must be linked to the input', () => {
     const describedBy = screen.getByRole('textbox').getAttribute('aria-describedby');
     expect(describedBy).toBeTruthy();
     expect(screen.getByText('Searches name and email')).toHaveAttribute('id', describedBy);
+  });
+});
+
+describe('GlobalSearch, helper text that does not fit', () => {
+  // jsdom reports 0 for both widths, so the overflow has to be stubbed in.
+  function stubWidths(scrollWidth: number, clientWidth: number) {
+    Object.defineProperty(HTMLElement.prototype, 'scrollWidth', {configurable: true, value: scrollWidth});
+    Object.defineProperty(HTMLElement.prototype, 'clientWidth', {configurable: true, value: clientWidth});
+  }
+
+  afterEach(() => {
+    stubWidths(0, 0);
+  });
+
+  it('shows the whole text in a tooltip on hover', async () => {
+    // The helper text names the columns being searched and is cut to one line on desktop,
+    // so the tooltip is the only place a long list can be read.
+    stubWidths(400, 200);
+    const helperText = 'Searches name, email, phone, reference and postcode';
+    render(<GlobalSearch value="" onChange={onChange} helperText={helperText} />);
+
+    await userEvent.hover(screen.getByText(helperText));
+
+    expect(await screen.findByRole('tooltip')).toHaveTextContent(helperText);
   });
 });

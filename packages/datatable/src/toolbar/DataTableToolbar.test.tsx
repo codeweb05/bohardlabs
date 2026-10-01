@@ -9,16 +9,17 @@
  * The block at the bottom guards a bug that has since been fixed; it is kept as a
  * regression test.
  */
+import {createTheme} from '@mui/material';
 import type {RowSelectionState} from '@tanstack/react-table';
 import {getCoreRowModel, getFilteredRowModel, useReactTable} from '@tanstack/react-table';
-import {screen, waitFor} from '@testing-library/react';
+import {screen, waitFor, within} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {useState} from 'react';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 
 import {DataTableProvider} from '../DataTableContext';
 import {DEFAULT_LABELS} from '../i18n';
-import {render} from '../test/test-utils';
+import {parentOf, render} from '../test/test-utils';
 import type {BulkAction, DataTableColumnDef} from '../types';
 import {DataTableToolbar} from './DataTableToolbar';
 
@@ -34,6 +35,9 @@ const data: Item[] = [
 ];
 
 const columns: DataTableColumnDef<Item>[] = [{id: 'name', accessorKey: 'name', header: 'Name'}];
+
+/** What `color: 'error'` resolves to under the stock theme the tests render with. */
+const errorColour = createTheme().palette.error.main;
 
 const onGlobalFilterChange = vi.fn<(value: string) => void>();
 const onFiltersReset = vi.fn();
@@ -338,5 +342,57 @@ describe('DataTableToolbar — search with no handler', () => {
     await userEvent.type(screen.getByRole('textbox'), 'det');
 
     expect(screen.getByRole('textbox')).toBeInTheDocument();
+  });
+});
+
+describe('DataTableToolbar, search with no handler, after the debounce', () => {
+  it('keeps what was typed once the debounced report has gone nowhere', async () => {
+    // The earlier test stops before the debounce fires. This one waits it out: the report
+    // has nowhere to go, and the box must still hold the text instead of snapping back.
+    renderToolbar();
+    const box = screen.getByPlaceholderText(DEFAULT_LABELS.globalSearch);
+
+    await userEvent.type(box, 'det');
+    await new Promise((resolve) => setTimeout(resolve, 350));
+
+    expect(box).toHaveValue('det');
+  });
+});
+
+describe('DataTableToolbar, how a mobile bulk action is drawn', () => {
+  it('colours the item and its icon after the action', async () => {
+    // A destructive action is told apart from the rest by its colour alone on a phone,
+    // where the menu has no room for a second line of text.
+    const coloured: BulkAction<Item> = {
+      id: 'delete',
+      label: 'Delete',
+      color: 'error',
+      icon: <svg data-testid="delete-icon" />,
+      onClick: bulkClick,
+    };
+    renderToolbar({isMobile: true, bulkActions: [coloured]}, {'row-1': true});
+
+    await userEvent.click(screen.getByRole('button', {name: DEFAULT_LABELS.actions}));
+    const item = await screen.findByRole('menuitem', {name: 'Delete'});
+    const icon = within(item).getByTestId('delete-icon');
+
+    expect(item).toHaveStyle({color: errorColour});
+    expect(parentOf(icon)).toHaveStyle({color: errorColour});
+  });
+
+  it('leaves the icon of an uncoloured action in the menu colour', async () => {
+    const plain: BulkAction<Item> = {
+      id: 'archive',
+      label: 'Archive',
+      icon: <svg data-testid="archive-icon" />,
+      onClick: bulkClick,
+    };
+    renderToolbar({isMobile: true, bulkActions: [plain]}, {'row-1': true});
+
+    await userEvent.click(screen.getByRole('button', {name: DEFAULT_LABELS.actions}));
+    const item = await screen.findByRole('menuitem', {name: 'Archive'});
+
+    expect(within(item).getByTestId('archive-icon')).toBeInTheDocument();
+    expect(item).not.toHaveStyle({color: errorColour});
   });
 });

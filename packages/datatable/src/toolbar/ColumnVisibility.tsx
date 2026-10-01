@@ -69,7 +69,9 @@ export function ColumnVisibility<TData extends RowData>({
 
   const getColumnLabel = (columnId: string): string => {
     const column = toggleableColumns.find((c) => c.id === columnId);
+    // v8 ignore start: only called with ids taken from `toggleableColumns`
     if (!column) return columnId;
+    // v8 ignore stop
     const columnDef = column.columnDef as DataTableColumnDef<TData>;
     return typeof columnDef.header === 'string' ? columnDef.header : columnId;
   };
@@ -77,9 +79,11 @@ export function ColumnVisibility<TData extends RowData>({
   // Toggle a single column's visibility
   const handleToggleVisibility = (columnId: string) => {
     const column = table.getColumn(columnId);
+    // v8 ignore start: the ids come from the table's own columns
     if (column) {
       column.toggleVisibility();
     }
+    // v8 ignore stop
   };
 
   // Show all columns

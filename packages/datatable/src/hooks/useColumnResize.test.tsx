@@ -11,7 +11,7 @@
 import type {ColumnDef, ColumnSizingState} from '@tanstack/react-table';
 import {getCoreRowModel, useReactTable} from '@tanstack/react-table';
 import {fireEvent, screen} from '@testing-library/react';
-import {useState} from 'react';
+import {act, useState} from 'react';
 import {describe, expect, it, vi} from 'vitest';
 
 import {render} from '../test/test-utils';
@@ -166,6 +166,21 @@ describe('useColumnResize', () => {
 
     fireEvent.mouseMove(document, {clientX: 400});
 
+    expect(screen.getByText('width: 160')).toBeInTheDocument();
+  });
+
+  it('ignores a move that lands in the same tick as the release', () => {
+    // The browser can deliver the release and one last move back to back, before React has
+    // torn the listeners down. That move belongs to no drag and must not resize anything.
+    render(<Harness />);
+    dragMouse(100, 160);
+
+    act(() => {
+      document.dispatchEvent(new MouseEvent('mouseup', {bubbles: true}));
+      document.dispatchEvent(new MouseEvent('mousemove', {bubbles: true, clientX: 400}));
+    });
+
+    expect(screen.getByText('isResizing: false')).toBeInTheDocument();
     expect(screen.getByText('width: 160')).toBeInTheDocument();
   });
 

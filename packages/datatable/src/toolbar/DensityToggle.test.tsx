@@ -6,12 +6,14 @@
  *
  * The block at the bottom records an issue found while writing these.
  */
+import {within} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 
 import {DEFAULT_LABELS} from '../i18n';
 import {DataTableLabelsProvider} from '../i18n';
 import {render, screen} from '../test/test-utils';
+import type {TableDensity} from '../types';
 import {DensityToggle} from './DensityToggle';
 
 const onChange = vi.fn();
@@ -129,5 +131,24 @@ describe('the density labels come from `labels`', () => {
     expect(screen.getByRole('menuitem', {name: 'Dense'})).toBeInTheDocument();
     expect(screen.getByRole('menuitem', {name: 'Normal'})).toBeInTheDocument();
     expect(screen.getByRole('menuitem', {name: 'Aere'})).toBeInTheDocument();
+  });
+});
+
+describe('DensityToggle, a density it does not know', () => {
+  it('still renders the trigger and marks nothing as current', async () => {
+    // A value written to storage by an older build, or passed from untyped code, is not one
+    // of the three. The type rejects it, so it is merged in the way untyped code would.
+    const stale = Object.assign({density: 'comfortable'} satisfies {density: TableDensity}, {density: 'cozy'});
+    render(<DensityToggle density={stale.density} onChange={onChange} />);
+
+    const trigger = screen.getByRole('button', {name: DENSITY_LABEL});
+    expect(within(trigger).getByTestId('DensityMediumIcon')).toBeInTheDocument();
+
+    await userEvent.click(trigger);
+
+    expect(screen.getAllByRole('menuitem')).toHaveLength(3);
+    for (const item of screen.getAllByRole('menuitem')) {
+      expect(item).not.toHaveClass('Mui-selected');
+    }
   });
 });

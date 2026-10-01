@@ -248,7 +248,9 @@ function ChromeCell({
 }) {
   return (
     <TableCell
+      /* v8 ignore start: compiler cache check. `children` is a new element on every render of the row and this cell has no state, so the operands after it are never compared */
       data-column-id={columnId}
+      /* v8 ignore stop */
       onClick={(e) => e.stopPropagation()}
       sx={[
         {
@@ -261,7 +263,9 @@ function ChromeCell({
         pinnedSx,
       ]}
     >
+      {/* v8 ignore start: as above */}
       {children}
+      {/* v8 ignore stop */}
     </TableCell>
   );
 }

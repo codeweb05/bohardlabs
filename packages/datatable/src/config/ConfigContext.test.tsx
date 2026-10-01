@@ -20,7 +20,7 @@ import {DateFilter} from '../filters/DateFilter';
 import {render} from '../test/test-utils';
 import {BulkActions} from '../toolbar/BulkActions';
 import type {BulkAction, DataTableConfirmProps} from '../types';
-import {DataTableConfigProvider} from './ConfigContext';
+import {ConfirmSlot, DataTableConfigProvider, useDateFormats} from './ConfigContext';
 
 interface Item {
   readonly id: string;
@@ -196,5 +196,49 @@ describe('dateFormats', () => {
     await waitFor(() => {
       expect(column.setFilterValue).toHaveBeenCalledWith(expect.stringMatching(/^15-\d{2}-\d{4}$/));
     });
+  });
+});
+
+// A host app changes these props after mount: a locale switch swaps the date formats, and
+// a lazily loaded design system swaps the dialog in once it arrives. The table underneath
+// is the same element on both renders, so nothing but the context tells it to update.
+describe('changing the config after mount', () => {
+  function FormatProbe() {
+    const formats = useDateFormats();
+    return <p>{`${formats.display} / ${formats.value}`}</p>;
+  }
+
+  it('hands new date formats to a subtree that did not re-render on its own', () => {
+    const subtree = <FormatProbe />;
+    const {rerender} = render(<DataTableConfigProvider>{subtree}</DataTableConfigProvider>);
+    expect(screen.getByText('DD/MM/YYYY / YYYY-MM-DD')).toBeInTheDocument();
+
+    rerender(<DataTableConfigProvider dateFormats={{display: 'MM/DD/YYYY'}}>{subtree}</DataTableConfigProvider>);
+
+    expect(screen.getByText('MM/DD/YYYY / YYYY-MM-DD')).toBeInTheDocument();
+  });
+
+  it('swaps an open dialog for the consumer one when the slot arrives late', () => {
+    const dialog = (
+      <ConfirmSlot open onClose={() => {}} onConfirm={() => {}} title="Delete" message="Delete the selected rows?" />
+    );
+    const {rerender} = render(<DataTableConfigProvider>{dialog}</DataTableConfigProvider>);
+    expect(screen.getByText('Delete the selected rows?')).toBeInTheDocument();
+
+    rerender(<DataTableConfigProvider slots={{confirmDialog: AppConfirmDialog}}>{dialog}</DataTableConfigProvider>);
+
+    expect(screen.getByRole('dialog', {name: 'app confirm'})).toBeInTheDocument();
+    expect(screen.getByText('App says: Delete')).toBeInTheDocument();
+  });
+
+  it('falls back to the built-in dialog when the slot is passed as undefined', () => {
+    // What `slots={{confirmDialog: condition ? Mine : undefined}}` produces.
+    render(
+      <DataTableConfigProvider slots={{confirmDialog: undefined}}>
+        <ConfirmSlot open onClose={() => {}} onConfirm={() => {}} title="Delete" message="Delete the selected rows?" />
+      </DataTableConfigProvider>,
+    );
+
+    expect(screen.getByText('Delete the selected rows?')).toBeInTheDocument();
   });
 });

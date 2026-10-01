@@ -101,6 +101,18 @@ describe('TableHeader — the truncation tooltip', () => {
     expect(await screen.findByRole('tooltip')).toHaveTextContent('Orders this week');
   });
 
+  it('shows a numeric header as text', async () => {
+    // A year column built from data in a plain-JS app hands the header over as a number.
+    // The column type rejects that, so the number is merged in the way untyped code would.
+    const yearColumn = Object.assign({header: ''} satisfies Pick<DataTableColumnDef<Item>, 'header'>, {header: 2024});
+    render(<Harness header={yearColumn.header} />);
+    await flushTruncationCheck();
+
+    fireEvent.mouseOver(screen.getByText('2024'));
+
+    expect(await screen.findByRole('tooltip')).toHaveTextContent('2024');
+  });
+
   it('shows no tooltip when the label fits', async () => {
     stubOverflow(100, 100);
     render(<Harness header="Name" />);

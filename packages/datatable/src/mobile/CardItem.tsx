@@ -155,7 +155,9 @@ export function CardItem<TData extends RowData>({
             {primaryColumn &&
               (() => {
                 const cell = row.getVisibleCells().find((c) => c.column.id === primaryColumn.id);
+                // v8 ignore start: `mobileColumns` is already filtered to visible columns, the same set `getVisibleCells` returns
                 if (!cell) return null;
+                // v8 ignore stop
                 const content = flexRender(cell.column.columnDef.cell, cell.getContext());
                 return (
                   <Typography
@@ -196,7 +198,9 @@ export function CardItem<TData extends RowData>({
             <Box sx={{display: 'flex', flexDirection: 'column', gap: 0.5}}>
               {secondaryColumns.map((column) => {
                 const cell = row.getVisibleCells().find((c) => c.column.id === column.id);
+                // v8 ignore start: as above
                 if (!cell) return null;
+                // v8 ignore stop
 
                 const meta = column.columnDef as DataTableColumnDef<TData>;
                 const label =

@@ -41,6 +41,7 @@ interface HarnessOptions {
   readonly enableExpanding?: boolean;
   readonly totalRows?: number;
   readonly manualPagination?: boolean;
+  readonly enableGrouping?: boolean;
 }
 
 function renderTable(options: HarnessOptions = {}) {
@@ -78,7 +79,7 @@ function renderTable(options: HarnessOptions = {}) {
       enableRowSelection: true,
       enableMultiRowSelection: true,
       enableExpanding: options.enableExpanding ?? false,
-      enableGrouping: false,
+      enableGrouping: options.enableGrouping ?? false,
     });
   });
 }
@@ -139,5 +140,31 @@ describe('useTableInstance — server-side pagination', () => {
     const {result} = renderTable();
 
     expect(result.current.getPageCount()).toBe(1);
+  });
+});
+
+describe('useTableInstance, grouping', () => {
+  it('groups rows by a column when grouping is on', () => {
+    const {result} = renderTable({enableGrouping: true});
+
+    act(() => {
+      result.current.setGrouping(['code']);
+    });
+
+    expect(result.current.getState().grouping).toEqual(['code']);
+    expect(result.current.getRowModel().rows.map((row) => row.getIsGrouped())).toEqual([true, true]);
+  });
+
+  it('ignores a grouping request when grouping is off', () => {
+    // The grouped row model is not loaded and the change handler is not wired, so a
+    // stray `setGrouping` leaves the flat list alone instead of half-applying.
+    const {result} = renderTable();
+
+    act(() => {
+      result.current.setGrouping(['code']);
+    });
+
+    expect(result.current.getState().grouping).toEqual([]);
+    expect(result.current.getRowModel().rows.map((row) => row.id)).toEqual(['row-1', 'row-2']);
   });
 });
