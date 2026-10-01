@@ -189,7 +189,7 @@ describe('useServerSidePagination — page reset', () => {
     expect(result.current.pagination.pageIndex).toBe(0);
   });
 
-  it('returns to the first page when sorting changes', async () => {
+  it('keeps the page when sorting changes', async () => {
     const {result} = renderPagination({initialPageIndex: 3});
 
     await waitFor(() => {
@@ -200,7 +200,10 @@ describe('useServerSidePagination — page reset', () => {
       result.current.setSorting([{id: 'name', desc: true}]);
     });
 
-    expect(result.current.pagination.pageIndex).toBe(0);
+    expect(result.current.pagination.pageIndex).toBe(3);
+    await waitFor(() => {
+      expect(lastParams()).toMatchObject({page: 4, sortBy: 'name', sortOrder: 'desc'});
+    });
   });
 
   it('keeps the page when only the page changes', async () => {

@@ -5,6 +5,7 @@ import type {
   Row,
   RowSelectionState,
   SortingState,
+  Table,
   VisibilityState,
 } from '@tanstack/react-table';
 import {
@@ -16,7 +17,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import {useMemo} from 'react';
+import {useEffect, useMemo} from 'react';
 
 import {resolveColumnOrder, resolveColumnPinning} from './hooks/useColumnPinning';
 import type {DataTableColumnDef, RowData} from './types';
@@ -120,7 +121,7 @@ export function useTableInstance<TData extends RowData>(options: UseTableInstanc
   // TanStack mutates the table instance in place. `'use no memo'` above opts the hook
   // out of the compiler; this disable is the lint equivalent so CI does not annotate it.
   // eslint-disable-next-line react-hooks/incompatible-library
-  return useReactTable({
+  const table = useReactTable({
     data: data as TData[],
     columns: tableColumns as DataTableColumnDef<TData>[],
     state: {
@@ -142,6 +143,10 @@ export function useTableInstance<TData extends RowData>(options: UseTableInstanc
     ...(enablePagination && {
       getPaginationRowModel: paginationRowModel,
       manualPagination,
+      // TanStack would send the table to page one after every re-sort, re-filter and new
+      // `data` array. A filter resets the page itself, a sort should not move it, and
+      // rows that go away are handled below.
+      autoResetPageIndex: false,
       pageCount: totalRows ? Math.ceil(totalRows / state.pagination.pageSize) : undefined,
       onPaginationChange: state.handlePaginationChange as (
         updater: PaginationState | ((prev: PaginationState) => PaginationState),
@@ -197,4 +202,21 @@ export function useTableInstance<TData extends RowData>(options: UseTableInstanc
       onGroupingChange: state.setGrouping,
     }),
   });
+
+  useLastPageWithRows(table, state.pagination.pageIndex, Boolean(paginationRowModel));
+
+  return table;
+}
+
+/**
+ * When the table does the paging and the rows under the current page go away (a delete, a
+ * refetch that returns fewer), show the last page that still has rows instead of an empty
+ * one. A server-driven table is left alone: its page is the server's to answer.
+ */
+function useLastPageWithRows<TData extends RowData>(table: Table<TData>, pageIndex: number, pagesItsOwnRows: boolean) {
+  'use no memo';
+  const lastPage = pagesItsOwnRows ? Math.max(table.getPageCount() - 1, 0) : pageIndex;
+  useEffect(() => {
+    if (pageIndex > lastPage) table.setPageIndex(lastPage);
+  }, [table, pageIndex, lastPage]);
 }

@@ -124,7 +124,7 @@ describe('DataTable holding the whole dataset', () => {
       expect(onServerStateChange).toHaveBeenCalledTimes(1);
     });
 
-    it('goes back to the first page when the order changes', async () => {
+    it('stays on its page when the order changes', async () => {
       const user = userEvent.setup();
       render(<DataTable columns={columns} data={fruits(25)} pageSize={10} />);
       await user.click(screen.getByRole('button', {name: L.nextPage}));
@@ -132,8 +132,9 @@ describe('DataTable holding the whole dataset', () => {
 
       await user.click(screen.getByText('Name'));
 
-      expect(await screen.findByText(L.pageOf(1, 3))).toBeInTheDocument();
-      expect(names()[0]).toBe('Apple');
+      // Five named fruits, then Fruit 6 to Fruit 10, fill the first page of the sorted list.
+      await waitFor(() => expect(names()[0]).toBe('Fruit 11'));
+      expect(screen.getByText(L.pageOf(2, 3))).toBeInTheDocument();
     });
   });
 
@@ -158,6 +159,40 @@ describe('DataTable holding the whole dataset', () => {
       expect(screen.getByText(L.totalRows(25))).toBeInTheDocument();
       expect(screen.getByText(L.pageOf(1, 3))).toBeInTheDocument();
       expect(screen.getByRole('button', {name: L.nextPage})).toBeEnabled();
+    });
+
+    function Shrinking() {
+      const [count, setCount] = useState(25);
+      return (
+        <>
+          <button onClick={() => setCount(15)}>shrink</button>
+          <DataTable columns={columns} data={fruits(count)} pageSize={10} />
+        </>
+      );
+    }
+
+    it('moves to the last page when the rows under its page go away', async () => {
+      const user = userEvent.setup();
+      render(<Shrinking />);
+      await user.click(screen.getByRole('button', {name: L.nextPage}));
+      await user.click(screen.getByRole('button', {name: L.nextPage}));
+      expect(screen.getByText(L.pageOf(3, 3))).toBeInTheDocument();
+
+      await user.click(screen.getByRole('button', {name: 'shrink'}));
+
+      expect(await screen.findByText(L.pageOf(2, 2))).toBeInTheDocument();
+      expect(names()).toHaveLength(5);
+    });
+
+    it('stays on its page when the same rows arrive again', async () => {
+      const user = userEvent.setup();
+      const view = render(<DataTable columns={columns} data={fruits(25)} pageSize={10} />);
+      await user.click(screen.getByRole('button', {name: L.nextPage}));
+
+      // A refetch hands back a new array holding the same rows.
+      view.rerender(<DataTable columns={columns} data={fruits(25)} pageSize={10} />);
+
+      expect(screen.getByText(L.pageOf(2, 3))).toBeInTheDocument();
     });
 
     it('shows the page size it was given even when the options leave it out', () => {

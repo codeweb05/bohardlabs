@@ -188,9 +188,8 @@ export function useDataTableState(options: UseDataTableStateOptions) {
   const handlePaginationChange = useCallback(
     (updater: PaginationState | ((prev: PaginationState) => PaginationState)) => {
       const next = typeof updater === 'function' ? updater(paginationRef.current) : updater;
-      // TanStack re-applies the first page after every client-side re-sort and re-filter,
-      // usually while the table is already on it. A new object with the old numbers would
-      // still read as a change downstream and report the same state a second time.
+      // A new object with the old numbers would still read as a change downstream and
+      // report the same state a second time.
       if (next.pageIndex === paginationRef.current.pageIndex && next.pageSize === paginationRef.current.pageSize) {
         return;
       }

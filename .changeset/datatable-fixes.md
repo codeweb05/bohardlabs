@@ -7,7 +7,6 @@ Fixes found by a critical pass over the table. No prop, export or label key chan
 Holding the whole dataset (no `manual*` flags):
 
 - Clicking a column header reorders the rows. The sort arrow moved and the rows stayed put.
-  A sort now also returns to the first page, as a filter does.
 - The pager follows the data: the row count, page count and next button update when rows
   arrive, when a search narrows them, and when a filter does.
 - The search box still filters with `enableFiltering={false}`. That prop switches column

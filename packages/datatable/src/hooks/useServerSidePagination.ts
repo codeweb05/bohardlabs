@@ -161,7 +161,7 @@ export function useServerSidePagination<TData>(
     placeholderData: keepPreviousData,
   });
 
-  // Reset to first page when filters/sorting change
+  // Reset to first page when filters change
   const handleFiltersChange = useCallback((filters: ColumnFiltersState) => {
     setColumnFilters(filters);
     setPagination((prev) => ({...prev, pageIndex: 0}));
@@ -169,11 +169,6 @@ export function useServerSidePagination<TData>(
 
   const handleGlobalFilterChange = useCallback((value: string) => {
     setGlobalFilter(value);
-    setPagination((prev) => ({...prev, pageIndex: 0}));
-  }, []);
-
-  const handleSortingChange = useCallback((newSorting: SortingState) => {
-    setSorting(newSorting);
     setPagination((prev) => ({...prev, pageIndex: 0}));
   }, []);
 
@@ -225,7 +220,7 @@ export function useServerSidePagination<TData>(
 
     // Handlers
     setPagination,
-    setSorting: handleSortingChange,
+    setSorting,
     setColumnFilters: handleFiltersChange,
     setGlobalFilter: handleGlobalFilterChange,
     onServerStateChange: handleServerStateChange,

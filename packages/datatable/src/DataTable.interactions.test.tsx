@@ -521,7 +521,7 @@ describe('DataTable – Feature Interactions', () => {
   // =========================================================================
 
   describe('Pagination + Sorting', () => {
-    it('sorting returns to the first page (client-side)', async () => {
+    it('sorting keeps the page (client-side)', async () => {
       const data = makePagedData(25);
       render(<DataTable columns={testColumns} data={data} enablePagination enableSorting pageSize={10} />);
 
@@ -531,12 +531,12 @@ describe('DataTable – Feature Interactions', () => {
         expect(screen.getByText(/page 2/i)).toBeInTheDocument();
       });
 
-      // Sort by name: the order changed under the page, so the table shows the top of it
       await userEvent.click(screen.getByText('Name'));
 
       await waitFor(() => {
-        expect(screen.getByText(/page 1 of/i)).toBeInTheDocument();
+        expect(screen.getByRole('columnheader', {name: /name/i})).toHaveAttribute('aria-sort', 'ascending');
       });
+      expect(screen.getByText(/page 2 of/i)).toBeInTheDocument();
     });
 
     it('client-side sorting reorders data correctly', async () => {
