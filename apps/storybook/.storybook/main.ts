@@ -2,6 +2,9 @@ import type {StorybookConfig} from '@storybook/react-vite';
 import react from '@vitejs/plugin-react';
 import remarkGfm from 'remark-gfm';
 
+// The sources that are published through the React Compiler. See `viteFinal`.
+const COMPILED = /\/packages\/datatable\/src\/.*\.[tj]sx?$/;
+
 const config: StorybookConfig = {
   // Stories live next to the source they document, inside each package. Picking them up
   // from here rather than copying them into this app is what keeps a story honest: it
@@ -54,9 +57,17 @@ const config: StorybookConfig = {
   // the JSX), so the React Compiler would not run here. The table's components depend on it
   // for the memoization they are written against, which means without this the showcase
   // and its browser tests exercise different behaviour from the published build.
+  //
+  // Only the table is compiled, because only the table is published compiled. The other
+  // packages build with plain `react()`, and compiling them here would test code nobody
+  // installs: the compiler's memoization has already hidden a re-render bug in a form story.
   viteFinal: (viteConfig) => ({
     ...viteConfig,
-    plugins: [...(viteConfig.plugins ?? []), react({compiler: true})],
+    plugins: [
+      ...(viteConfig.plugins ?? []),
+      react({compiler: true, include: COMPILED}),
+      react({exclude: [/\/node_modules\//, COMPILED]}),
+    ],
   }),
 };
 
