@@ -13,10 +13,12 @@ import {
   Menu,
   MenuItem,
   Tooltip,
+  alpha,
 } from '@mui/material';
 import type {ColumnFiltersState, Table} from '@tanstack/react-table';
 import {useState} from 'react';
 
+import {ConfirmSlot} from '../config/ConfigContext';
 import {useLabels} from '../i18n';
 import type {BulkAction, DataTableColumnDef, ExportFormat, RowData, TableDensity} from '../types';
 import {ColumnVisibility} from './ColumnVisibility';
@@ -66,7 +68,9 @@ interface DataTableToolbarProps<TData extends RowData> {
   readonly enableExport?: boolean;
   readonly exportFormats?: readonly ExportFormat[];
   readonly exportFileName?: string;
-  readonly onExport?: (format: ExportFormat, data: TData[]) => void;
+  readonly onExport?: (format: ExportFormat, data: TData[]) => void | Promise<void>;
+  readonly onExportStart?: (format: ExportFormat) => void;
+  readonly onExportComplete?: (format: ExportFormat, success: boolean) => void;
 
   // Mobile bulk actions
   readonly isMobile?: boolean;
@@ -96,6 +100,8 @@ export function DataTableToolbar<TData extends RowData>({
   exportFormats = ['csv'],
   exportFileName = 'export',
   onExport,
+  onExportStart,
+  onExportComplete,
   isMobile = false,
   bulkActions,
   selectedRows,
@@ -103,6 +109,23 @@ export function DataTableToolbar<TData extends RowData>({
   const labels = useLabels();
   const [bulkMenuAnchor, setBulkMenuAnchor] = useState<HTMLElement | null>(null);
   const [isBulkActionLoading, setIsBulkActionLoading] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<BulkAction<TData> | null>(null);
+
+  const runBulkAction = async (action: BulkAction<TData>) => {
+    setIsBulkActionLoading(true);
+    try {
+      await action.onClick(selectedRows as TData[]);
+      // Same as the desktop bar: on success the rows are gone, so the
+      // count chip and the next action must not still point at them.
+      // Left alone on failure so the user can retry the same selection.
+      table.resetRowSelection();
+    } finally {
+      setIsBulkActionLoading(false);
+      setConfirmAction(null);
+    }
+  };
+
+  const confirmMessage = confirmAction?.confirmMessage ?? '';
 
   const hasActiveFilters = columnFilters.length > 0 || globalFilter.length > 0;
   const activeFilterCount = columnFilters.length + (globalFilter ? 1 : 0);
@@ -120,7 +143,8 @@ export function DataTableToolbar<TData extends RowData>({
         px: {xs: 1.5, sm: 2},
         pt: {xs: 1, sm: 1.25},
         pb: {xs: 1, sm: globalFilterHelperText ? 2.5 : 1.25},
-        bgcolor: (theme) => (theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.02)' : 'rgba(0, 0, 0, 0.01)'),
+        // A wash of the theme's own text colour, so the tint follows a branded palette.
+        bgcolor: (theme) => alpha(theme.palette.text.primary, theme.palette.mode === 'dark' ? 0.02 : 0.01),
         borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
       }}
     >
@@ -212,18 +236,15 @@ export function DataTableToolbar<TData extends RowData>({
                   <MenuItem
                     key={action.id}
                     disabled={disabled}
-                    onClick={async () => {
+                    onClick={() => {
                       setBulkMenuAnchor(null);
-                      setIsBulkActionLoading(true);
-                      try {
-                        await action.onClick(selectedRows as TData[]);
-                        // Same as the desktop bar: on success the rows are gone, so the
-                        // count chip and the next action must not still point at them.
-                        // Left alone on failure so the user can retry the same selection.
-                        table.resetRowSelection();
-                      } finally {
-                        setIsBulkActionLoading(false);
+                      // The menu is the phone's version of the desktop bar, so a
+                      // destructive action asks first here as it does there.
+                      if (action.confirmMessage) {
+                        setConfirmAction(action);
+                        return;
                       }
+                      void runBulkAction(action);
                     }}
                     sx={{color: action.color ? `${action.color}.main` : undefined}}
                   >
@@ -237,6 +258,17 @@ export function DataTableToolbar<TData extends RowData>({
                 );
               })}
             </Menu>
+            <ConfirmSlot
+              open={Boolean(confirmAction)}
+              onClose={() => setConfirmAction(null)}
+              onConfirm={async () => {
+                if (confirmAction) await runBulkAction(confirmAction);
+              }}
+              title={confirmAction?.label ?? ''}
+              message={typeof confirmMessage === 'function' ? confirmMessage(selectedRows.length) : confirmMessage}
+              confirmColor={confirmAction?.color === 'error' ? 'error' : 'primary'}
+              isLoading={isBulkActionLoading}
+            />
           </>
         )}
       </Box>
@@ -280,7 +312,14 @@ export function DataTableToolbar<TData extends RowData>({
         {enableExport && (
           <>
             <Divider orientation="vertical" flexItem sx={{mx: 0.5}} />
-            <ExportMenu table={table} formats={exportFormats} fileName={exportFileName} onExport={onExport} />
+            <ExportMenu
+              table={table}
+              formats={exportFormats}
+              fileName={exportFileName}
+              onExport={onExport}
+              onExportStart={onExportStart}
+              onExportComplete={onExportComplete}
+            />
           </>
         )}
 

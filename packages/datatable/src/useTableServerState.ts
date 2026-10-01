@@ -33,6 +33,10 @@ export interface UseTableServerStateResult {
  * The DataTable remains the source of truth: it persists the state and reports every
  * change through the returned `onServerStateChange`.
  *
+ * Give the table the same defaults (`pageSize`, `initialSorting`, `initialFilters`,
+ * `initialGlobalFilter`). Its mount emit reports its own, so a default set only here lasts
+ * for one request and is then replaced by the table's.
+ *
  * The defaults are read once (lazy `useState` initializer); later changes to `options`
  * are ignored by design — the resolved state is owned from mount onward.
  */

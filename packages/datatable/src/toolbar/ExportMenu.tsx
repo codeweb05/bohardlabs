@@ -3,7 +3,7 @@ import DescriptionIcon from '@mui/icons-material/Description';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import TableChartIcon from '@mui/icons-material/TableChart';
 import {ListItemIcon, ListItemText, MenuItem} from '@mui/material';
-import type {Table} from '@tanstack/react-table';
+import type {Row, Table} from '@tanstack/react-table';
 import {useState} from 'react';
 
 import {AnchoredMenu} from '../AnchoredMenu';
@@ -16,7 +16,9 @@ interface ExportMenuProps<TData extends RowData> {
   readonly table: Table<TData>;
   readonly formats?: readonly ExportFormat[];
   readonly fileName?: string;
-  readonly onExport?: (format: ExportFormat, data: TData[]) => void;
+  readonly onExport?: (format: ExportFormat, data: TData[]) => void | Promise<void>;
+  readonly onExportStart?: (format: ExportFormat) => void;
+  readonly onExportComplete?: (format: ExportFormat, success: boolean) => void;
 }
 
 export function ExportMenu<TData extends RowData>({
@@ -24,17 +26,33 @@ export function ExportMenu<TData extends RowData>({
   formats = ['csv'],
   fileName = 'export',
   onExport,
+  onExportStart,
+  onExportComplete,
 }: Readonly<ExportMenuProps<TData>>) {
   const labels = useLabels();
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
 
   const handleExport = async (format: ExportFormat) => {
     setAnchorEl(null);
+    onExportStart?.(format);
+    let succeeded = true;
+    try {
+      await runExport(format);
+    } catch (error) {
+      // The click handler does not await this, so a throw from here would be a rejection
+      // nobody is listening for. The consumer hears about it through `onExportComplete`.
+      console.error(`Failed to export the table as "${format}":`, error);
+      succeeded = false;
+    }
+    onExportComplete?.(format, succeeded);
+  };
 
-    const rows = table.getFilteredRowModel().rows.map((row) => row.original);
+  const runExport = async (format: ExportFormat) => {
+    // The sorted model is the filtered one put in the order on screen, across every page.
+    const rows = leafRows(table.getSortedRowModel().rows).map((row) => row.original);
 
     if (onExport) {
-      onExport(format, rows);
+      await onExport(format, rows);
       return;
     }
 
@@ -105,9 +123,15 @@ export function ExportMenu<TData extends RowData>({
   );
 }
 
+/** A group row is a heading over the rows it holds, so a grouped table exports what is inside. */
+function leafRows<TData extends RowData>(rows: readonly Row<TData>[]): Row<TData>[] {
+  return rows.flatMap((row) => (row.getIsGrouped() ? leafRows(row.subRows) : [row]));
+}
+
 function toExportString(value: unknown): string {
   if (value == null) return '';
   if (Array.isArray(value)) return value.map(toExportString).join(', ');
+  if (value instanceof Date) return Number.isNaN(value.getTime()) ? '' : value.toISOString();
   if (typeof value === 'object') return '';
   if (typeof value === 'string') return value;
   if (typeof value === 'number' || typeof value === 'boolean') return String(value);
@@ -141,22 +165,21 @@ function columnValues<TData extends RowData>(
   return data.map((row, rowIndex) => columns.map((col) => getColumnValue(col.columnDef, row, rowIndex)));
 }
 
+function toCsvCell(value: string): string {
+  return /[",\r\n]/.test(value) ? `"${value.replaceAll('"', '""')}"` : value;
+}
+
 function exportToCsv<TData extends RowData>(
   data: TData[],
   columns: Array<{id: string; columnDef: DataTableColumnDef<TData>}>,
   fileName: string,
 ) {
-  const headers = columnHeaders(columns);
-  const rows = columnValues(data, columns).map((values) =>
-    values.map((stringValue) => {
-      if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
-        return `"${stringValue.replaceAll('"', '""')}"`;
-      }
-      return stringValue;
-    }),
+  // Headings are cells too: one with a comma in it would shift every column under it.
+  const lines = [columnHeaders(columns), ...columnValues(data, columns)].map((values) =>
+    values.map(toCsvCell).join(','),
   );
 
-  const csvContent = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+  const csvContent = lines.join('\n');
   downloadFile(csvContent, `${fileName}.csv`, 'text/csv;charset=utf-8;');
 }
 

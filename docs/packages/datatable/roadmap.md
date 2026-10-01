@@ -81,7 +81,7 @@ A parallel review of `src/components/DataTable/**` as a candidate package landed
 
 **`t()` never returns null.** i18next returns the key itself when a translation is missing, so every `t('x') ?? 'English'` in the folder was dead code and a locale with a gap rendered raw key strings at the user. The fallbacks now use `t(key, {defaultValue: …})`. This is item 28's problem in miniature and is the argument for doing it early.
 
-Deferred deliberately, all recorded in the findings doc: `toolbar/ExpandToggle.tsx` is unexported and unused (export it or delete it before packaging); `NumberFilter` declares a `max` prop it never reads and hardcodes its "Min"/"Max" placeholders; `TextFilter`'s clear button has no accessible name; and `DataTable.tsx` renders one skeleton row per `pageSize`, so a page size of 100 paints 100 of them.
+Deferred deliberately, all recorded in the findings doc: `toolbar/ExpandToggle.tsx` is unexported and unused (export it or delete it before packaging); `NumberFilter` declares a `max` prop it never reads; and `DataTable.tsx` renders one skeleton row per `pageSize`, so a page size of 100 paints 100 of them.
 
 Two components in the folder are package surface with no caller in this app: `toolbar/ColumnOrdering.tsx` (the app reorders by dragging headers) and `toolbar/ExpandToggle.tsx`. Both are covered by tests only. Anything they do that the hooks also do has to be reconciled against the hooks before publishing, not left to drift.
 
@@ -269,7 +269,7 @@ After a background refetch, briefly highlight rows whose values changed.
 
 Export visible columns, in their current order, with their display labels.
 
-**What exists:** `ExportMenu` already filters on `getIsVisible()`.
+**What exists:** `ExportMenu` already filters on `getIsVisible()`, and writes the rows in the order they are sorted on screen.
 
 **What is missing:** it reads `getAllLeafColumns()`, so the file comes out in column-def order rather than the user's order. Switch to `getVisibleLeafColumns()`.
 

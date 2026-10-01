@@ -40,6 +40,7 @@
  *     <DataTable
  *       tableId="orders"
  *       columns={columns}
+ *       pageSize={25}
  *       data={data?.data ?? []}
  *       totalRows={data?.meta?.total ?? 0}
  *       manualPagination

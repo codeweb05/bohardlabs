@@ -305,15 +305,26 @@ export function useDataTableState(options: UseDataTableStateOptions) {
   // Filter changes reset the page within the same event-handler commit (see
   // handleFiltersChange/handleGlobalFilterChange), so this fires exactly once per
   // settled state — never an intermediate emit with a stale page index.
+  //
+  // The callback is read through a ref, so its identity is not a reason to emit. A
+  // handler written inline is a new function on every render of the page, and one that
+  // stores what it is given re-renders the page: with the callback in the dependency
+  // list that is an emit per render, and a loop.
+  const onServerStateChangeRef = useRef(onServerStateChange);
   useEffect(() => {
-    if (!onServerStateChange) return;
-    onServerStateChange({
+    onServerStateChangeRef.current = onServerStateChange;
+  });
+  const reportsServerState = Boolean(onServerStateChange);
+
+  useEffect(() => {
+    if (!reportsServerState) return;
+    onServerStateChangeRef.current?.({
       pagination: internalPagination,
       sorting,
       columnFilters,
       globalFilter,
     });
-  }, [onServerStateChange, internalPagination, sorting, columnFilters, globalFilter]);
+  }, [reportsServerState, internalPagination, sorting, columnFilters, globalFilter]);
 
   // --- Persistence effect (P1 fix: separate mount guard) ---
   useEffect(() => {

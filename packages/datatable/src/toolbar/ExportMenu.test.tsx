@@ -56,8 +56,8 @@ function createMockTable(
   }>,
 ) {
   return {
-    getFilteredRowModel: () => ({
-      rows: data.map((d) => ({original: d})),
+    getSortedRowModel: () => ({
+      rows: data.map((d) => ({original: d, getIsGrouped: () => false})),
     }),
     getAllLeafColumns: () =>
       columns.map((col) => ({
@@ -322,7 +322,7 @@ describe('ExportMenu', () => {
       const {getContent} = setupDownloadMocks();
 
       const table = {
-        getFilteredRowModel: () => ({rows: [{original: {id: '1', name: 'Test'}}]}),
+        getSortedRowModel: () => ({rows: [{original: {id: '1', name: 'Test'}, getIsGrouped: () => false}]}),
         getAllLeafColumns: () => [
           {id: 'select', getIsVisible: () => true, columnDef: {accessorKey: 'id', header: 'Select'}},
           {id: 'name', getIsVisible: () => true, columnDef: {accessorKey: 'name', header: 'Name'}},
@@ -347,7 +347,9 @@ describe('ExportMenu', () => {
       const {getContent} = setupDownloadMocks();
 
       const table = {
-        getFilteredRowModel: () => ({rows: [{original: {id: '1', name: 'Test', email: 'test@test.com'}}]}),
+        getSortedRowModel: () => ({
+          rows: [{original: {id: '1', name: 'Test', email: 'test@test.com'}, getIsGrouped: () => false}],
+        }),
         getAllLeafColumns: () => [
           {id: 'name', getIsVisible: () => true, columnDef: {accessorKey: 'name', header: 'Name'}},
           {id: 'email', getIsVisible: () => false, columnDef: {accessorKey: 'email', header: 'Email'}},

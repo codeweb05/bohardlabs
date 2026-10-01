@@ -163,6 +163,8 @@ export function OrdersPage() {
     <DataTable
       tableId="orders"
       columns={columns}
+      pageSize={25} // the same defaults as the hook above: the table's are the ones that win
+      initialSorting={[{id: 'placedAt', desc: true}]}
       data={data?.data ?? []} // one page, read defensively
       totalRows={data?.meta?.total ?? 0} // the real size, or the pager says "1 of 1"
       manualPagination

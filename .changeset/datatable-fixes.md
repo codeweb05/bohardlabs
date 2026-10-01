@@ -33,6 +33,46 @@ The filter drawer:
 - The number range placeholders read from `labels.from` and `labels.to`, so they translate.
   They were the hardcoded words "Min" and "Max".
 
+Selection and bulk actions:
+
+- On a server-driven table, the header checkbox works on every page. Past page one it stayed
+  unticked with every row selected, and a second click could not clear them.
+- With `enablePagination={false}`, the header checkbox is ticked once every row is. It used
+  to read as ticked as soon as the first `pageSize` rows were.
+- On a phone, a bulk action with a `confirmMessage` asks before it runs, as it does on a
+  desktop. The menu used to run it straight away.
+
+Export:
+
+- The file follows the sort on screen. Rows used to come out in the order they were loaded.
+- A `Date` cell is written as an ISO string. It was an empty cell.
+- CSV headings are quoted like cells, so a heading with a comma no longer shifts every
+  column, and a cell holding a lone carriage return is quoted.
+- `onExportStart` and `onExportComplete` are called. They were accepted and never used. A
+  failed export reports `onExportComplete(format, false)` and is logged, where it used to
+  leave an unhandled promise rejection.
+
+Columns:
+
+- Resizing honours a column's own `minSize` and `maxSize`. A column allowed to be 800px wide
+  snapped back to 500 on the first drag.
+- The table's width follows a resize straight away, so the last column no longer overlaps or
+  leaves a gap until the next unrelated render.
+- A sortable header carries `aria-sort`, so a screen reader announces the direction.
+- The hidden heading of the actions column is one pixel wide. It was as wide as the column,
+  and could be clicked through.
+
+State:
+
+- `onServerStateChange` written inline (`onServerStateChange={(s) => setState(s)}`) is
+  called once per change. It used to be called again on every render of the page, which
+  looped forever when the handler stored the state.
+- Saved state that the table did not write (an older version, a hand-edited entry) is
+  ignored slice by slice. A wrong shape for the column order, pinning, sizing, visibility,
+  grouping or density used to throw on mount, for that user, on every visit.
+- The toolbar and pager tint come from the theme's text colour. They were fixed black and
+  white washes that ignored a branded palette. Under the stock themes nothing moves.
+
 Elsewhere:
 
 - `onSelectionChange` fires when the selection changes to different rows of the same count,

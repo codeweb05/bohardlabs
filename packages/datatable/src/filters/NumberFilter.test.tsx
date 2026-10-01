@@ -476,6 +476,25 @@ describe('NumberFilter — an external change to the filter reaches the inputs',
     expect(maxInput()).toHaveValue('20');
   });
 
+  it('empties the bound an outside change leaves open', () => {
+    const {rerender} = render(<ControlledHarness filters={[{id: 'amount', value: [10, 20]}]} />);
+
+    rerender(<ControlledHarness filters={[{id: 'amount', value: [10, null]}]} />);
+
+    expect(minInput()).toHaveValue('10');
+    expect(maxInput()).toHaveValue('');
+  });
+
+  it('keeps a half-typed bound that already equals the one arriving', async () => {
+    const {rerender} = render(<ControlledHarness filters={[]} />);
+    await userEvent.type(minInput(), '10.');
+
+    rerender(<ControlledHarness filters={[{id: 'amount', value: [10, 20]}]} />);
+
+    expect(minInput()).toHaveValue('10.');
+    expect(maxInput()).toHaveValue('20');
+  });
+
   it('empties both bounds when the filter is cleared from elsewhere', () => {
     const {rerender} = render(<ControlledHarness filters={[{id: 'amount', value: [10, 20]}]} />);
 
@@ -505,6 +524,16 @@ describe('NumberFilter, an external change reaches the single input', () => {
     rerender(<ControlledSingle filters={[{id: 'amount', value: 7}]} />);
 
     expect(screen.getByRole('textbox')).toHaveValue('7');
+  });
+
+  it('keeps a half-typed number that already equals the one arriving', async () => {
+    const {rerender} = render(<ControlledSingle filters={[{id: 'amount', value: 42}]} />);
+    await userEvent.clear(screen.getByRole('textbox'));
+    await userEvent.type(screen.getByRole('textbox'), '7.');
+
+    rerender(<ControlledSingle filters={[{id: 'amount', value: 7}]} />);
+
+    expect(screen.getByRole('textbox')).toHaveValue('7.');
   });
 
   it('empties the box when the filter is cleared from elsewhere', () => {

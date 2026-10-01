@@ -145,6 +145,8 @@ export function DataTable<TData extends RowData>(props: Readonly<DataTableProps<
     exportFormats = ['csv'],
     exportFileName = 'export',
     onExport,
+    onExportStart,
+    onExportComplete,
 
     // UI
     density: initialDensity = 'comfortable',
@@ -369,6 +371,8 @@ export function DataTable<TData extends RowData>(props: Readonly<DataTableProps<
                 exportFormats={exportFormats}
                 exportFileName={exportFileName}
                 onExport={onExport}
+                onExportStart={onExportStart}
+                onExportComplete={onExportComplete}
                 isMobile={isMobile}
                 bulkActions={bulkActions}
                 selectedRows={selectedRows}

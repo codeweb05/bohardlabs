@@ -674,6 +674,7 @@ export interface DataTableProps<TData extends RowData> extends TableEventHandler
    *   <DataTable
    *     tableId="orders"
    *     columns={columns}
+   *     pageSize={25} // the same default as the hook: the table's own is what it emits
    *     data={data?.data ?? []}
    *     totalRows={data?.meta?.total ?? 0}
    *     manualPagination
@@ -863,8 +864,10 @@ export interface DataTableProps<TData extends RowData> extends TableEventHandler
   /**
    * Take over the export. Called instead of the built-in writer, with the format and the
    * rows currently held, which is the hook for "ask the server for the full file instead".
+   * Return the promise when the work is asynchronous: `onExportComplete` waits for it, and
+   * reports `false` if it rejects.
    */
-  readonly onExport?: (format: ExportFormat, data: TData[]) => void;
+  readonly onExport?: (format: ExportFormat, data: TData[]) => void | Promise<void>;
 
   // Virtualization
   /**

@@ -144,7 +144,9 @@ describe('the filter drawer', () => {
     await user.click(await screen.findByRole('option', {name: 'Open'}));
 
     // Fifteen of thirty are OPEN; the other fifteen are REOPENED, which contains "open".
-    expect(await screen.findByText(L.totalRows(15))).toBeInTheDocument();
+    // The dropdown waits out its debounce first, which the default one second barely clears
+    // when the whole suite is running.
+    expect(await screen.findByText(L.totalRows(15), undefined, {timeout: 5000})).toBeInTheDocument();
   });
 
   it('does not lose a digit typed while the last one is being committed', async () => {
@@ -263,6 +265,29 @@ describe('filtering rows the table already holds', () => {
     render(<DataTable columns={shipmentColumns} data={shipments} initialFilters={[{id: 'priority', value: 2}]} />);
 
     expect(screen.getByText(L.totalRows(3))).toBeInTheDocument();
+  });
+
+  it('keeps the rows matching any of several chosen options', () => {
+    render(<DataTable columns={shipmentColumns} data={shipments} initialFilters={[{id: 'priority', value: [2, 3]}]} />);
+
+    expect(screen.getByText(L.totalRows(6))).toBeInTheDocument();
+  });
+
+  it('matches a dropdown against a column where some rows hold nothing', () => {
+    const byState: DataTableColumnDef<Shipment>[] = shipmentColumns.map((column) =>
+      column.id === 'sent'
+        ? {...column, filterConfig: {type: 'select', options: [{value: 'pending', label: 'Pending'}]}}
+        : column,
+    );
+    render(<DataTable columns={byState} data={shipments} initialFilters={[{id: 'sent', value: 'pending'}]} />);
+
+    expect(screen.getByText(L.totalRows(1))).toBeInTheDocument();
+  });
+
+  it('keeps every row with a readable date when the date filter holds nothing', () => {
+    render(<DataTable columns={shipmentColumns} data={shipments} initialFilters={[{id: 'sent', value: null}]} />);
+
+    expect(screen.getByText(L.totalRows(10))).toBeInTheDocument();
   });
 
   it('leaves a column that brought its own match alone', () => {

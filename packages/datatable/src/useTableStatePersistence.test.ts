@@ -537,6 +537,41 @@ describe('useTableStatePersistence, filters and a reset during a pending write',
     expect(result.current.loadPersistedState()).toEqual(state);
   });
 
+  it('restores a saved layout', () => {
+    const state: PersistedTableState = {
+      density: 'compact',
+      columnOrder: ['status', 'name'],
+      columnPinning: {left: ['status']},
+      columnSizing: {name: 240},
+      columnVisibility: {status: false},
+      grouping: ['status'],
+    };
+    localStorageMock.setItem(getTableStateStorageKey('filter-table'), JSON.stringify(state));
+    const {result} = renderHook(() => useTableStatePersistence('filter-table'));
+
+    expect(result.current.loadPersistedState()).toEqual(state);
+  });
+
+  it.each([{left: 'status'}, {left: ['status'], right: [3]}])('drops pinning it cannot read: %j', (columnPinning) => {
+    localStorageMock.setItem(
+      getTableStateStorageKey('filter-table'),
+      JSON.stringify({density: 'compact', columnPinning}),
+    );
+    const {result} = renderHook(() => useTableStatePersistence('filter-table'));
+
+    expect(result.current.loadPersistedState()).toEqual({density: 'compact'});
+  });
+
+  it.each([
+    {name: 'a column width that is not a number', saved: {columnSizing: {name: '240'}}},
+    {name: 'a density that is only a property every object has', saved: {density: 'toString'}},
+  ])('drops $name', ({saved}) => {
+    localStorageMock.setItem(getTableStateStorageKey('filter-table'), JSON.stringify({...saved, pageSize: 25}));
+    const {result} = renderHook(() => useTableStatePersistence('filter-table'));
+
+    expect(result.current.loadPersistedState()).toEqual({pageSize: 25});
+  });
+
   it('writes only the latest whole state when two arrive inside the debounce', () => {
     // A sort followed straight away by a page-size change: one write, holding the second.
     const {result} = renderHook(() => useTableStatePersistence('burst-table'));

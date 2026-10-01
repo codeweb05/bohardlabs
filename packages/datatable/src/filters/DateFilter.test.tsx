@@ -7,6 +7,7 @@ import userEvent from '@testing-library/user-event';
 import type {ReactNode} from 'react';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 
+import {DEFAULT_LABELS as L} from '../i18n';
 import {DateFilter} from './DateFilter';
 
 // ---------------------------------------------------------------------------
@@ -294,6 +295,21 @@ describe('DateFilter — Mode selection', () => {
 // ---------------------------------------------------------------------------
 // Tests — External sync
 // ---------------------------------------------------------------------------
+
+describe('DateFilter, handed a different column', () => {
+  it('clears the column it holds now, not the one it was mounted with', async () => {
+    const user = userEvent.setup();
+    const first = createMockColumn('2026-06-15');
+    const second = createMockColumn('2026-12-25');
+    const view = render(<DateFilter column={first} showRange={false} />, {wrapper: Wrapper});
+
+    view.rerender(<DateFilter column={second} showRange={false} />);
+    await user.click(screen.getByRole('button', {name: L.reset}));
+
+    expect(second.setFilterValue).toHaveBeenCalledWith(undefined);
+    expect(first.setFilterValue).not.toHaveBeenCalled();
+  });
+});
 
 describe('DateFilter — External filter value sync', () => {
   it('syncs range inputs when mounted with a new filter value', () => {

@@ -49,11 +49,18 @@ export function TableContainerComponent<TData extends RowData>({
   const {density, columnPinning, columnVisibility} = useTableUI();
   const densityConfig = DENSITY_CONFIG[density];
 
-  // Calculate total table width when column resizing is enabled
-  // Use columnSizing prop to force recalculation on every resize.
-  // `getTotalSize()` rather than `getCenterTotalSize()`: the latter drops the pinned
-  // columns from the sum, which would leave the table too narrow once anything is pinned.
-  const totalWidth = enableColumnResizing ? table.getTotalSize() : undefined;
+  // Total table width when column resizing is enabled: the columns on screen, each at the
+  // width it is styled with below. Summed from the sizing and visibility state rather than
+  // asked of `table.getTotalSize()`, which reads through the stable `table`: the React
+  // Compiler caches its first answer, and the table stays the width it was while the
+  // columns inside it are resized or hidden. Pinned columns count, as they do there.
+  const totalWidth = useMemo(() => {
+    if (!enableColumnResizing) return undefined;
+    return table
+      .getAllLeafColumns()
+      .filter((column) => columnVisibility?.[column.id] !== false)
+      .reduce((total, column) => total + (columnSizing?.[column.id] ?? column.getSize()), 0);
+  }, [enableColumnResizing, table, columnSizing, columnVisibility]);
 
   // Frozen columns, serialized in visual order. A string rather than an array so it
   // compares by value and the React Compiler re-renders the header and rows on a change.

@@ -16,9 +16,11 @@ import type {CellOverflowMode, DataTableColumnDef, DensityConfig, HeaderCase, Ro
 import {DEFAULT_HEADER_CASE, DENSITY_CONFIG} from '../types';
 import {ResizeHandle} from './ResizeHandle';
 
-/** The width a column can be dragged or nudged between. */
+/** The width a column can be dragged or nudged between, unless it sets its own. */
 const RESIZE_MIN_WIDTH = 50;
 const RESIZE_MAX_WIDTH = 500;
+
+const ARIA_SORT = {asc: 'ascending', desc: 'descending'} as const;
 
 function descToDirection(desc: boolean): SortDirection {
   return desc ? 'desc' : 'asc';
@@ -29,6 +31,12 @@ function descToDirection(desc: boolean): SortDirection {
  */
 function getSortDirection(sortInfo: {id: string; desc: boolean} | undefined): false | SortDirection {
   return sortInfo ? descToDirection(sortInfo.desc) : false;
+}
+
+/** What the header cell announces: the button inside it only names the next action. */
+function getAriaSort(canSort: boolean, isSorted: false | SortDirection) {
+  if (!canSort) return undefined;
+  return isSorted ? ARIA_SORT[isSorted] : 'none';
 }
 
 // Sort icon component - simple and clean
@@ -259,9 +267,18 @@ interface HeaderCellProps<TData extends RowData> {
   readonly enableColumnOrdering?: boolean;
   readonly columnStyle?: React.CSSProperties;
   readonly resizingColumnId: string | null;
-  readonly onResizeStart: (columnId: string, startWidth: number) => (e: React.MouseEvent | React.TouchEvent) => void;
+  readonly onResizeStart: (
+    columnId: string,
+    startWidth: number,
+    limits?: {min: number; max: number},
+  ) => (e: React.MouseEvent | React.TouchEvent) => void;
   /** Applies a width delta in one step. The keyboard path on the resize handle. */
-  readonly onResizeBy: (columnId: string, currentWidth: number, delta: number) => void;
+  readonly onResizeBy: (
+    columnId: string,
+    currentWidth: number,
+    delta: number,
+    limits?: {min: number; max: number},
+  ) => void;
   readonly onColumnDragStart?: (columnId: string) => void;
   readonly onColumnDragOver?: (columnId: string) => void;
   readonly onColumnDragEnd?: () => void;
@@ -384,8 +401,12 @@ function SelectHeaderCell<TData extends RowData>({
     // slice with the current pageIndex/pageSize props (which the parent sources from
     // context) so the result is always in sync with the visible page.
     const allRows = table.getPrePaginationRowModel().rows;
+    // A server-driven table holds one page and a table that does not page shows every
+    // row, so in both the rows it has are the page. Neither has a pagination row model,
+    // and slicing from `pageIndex * pageSize` would leave the wrong rows or none.
     const start = pageIndex * pageSize;
-    const pageRows = pageSize > 0 ? allRows.slice(start, start + pageSize) : allRows;
+    const holdsOnePage = !table.options.getPaginationRowModel || pageSize <= 0;
+    const pageRows = holdsOnePage ? allRows : allRows.slice(start, start + pageSize);
     const selectableRows = pageRows.filter((row) => row.getCanSelect());
     const selectedOnPage = selectableRows.filter((row) => selection[row.id]).length;
     return {
@@ -541,8 +562,9 @@ function ActionsHeaderCell({
         component="span"
         sx={{
           position: 'absolute',
-          width: 1,
-          height: 1,
+          // In px: a bare 1 in `sx` is 100%, which stretches the hidden label over the cell.
+          width: '1px',
+          height: '1px',
           overflow: 'hidden',
           clipPath: 'inset(50%)',
           whiteSpace: 'nowrap',
@@ -592,6 +614,10 @@ function RegularHeaderCell<TData extends RowData>({
 
   const canSort = header.column.getCanSort();
   const canResize = enableColumnResizing && columnDef.enableResizing !== false;
+  // The column's own limits, the ones its cells are already styled with below. Resizing
+  // against the table-wide pair instead drags a column past what it declared, and pulls
+  // one declared wider than that pair back to it on the first nudge.
+  const resizeLimits = {min: columnDef.minSize ?? RESIZE_MIN_WIDTH, max: columnDef.maxSize ?? RESIZE_MAX_WIDTH};
   const isResizing = resizingColumnId === header.id;
 
   const sortInfo = sortingState.find((s) => s.id === header.id);
@@ -609,8 +635,8 @@ function RegularHeaderCell<TData extends RowData>({
 
   const cellSx: SxSlot = {
     width: columnWidth,
-    minWidth: columnDef.minSize ?? 50,
-    maxWidth: columnDef.maxSize ?? 500,
+    minWidth: resizeLimits.min,
+    maxWidth: resizeLimits.max,
     p: densityConfig.cellPadding,
     fontSize: densityConfig.fontSize,
     fontWeight: 600,
@@ -636,6 +662,7 @@ function RegularHeaderCell<TData extends RowData>({
       ref={headerRef}
       data-column-id={header.column.id}
       colSpan={header.colSpan}
+      aria-sort={getAriaSort(canSort, isSorted)}
       sx={[cellSx, pinnedSx]}
       draggable={enableColumnOrdering}
       onDragStart={() => onColumnDragStart?.(header.id)}
@@ -682,13 +709,13 @@ function RegularHeaderCell<TData extends RowData>({
       {canResize && (
         <ResizeHandle
           isResizing={isResizing}
-          onMouseDown={onResizeStart(header.id, columnWidth)}
-          onTouchStart={onResizeStart(header.id, columnWidth)}
+          onMouseDown={onResizeStart(header.id, columnWidth, resizeLimits)}
+          onTouchStart={onResizeStart(header.id, columnWidth, resizeLimits)}
           onDoubleClick={handleResetSize}
-          onResizeBy={(delta) => onResizeBy(header.id, columnWidth, delta)}
+          onResizeBy={(delta) => onResizeBy(header.id, columnWidth, delta, resizeLimits)}
           width={columnWidth}
-          minWidth={RESIZE_MIN_WIDTH}
-          maxWidth={RESIZE_MAX_WIDTH}
+          minWidth={resizeLimits.min}
+          maxWidth={resizeLimits.max}
         />
       )}
     </TableCell>

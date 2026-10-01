@@ -2,6 +2,7 @@ import {useCallback, useEffect, useRef} from 'react';
 
 import {getTableStateStorageKey} from './storage/storageKey';
 import type {PersistedTableState} from './types';
+import {DENSITY_CONFIG} from './types';
 
 /** Debounce delay for batching persistence writes (ms) */
 const PERSIST_DEBOUNCE_MS = 150;
@@ -13,14 +14,58 @@ const PERSIST_DEBOUNCE_MS = 150;
  * is what prevents a redundant initial fetch on mount.
  */
 function sanitizePersistedState(state: PersistedTableState): PersistedTableState {
-  const {pageIndex, pageSize, sorting, columnFilters, globalFilter, ...rest} = state;
+  const {pageIndex, pageSize, sorting, columnFilters, globalFilter, ...layout} = state;
   return {
-    ...rest,
+    ...sanitizeLayout(layout),
     ...(typeof pageIndex === 'number' && Number.isInteger(pageIndex) && pageIndex >= 0 ? {pageIndex} : {}),
     ...(typeof pageSize === 'number' && Number.isInteger(pageSize) && pageSize > 0 ? {pageSize} : {}),
-    ...(Array.isArray(sorting) ? {sorting} : {}),
-    ...(Array.isArray(columnFilters) ? {columnFilters} : {}),
+    ...(isListOf(sorting, hasId) ? {sorting} : {}),
+    ...(isListOf(columnFilters, hasId) ? {columnFilters} : {}),
     ...(typeof globalFilter === 'string' ? {globalFilter} : {}),
+  };
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function isString(value: unknown): value is string {
+  return typeof value === 'string';
+}
+
+function hasId(value: unknown): boolean {
+  return isRecord(value) && isString(value.id);
+}
+
+function isListOf(value: unknown, isItem: (item: unknown) => boolean): boolean {
+  return Array.isArray(value) && value.every(isItem);
+}
+
+function isWidth(value: unknown): boolean {
+  return typeof value === 'number' && Number.isFinite(value);
+}
+
+function isPinning(value: unknown): boolean {
+  if (!isRecord(value)) return false;
+  return [value.left, value.right].every((side) => side === undefined || isListOf(side, isString));
+}
+
+/**
+ * The layout half of the same check. Each of these is read without a guard further in
+ * (a density that is not a key of `DENSITY_CONFIG`, an order that is not an array), so a
+ * wrong shape here is a table that throws on mount, for that user, until the entry goes.
+ */
+function sanitizeLayout(
+  layout: Omit<PersistedTableState, 'pageIndex' | 'pageSize' | 'sorting' | 'columnFilters' | 'globalFilter'>,
+): PersistedTableState {
+  const {density, columnOrder, columnPinning, columnSizing, columnVisibility, grouping} = layout;
+  return {
+    ...(isString(density) && Object.hasOwn(DENSITY_CONFIG, density) ? {density} : {}),
+    ...(isListOf(columnOrder, isString) ? {columnOrder} : {}),
+    ...(isPinning(columnPinning) ? {columnPinning} : {}),
+    ...(isRecord(columnSizing) && isListOf(Object.values(columnSizing), isWidth) ? {columnSizing} : {}),
+    ...(isRecord(columnVisibility) ? {columnVisibility} : {}),
+    ...(isListOf(grouping, isString) ? {grouping} : {}),
   };
 }
 

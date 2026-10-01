@@ -3,10 +3,17 @@ import {useCallback, useEffect, useRef, useState} from 'react';
 
 import type {RowData} from '../types';
 
+/** The narrowest and widest one column may get, where that differs from the table's. */
+interface ResizeLimits {
+  readonly min: number;
+  readonly max: number;
+}
+
 interface ResizeState {
   columnId: string | null;
   startX: number;
   startWidth: number;
+  limits?: ResizeLimits;
 }
 
 interface UseColumnResizeOptions<TData extends RowData> {
@@ -18,9 +25,13 @@ interface UseColumnResizeOptions<TData extends RowData> {
 interface UseColumnResizeReturn {
   isResizing: boolean;
   resizingColumnId: string | null;
-  handleResizeStart: (columnId: string, startWidth: number) => (e: React.MouseEvent | React.TouchEvent) => void;
+  handleResizeStart: (
+    columnId: string,
+    startWidth: number,
+    limits?: ResizeLimits,
+  ) => (e: React.MouseEvent | React.TouchEvent) => void;
   /** Applies a width delta in one step. The keyboard path, where there is no drag to follow. */
-  resizeColumnBy: (columnId: string, currentWidth: number, delta: number) => void;
+  resizeColumnBy: (columnId: string, currentWidth: number, delta: number, limits?: ResizeLimits) => void;
 }
 
 export function useColumnResize<TData extends RowData>({
@@ -57,10 +68,12 @@ export function useColumnResize<TData extends RowData>({
     if (resizingColumnId === null) return;
 
     const applyWidth = (clientX: number) => {
-      const {columnId, startX, startWidth} = resizeStateRef.current;
+      const {columnId, startX, startWidth, limits} = resizeStateRef.current;
       if (!columnId) return;
 
-      const newWidth = Math.min(maxWidthRef.current, Math.max(minWidthRef.current, startWidth + (clientX - startX)));
+      const min = limits?.min ?? minWidthRef.current;
+      const max = limits?.max ?? maxWidthRef.current;
+      const newWidth = Math.min(max, Math.max(min, startWidth + (clientX - startX)));
       tableRef.current.setColumnSizing((prev) => ({
         ...prev,
         [columnId]: newWidth,
@@ -109,7 +122,7 @@ export function useColumnResize<TData extends RowData>({
   }, [resizingColumnId]);
 
   const handleResizeStart = useCallback(
-    (columnId: string, startWidth: number) => (e: React.MouseEvent | React.TouchEvent) => {
+    (columnId: string, startWidth: number, limits?: ResizeLimits) => (e: React.MouseEvent | React.TouchEvent) => {
       e.preventDefault();
       e.stopPropagation();
 
@@ -119,14 +132,17 @@ export function useColumnResize<TData extends RowData>({
         columnId,
         startX: clientX,
         startWidth,
+        limits,
       };
       setResizingColumnId(columnId);
     },
     [],
   );
 
-  const resizeColumnBy = useCallback((columnId: string, currentWidth: number, delta: number) => {
-    const nextWidth = Math.min(maxWidthRef.current, Math.max(minWidthRef.current, currentWidth + delta));
+  const resizeColumnBy = useCallback((columnId: string, currentWidth: number, delta: number, limits?: ResizeLimits) => {
+    const min = limits?.min ?? minWidthRef.current;
+    const max = limits?.max ?? maxWidthRef.current;
+    const nextWidth = Math.min(max, Math.max(min, currentWidth + delta));
     if (nextWidth === currentWidth) return;
 
     tableRef.current.setColumnSizing((prev) => ({...prev, [columnId]: nextWidth}));

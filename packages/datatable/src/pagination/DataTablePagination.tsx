@@ -3,7 +3,17 @@ import KeyboardArrowRight from '@mui/icons-material/KeyboardArrowRight';
 import KeyboardDoubleArrowLeft from '@mui/icons-material/KeyboardDoubleArrowLeft';
 import KeyboardDoubleArrowRight from '@mui/icons-material/KeyboardDoubleArrowRight';
 import type {SelectChangeEvent} from '@mui/material';
-import {Box, FormControl, IconButton, MenuItem, Select, Typography, useMediaQuery, useTheme} from '@mui/material';
+import {
+  Box,
+  FormControl,
+  IconButton,
+  MenuItem,
+  Select,
+  Typography,
+  alpha,
+  useMediaQuery,
+  useTheme,
+} from '@mui/material';
 import type {Table} from '@tanstack/react-table';
 
 import {useTableCore, useTableUI} from '../DataTableContext.hooks';
@@ -108,7 +118,8 @@ export function DataTablePagination<TData extends RowData>({
         gap: {xs: 1.5, sm: 2},
         px: {xs: 1.5, sm: 2},
         py: {xs: 1, sm: 1.25},
-        bgcolor: (muiTheme) => (muiTheme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.02)' : 'rgba(0, 0, 0, 0.01)'),
+        // A wash of the theme's own text colour, so the tint follows a branded palette.
+        bgcolor: (muiTheme) => alpha(muiTheme.palette.text.primary, muiTheme.palette.mode === 'dark' ? 0.02 : 0.01),
         borderTop: (muiTheme) => `1px solid ${muiTheme.palette.divider}`,
       }}
     >

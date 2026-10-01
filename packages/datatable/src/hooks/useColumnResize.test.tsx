@@ -46,7 +46,7 @@ function Harness({limits, startWidth = 100}: Readonly<HarnessProps>) {
     getRowId: (row) => row.id,
     getCoreRowModel: getCoreRowModel(),
   });
-  const {isResizing, resizingColumnId, handleResizeStart} = useColumnResize(
+  const {isResizing, resizingColumnId, handleResizeStart, resizeColumnBy} = useColumnResize(
     limits ? {table, minWidth: limits.min, maxWidth: limits.max} : {table},
   );
   const start = handleResizeStart('name', startWidth);
@@ -56,6 +56,12 @@ function Harness({limits, startWidth = 100}: Readonly<HarnessProps>) {
       {/* A button rather than the real component's div, so the handle is reachable
           without tripping the a11y lint rules this file has no reason to bend. */}
       <button type="button" data-testid="handle" onMouseDown={start} onTouchStart={start} />
+      <button type="button" onClick={() => resizeColumnBy('name', startWidth, 1000)}>
+        widen
+      </button>
+      <button type="button" onClick={() => resizeColumnBy('name', startWidth, -1000)}>
+        narrow
+      </button>
       <p>{`resizing: ${resizingColumnId ?? 'none'}`}</p>
       <p>{`isResizing: ${String(isResizing)}`}</p>
       <p>{`width: ${columnSizing.name ?? 'unset'}`}</p>
@@ -145,6 +151,17 @@ describe('useColumnResize', () => {
     dragMouse(100, 0);
 
     expect(screen.getByText('width: 120')).toBeInTheDocument();
+  });
+
+  it.each([
+    {name: 'stops a keyboard step at the maximum width', button: 'widen', width: 200},
+    {name: 'stops a keyboard step at the minimum width', button: 'narrow', width: 120},
+  ] as const)('$name', ({button, width}) => {
+    render(<Harness limits={{min: 120, max: 200}} startWidth={150} />);
+
+    fireEvent.click(screen.getByRole('button', {name: button}));
+
+    expect(screen.getByText(`width: ${width}`)).toBeInTheDocument();
   });
 
   it('leaves the resizing state on mouse up', () => {
