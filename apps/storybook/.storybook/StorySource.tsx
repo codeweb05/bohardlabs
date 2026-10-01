@@ -7,6 +7,8 @@ import Collapse from '@mui/material/Collapse';
 import {useEffect, useId, useState} from 'react';
 import {getChannel} from 'storybook/preview-api';
 
+import {describeStory, loadStoryFile} from './storyCode';
+
 /**
  * The event `@storybook/react`'s `jsxDecorator` fires once it has turned the rendered story
  * into a JSX string, and the one the docs page's Show code listens to. Spelled out rather
@@ -72,47 +74,27 @@ function useSnippet(storyId: string): string | null {
 }
 
 /**
- * Keys that describe the story to Storybook rather than the component to a reader.
- * `parameters` narrows the Controls panel, `tags` drives autodocs, and `play` is the
- * interaction test: all three are noise in an app, and `play` is the longest of them.
+ * The text of the file the story lives in, fetched the first time its code is asked for.
+ * `null` until it arrives, and for a story whose file cannot be found.
  */
-const STORYBOOK_ONLY = /^ {2}(parameters|tags|globals|name|storyName|play|loaders|beforeEach|decorators):/;
+function useStoryFile(fileName: string | null, isWanted: boolean): string | null {
+  const [loaded, setLoaded] = useState<{readonly fileName: string; readonly text: string | null} | null>(null);
 
-/**
- * Trims a story's own source down to the part worth copying, for the stories the JSX
- * snippet does not cover.
- *
- * `csf-plugin` writes each story's source into `parameters.docs.source.originalSource` at
- * build time, always at two-space indentation for a top-level key, so a dropped key runs
- * until the next line that starts one or until the closing brace. That formatting is the
- * plugin's, not a file's, which is what makes a line scan safe here.
- */
-export function toSnippet(originalSource: string): string {
-  const kept: string[] = [];
-  let dropping = false;
+  useEffect(() => {
+    if (!isWanted || fileName === null) return;
 
-  for (const line of originalSource.split('\n')) {
-    if (dropping) {
-      // The dropped value's own closing line, at the same two-space indent.
-      if (/^ {2}[)\]}]/.test(line)) {
-        dropping = false;
-        continue;
-      }
-      // Anything else still indented past top level belongs to the dropped value.
-      if (!/^(?: {2})?\S/.test(line)) continue;
-      dropping = false;
-    }
-    if (STORYBOOK_ONLY.test(line)) {
-      dropping = true;
-      continue;
-    }
-    kept.push(line);
-  }
+    let isCurrent = true;
+    const load = async () => {
+      const text = await loadStoryFile(fileName);
+      if (isCurrent) setLoaded({fileName, text});
+    };
+    void load();
+    return () => {
+      isCurrent = false;
+    };
+  }, [fileName, isWanted]);
 
-  const snippet = kept.join('\n').trim();
-  // A story that was nothing but a `play` would leave `{}`. Better the raw source than an
-  // empty block that reads as a bug.
-  return snippet.replace(/\s/g, '').length > 2 ? snippet : originalSource.trim();
+  return loaded?.fileName === fileName ? loaded.text : null;
 }
 
 /**
@@ -120,20 +102,31 @@ export function toSnippet(originalSource: string): string {
  *
  * Storybook puts this on the docs page and nowhere else, so someone clicking through the
  * sidebar sees a working table and no way to get the code that made it without changing
- * views. Same string, in the place they are looking, for the same reason `StoryNote` puts
- * the description there.
+ * views. It goes in the place they are looking, for the same reason `StoryNote` puts the
+ * description there, and it says more than the docs page does: a story built on a demo
+ * component shows that component too. `storyCode.ts` has the reasoning.
  *
  * Collapsed until asked for: an open code block under every story would double the height of
  * the canvas, and its text would sit inside the same root the `play` functions and the axe
  * pass read, where it can only add noise. `unmountOnExit` keeps it out of the DOM entirely
  * until it is opened.
  */
-export function StorySource({storyId, originalSource}: {readonly storyId: string; readonly originalSource: string}) {
+export function StorySource({
+  storyId,
+  originalSource,
+  fileName,
+}: {
+  readonly storyId: string;
+  readonly originalSource: string;
+  readonly fileName: string | null;
+}) {
   const [isOpen, setIsOpen] = useState(false);
   const [hasCopied, setHasCopied] = useState(false);
   const regionId = useId();
 
-  const source = useSnippet(storyId) ?? toSnippet(originalSource);
+  const snippet = useSnippet(storyId);
+  const file = useStoryFile(fileName, isOpen);
+  const source = describeStory({snippet, originalSource, file});
 
   const copy = async () => {
     try {
@@ -196,7 +189,9 @@ export function StorySource({storyId, originalSource}: {readonly storyId: string
             fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace',
             fontSize: '0.75rem',
             lineHeight: 1.6,
-            overflowX: 'auto',
+            // A story's code now carries the definitions it leans on, which can run long.
+            maxHeight: '60vh',
+            overflow: 'auto',
           }}
         >
           {source}

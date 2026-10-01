@@ -132,6 +132,8 @@ const preview: Preview = {
       // channel, which is what the docs page shows; this is what `csf-plugin` wrote at build
       // time, and it is the story object rather than a component call.
       const source: unknown = context.parameters.docs?.source?.originalSource;
+      // Where the story file is, so the code block can show the declarations the story uses.
+      const fileName: unknown = context.parameters.fileName;
       // The docs page renders both of these itself, above and below each embedded story.
       const isCanvas = context.viewMode !== 'docs';
 
@@ -140,7 +142,13 @@ const preview: Preview = {
           <CssBaseline />
           {isCanvas && typeof note === 'string' && <StoryNote text={note} />}
           <Story />
-          {isCanvas && typeof source === 'string' && <StorySource storyId={context.id} originalSource={source} />}
+          {isCanvas && typeof source === 'string' && (
+            <StorySource
+              storyId={context.id}
+              originalSource={source}
+              fileName={typeof fileName === 'string' ? fileName : null}
+            />
+          )}
         </ThemeProvider>
       );
     },

@@ -2,7 +2,7 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "noEmit": true,
-    "types": ["vitest/globals"]
+    "types": ["vitest/globals", "vite/client"]
   },
   "include": [".storybook/**/*.ts", ".storybook/**/*.tsx", "src", "vitest.config.ts"]
 }

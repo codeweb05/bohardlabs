@@ -79,9 +79,11 @@ font size and header case are the `density` and `headerCase` props.
 
 ## Every story carries its own code
 
-Under each story in the canvas is a **Show code** / **Copy** bar, holding the same JSX the
-docs page shows: the component call with the args currently set in the Controls panel, not
-the story object and not its `play` function. Change a control and the snippet follows.
+Under each story in the canvas is a **Show code** / **Copy** bar. It holds the component call
+with the args currently set in the Controls panel, not the story object and not its `play`
+function, so changing a control changes the snippet. A story built on a small demo component
+shows that component as well, with the data it uses, because a line that only names it is
+not code anyone can copy.
 
 It stays collapsed until asked for. An open code block under every story would double the
 height of the canvas, and its text would sit inside the same root the `play` functions and

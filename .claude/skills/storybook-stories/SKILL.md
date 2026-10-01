@@ -97,12 +97,16 @@ Contrast under Nord or Dracula is not covered by a test; check it by eye in the 
   stacks only, because a webfont would silently fall back in CI.
 - **The story note.** A JSDoc block above an exported story becomes the paragraph under it in
   the canvas. Write it as prose for a reader, not as a changelog line.
-- **The source block.** `csf-plugin` writes each story's raw source into
-  `parameters.docs.source.originalSource` at build time, and the decorator renders it under
-  the story in the canvas behind **Show code** / **Copy**, with the Storybook-only keys
-  (`parameters`, `tags`, `globals`, `name`, `storyName`) stripped by `toSnippet`. It stays
-  collapsed with `unmountOnExit`, which is load-bearing: an expanded code block would put the
-  story's own source text inside the root that `within(canvasElement)` and axe read.
+- **The source block.** Under the story in the canvas, behind **Show code** / **Copy**. It
+  shows the JSX Storybook renders from the story's args, or, for a story with no args, the
+  story object `csf-plugin` wrote into `parameters.docs.source.originalSource` with the
+  Storybook-only keys (`parameters`, `tags`, `play`, `decorators` and friends) dropped. Under
+  that it appends every top-level declaration in the story file the code leans on, so a story
+  built on a local `Demo` component shows `Demo`, not one line naming it. Long arrays and
+  data URLs are cut short. `.storybook/storyCode.ts` holds the logic, and it scans the file
+  by line, so keep a story file's declarations at column zero, which the formatter does. It
+  stays collapsed with `unmountOnExit`, which is load-bearing: an expanded code block would
+  put the story's own source text inside the root that `within(canvasElement)` and axe read.
 
 Both extras render in the canvas only (`viewMode !== 'docs'`); the docs page already prints
 the description and the source itself.
