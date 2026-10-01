@@ -5,7 +5,7 @@
  * being `useInlineEdit`), and nothing tested it. That matters for a package: a
  * consumer who passes `onRowEdit` to `<DataTable>` gets THIS one, not the hook.
  *
- * The block at the bottom is a KNOWN ISSUE and is EXPECTED TO FAIL.
+ * The block at the bottom is a regression test: it failed when it was written.
  */
 import type {ColumnDef} from '@tanstack/react-table';
 import {getCoreRowModel, useReactTable} from '@tanstack/react-table';
@@ -325,7 +325,7 @@ describe('DataTableProvider — inline editing', () => {
 });
 
 // ===========================================================================
-// KNOWN ISSUE — DataTableContext.tsx:102
+// REGRESSION — DataTableContext.tsx:102
 //
 //   const message = error instanceof Error ? error.message : 'Failed to save changes';
 //   setEditError(message);
@@ -344,7 +344,7 @@ describe('DataTableProvider — inline editing', () => {
 // into its own key, and then checks the English literal is gone — so any correct fix
 // passes it whichever key name is chosen.
 //
-// EXPECTED TO FAIL until the message comes from `t()`.
+// Failed when written; passes now that the message comes from `labels`.
 // ===========================================================================
 
 describe('the save-failure message comes from `labels`', () => {

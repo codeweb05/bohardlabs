@@ -143,7 +143,7 @@ describe('TextFilter — re-rendering', () => {
 });
 
 // ===========================================================================
-// KNOWN ISSUE — filters/TextFilter.tsx:17-23
+// REGRESSION — filters/TextFilter.tsx:17-23
 //
 //   const filterValue = (column.getFilterValue() ?? '') as string;
 //   const [localValue, setLocalValue] = useState(filterValue);
@@ -161,10 +161,10 @@ describe('TextFilter — re-rendering', () => {
 // toolbar clears every filter, the search box still shows the old term, and the user has
 // to delete it by hand before the field will agree with the table it belongs to.
 //
-// EXPECTED TO FAIL until the filter value reaches the field as a real input, either as a
-// prop from FilterPanel or with the component opted out via 'use no memo'.
+// Failed when written; passes now that the component is opted out via 'use no memo', so
+// the filter value is read again on every render.
 // ===========================================================================
-describe('KNOWN ISSUE — an external change to the filter must reach the text box', () => {
+describe('Regression — an external change to the filter must reach the text box', () => {
   /** Fully controlled: the value comes from outside, as it does after a reset. */
   function ControlledHarness({filters}: Readonly<{filters: ColumnFiltersState}>) {
     const table = useReactTable({

@@ -230,7 +230,7 @@ describe('Regression — a zero-valued select option must not be dropped', () =>
 });
 
 // ===========================================================================
-// KNOWN ISSUE — filters/SelectFilter.tsx:29-44
+// REGRESSION — filters/SelectFilter.tsx:29-44
 //
 //   const filterValue = column.getFilterValue();
 //   const computedValue: SelectFilterValue = multiple ? ... : ...;
@@ -247,10 +247,10 @@ describe('Regression — a zero-valued select option must not be dropped', () =>
 // The `multiple` half of the same condition does work, because `multiple` is a real prop.
 // That is what makes the block look reachable when the filter half never is.
 //
-// EXPECTED TO FAIL until the filter value reaches the field as a real input, either as a
-// prop from FilterPanel or with the component opted out via 'use no memo'.
+// Failed when written; passes now that the component is opted out via 'use no memo', so
+// the filter value is read again on every render.
 // ===========================================================================
-describe('KNOWN ISSUE — an external change to the filter must reach the select', () => {
+describe('Regression — an external change to the filter must reach the select', () => {
   /** Fully controlled: the value comes from outside, as it does after a reset. */
   function ControlledHarness({filters}: Readonly<{filters: ColumnFiltersState}>) {
     const table = useReactTable({

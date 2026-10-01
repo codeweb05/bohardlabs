@@ -40,12 +40,24 @@ interface HarnessProps {
   readonly dark?: boolean;
 }
 
+/** A shadow no default theme has, at the elevation MUI gives a popover. */
+const POPOVER_SHADOW = '0 0 0 3px rgb(1, 2, 3)';
+
+function themeFor(mode: 'light' | 'dark') {
+  const theme = createTheme({palette: {mode}});
+  theme.shadows[8] = POPOVER_SHADOW;
+  return theme;
+}
+
+const lightTheme = themeFor('light');
+const darkTheme = themeFor('dark');
+
 function Harness({enableReordering, dark = false}: Readonly<HarnessProps>) {
   'use no memo';
   const table = useReactTable({data, columns, getCoreRowModel: getCoreRowModel()});
 
   return (
-    <ThemeProvider theme={createTheme({palette: {mode: dark ? 'dark' : 'light'}})}>
+    <ThemeProvider theme={dark ? darkTheme : lightTheme}>
       <DataTableProvider table={table} density="comfortable" setDensity={() => {}}>
         <ColumnVisibility table={table} enableReordering={enableReordering} />
       </DataTableProvider>
@@ -128,16 +140,13 @@ describe('ColumnVisibility, drags that are not a reorder', () => {
   });
 });
 
-describe('ColumnVisibility, under a dark theme', () => {
-  it('casts a heavier shadow, which is what lifts the popover off a dark page', async () => {
-    const list = await openPopover({dark: true});
+describe('ColumnVisibility, under a theme of the consumer', () => {
+  it.each([{dark: false}, {dark: true}])('casts the shadow the theme gives a popover, dark: $dark', async ({dark}) => {
+    const list = await openPopover({dark});
+    const paper = parentOf(list);
 
-    expect(generatedCss(parentOf(list))).toContain('rgba(0, 0, 0, 0.4)');
-  });
-
-  it('keeps the light one under a light theme', async () => {
-    const list = await openPopover();
-
-    expect(generatedCss(parentOf(list))).toContain('rgba(0, 0, 0, 0.08)');
+    // MUI hands the paper its shadow as a variable, and the rule only points at it.
+    expect(paper).toHaveStyle({'--Paper-shadow': POPOVER_SHADOW});
+    expect(generatedCss(paper)).toContain('box-shadow: var(--Paper-shadow)');
   });
 });

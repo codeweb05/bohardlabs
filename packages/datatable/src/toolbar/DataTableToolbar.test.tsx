@@ -260,6 +260,21 @@ describe('DataTableToolbar — mobile bulk actions', () => {
     expect(disabled).toHaveBeenCalledWith([data[0], data[1]]);
   });
 
+  it('logs an action that fails and keeps the selection, so it can be tried again', async () => {
+    const failure = new Error('the server said no');
+    bulkClick.mockRejectedValue(failure);
+    const logged = vi.spyOn(console, 'error').mockImplementation(() => {});
+    renderToolbar(mobileProps, {'row-1': true});
+
+    await userEvent.click(screen.getByRole('button', {name: DEFAULT_LABELS.actions}));
+    await userEvent.click(await screen.findByRole('menuitem', {name: 'Delete'}));
+
+    await waitFor(() => expect(logged).toHaveBeenCalledWith('Bulk action "delete" failed:', failure));
+    expect(screen.getByText(`1 ${DEFAULT_LABELS.selected}`)).toBeInTheDocument();
+    expect(screen.getByRole('button', {name: DEFAULT_LABELS.actions})).toBeEnabled();
+    logged.mockRestore();
+  });
+
   it('locks the trigger while an action is in flight', async () => {
     let release = () => {};
     bulkClick.mockImplementation(

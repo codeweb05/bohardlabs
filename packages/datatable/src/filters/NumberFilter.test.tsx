@@ -297,21 +297,62 @@ describe('NumberFilter — single mode', () => {
   });
 });
 
-describe('NumberFilter — documented gaps', () => {
-  it('accepts a value above the configured max, because max is never read', async () => {
-    // NOT a passing-by-design assertion: `max` is declared in NumberFilterProps and
-    // forwarded by FilterPanel from `filterConfig.max`, but the component never
-    // destructures it, so the bound is inert. `min` is barely better — it only
-    // decides whether a leading minus is allowed, it does not clamp.
-    // Decide the intended contract (clamp, validate, or drop the props) before this
-    // ships as a package; this test only records today's behaviour.
-    render(<Harness max={10} debounceMs={NO_AUTO_COMMIT} />);
+describe('NumberFilter, held to the configured limits', () => {
+  it('filters by the limit when a bound is typed past it', async () => {
+    render(<Harness min={1} max={7} />);
 
-    await userEvent.type(minInput(), '999');
+    await userEvent.type(minInput(), '0');
+    await userEvent.type(maxInput(), '999');
 
-    expect(minInput()).toHaveValue('999');
+    await waitFor(() => {
+      expect(filterState()).toEqual([{id: 'amount', value: [1, 7]}]);
+    });
   });
 
+  it('shows the limit once the box is left, so it agrees with the filter', async () => {
+    render(<Harness min={1} max={7} debounceMs={NO_AUTO_COMMIT} />);
+
+    await userEvent.type(maxInput(), '999');
+    await userEvent.type(minInput(), '0');
+    await userEvent.tab();
+
+    expect(minInput()).toHaveValue('1');
+    expect(maxInput()).toHaveValue('7');
+    expect(filterState()).toEqual([{id: 'amount', value: [1, 7]}]);
+  });
+
+  it('leaves a number inside the limits as it was typed', async () => {
+    render(<Harness min={1} max={7} debounceMs={NO_AUTO_COMMIT} />);
+
+    await userEvent.type(minInput(), '2.');
+    await userEvent.tab();
+
+    expect(minInput()).toHaveValue('2.');
+    expect(filterState()).toEqual([{id: 'amount', value: [2, null]}]);
+  });
+
+  it('holds a single value to the limits too', async () => {
+    render(<Harness showRange={false} max={7} debounceMs={NO_AUTO_COMMIT} />);
+
+    await userEvent.type(screen.getByRole('textbox'), '999');
+    await userEvent.tab();
+
+    expect(screen.getByRole('textbox')).toHaveValue('7');
+    expect(filterState()).toEqual([{id: 'amount', value: 7}]);
+  });
+
+  it('holds a single value to the limits when the debounce commits it', async () => {
+    render(<Harness showRange={false} min={1} />);
+
+    await userEvent.type(screen.getByRole('textbox'), '0');
+
+    await waitFor(() => {
+      expect(filterState()).toEqual([{id: 'amount', value: 1}]);
+    });
+  });
+});
+
+describe('NumberFilter, its labels', () => {
   it('labels the range inputs from the table labels, so they translate', () => {
     render(<Harness />);
 
@@ -445,14 +486,13 @@ describe('Regression — unmount must not flush when nothing was typed', () => {
 //   const [prevFilterValueKey, setPrevFilterValueKey] = useState(filterValueKey);
 //   if (filterValueKey !== prevFilterValueKey) { ...resync every local input... }
 //
-// Its four siblings carry the same block and none of them run it: `column` is a stable
-// object, React Compiler caches the render against it, and `getFilterValue()` is never
-// re-read (written up at length in BooleanFilter.test.tsx, with a KNOWN ISSUE test in
-// each of the four). NumberFilter is the exception, these two tests pass.
+// Its four siblings carried the same block and none of them ran it: `column` is a stable
+// object, React Compiler cached the render against it, and `getFilterValue()` was never
+// re-read (written up at length in BooleanFilter.test.tsx, with a regression test in
+// each of the four). NumberFilter was the exception, these two tests always passed.
 //
-// So this pair is a working reference for the fix, and a guard that whatever makes this
-// component behave is not refactored away. Do not delete them when the sibling filters
-// are fixed.
+// So this pair was the working reference for the fix, and stays as a guard that whatever
+// makes this component behave is not refactored away.
 // ===========================================================================
 describe('NumberFilter — an external change to the filter reaches the inputs', () => {
   /** Fully controlled: the value comes from outside, as it does after a reset. */

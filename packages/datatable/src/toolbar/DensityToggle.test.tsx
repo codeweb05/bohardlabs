@@ -93,7 +93,7 @@ describe('DensityToggle', () => {
 });
 
 // ===========================================================================
-// KNOWN ISSUE — toolbar/DensityToggle.tsx:23, :28, :33, :47 and :51
+// REGRESSION — toolbar/DensityToggle.tsx:23, :28, :33, :47 and :51
 //
 //   label: t('dataTable.density.compact') ?? 'Compact',
 //   aria-label={t('dataTable.density.label') ?? 'Density'}
@@ -108,7 +108,8 @@ describe('DensityToggle', () => {
 // the fix there was `t(key, {defaultValue: …})`, which is what actually falls back.
 // `ExportMenu.tsx:92` has the last remaining copy of the pattern.
 //
-// EXPECTED TO FAIL until the fallbacks use `defaultValue`.
+// Failed when written; passes now that the strings come from `labels`, which always
+// holds an English default.
 // ===========================================================================
 
 describe('the density labels come from `labels`', () => {

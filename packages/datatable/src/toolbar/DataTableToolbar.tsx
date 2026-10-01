@@ -121,6 +121,8 @@ export function DataTableToolbar<TData extends RowData>({
       // count chip and the next action must not still point at them.
       // Left alone on failure so the user can retry the same selection.
       table.resetRowSelection();
+    } catch (error) {
+      console.error(`Bulk action "${action.id}" failed:`, error);
     } finally {
       setIsBulkActionLoading(false);
       setConfirmAction(null);

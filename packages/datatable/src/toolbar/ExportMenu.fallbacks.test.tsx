@@ -3,7 +3,7 @@
  * because `ExportMenu.test.tsx` builds its table out of `as any` literals, and this
  * assertion needs a real table instance.
  *
- * The whole file is a KNOWN ISSUE and is EXPECTED TO FAIL.
+ * The whole file is a regression test: it failed when it was written.
  */
 import type {ColumnDef} from '@tanstack/react-table';
 import {getCoreRowModel, getFilteredRowModel, useReactTable} from '@tanstack/react-table';
@@ -35,7 +35,7 @@ function Harness() {
 }
 
 // ===========================================================================
-// KNOWN ISSUE — toolbar/ExportMenu.tsx:78-82, :88 and :92
+// REGRESSION — toolbar/ExportMenu.tsx:78-82, :88 and :92
 //
 //   return t('dataTable.exportCsv') ?? 'Export CSV';
 //   aria-label={t('dataTable.export') ?? 'Export'}
@@ -49,7 +49,8 @@ function Harness() {
 // what actually falls back) and as the one still open in `DensityToggle`. These three
 // were the only copies of the pattern in the DataTable.
 //
-// EXPECTED TO FAIL until the fallbacks use `defaultValue`.
+// Failed when written; passes now that the strings come from `labels`, which always
+// holds an English default.
 // ===========================================================================
 
 describe('the export labels come from `labels`', () => {

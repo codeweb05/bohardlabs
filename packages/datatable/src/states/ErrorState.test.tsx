@@ -26,8 +26,9 @@ describe('ErrorState — full', () => {
 
   it('falls back to the generic message when the error is null', () => {
     // `error` is typed `string | null` because the query hooks report exactly that.
-    // `getAllByText` rather than `getByText` because the fallback currently renders in
-    // both the heading and the body — see the KNOWN ISSUE at the bottom of this file.
+    // `getAllByText` rather than `getByText` because the fallback used to render in both
+    // the heading and the body. The regression block at the bottom of this file holds it
+    // to one.
     render(<ErrorState error={null} />);
 
     expect(screen.getAllByText(GENERIC).length).toBeGreaterThan(0);
@@ -161,7 +162,7 @@ describe('ErrorState — dark theme', () => {
 });
 
 // ===========================================================================
-// KNOWN ISSUE — states/ErrorState.tsx:15, :78 and :90
+// REGRESSION — states/ErrorState.tsx:15, :78 and :90
 //
 //   const displayError = error ?? t('dataTable.error');
 //   <Typography variant="h6" …>{t('dataTable.error')}</Typography>
@@ -176,9 +177,9 @@ describe('ErrorState — dark theme', () => {
 // fallback (`{error && <Typography …>{error}</Typography>}`) or give the heading its
 // own shorter key.
 //
-// EXPECTED TO FAIL until the generic message appears at most once.
+// Failed when written; passes now that the generic message appears once.
 // ===========================================================================
-describe('KNOWN ISSUE — the generic error message must not be printed twice', () => {
+describe('Regression — the generic error message must not be printed twice', () => {
   it('shows one copy of the fallback message', () => {
     render(<ErrorState />);
 

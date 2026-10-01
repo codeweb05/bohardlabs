@@ -268,7 +268,7 @@ describe('useColumnResize', () => {
 });
 
 // ===========================================================================
-// KNOWN ISSUE — hooks/useColumnResize.ts:94
+// REGRESSION — hooks/useColumnResize.ts:94
 //
 //   document.addEventListener('touchmove', handleTouchMove);
 //   document.addEventListener('touchend', handleEnd);
@@ -284,9 +284,10 @@ describe('useColumnResize', () => {
 //   - the document listeners stay subscribed, so the next touch anywhere on the page
 //     resizes the column.
 //
-// EXPECTED TO FAIL until `touchcancel` is wired to `handleEnd` alongside `touchend`.
+// Failed when written; passes now that `touchcancel` is wired to `handleEnd` alongside
+// `touchend`.
 // ===========================================================================
-describe('KNOWN ISSUE — a cancelled touch must end the resize', () => {
+describe('Regression — a cancelled touch must end the resize', () => {
   it('leaves the resizing state when the gesture is cancelled', () => {
     render(<Harness />);
     fireEvent.touchStart(handle(), {touches: [{clientX: 100}]});

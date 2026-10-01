@@ -60,7 +60,7 @@ describe('TableHeader — the expand-all cell', () => {
 });
 
 // ===========================================================================
-// KNOWN ISSUE — core/TableHeader.tsx:414-419 and :441-455
+// REGRESSION — core/TableHeader.tsx:414-419 and :441-455
 //
 //   const rows = table.getRowModel().rows;
 //   const allExpanded = rows.length > 0 && rows.every((row) => row.getIsExpanded());
@@ -91,9 +91,10 @@ describe('TableHeader — the expand-all cell', () => {
 // header never renders in that case. The guard is correct defensively, and unreachable
 // through the public component.
 //
-// EXPECTED TO FAIL until the header cell follows the expanded state.
+// Failed when written; passes now that the cell reads the expanded state from
+// `useTableUI()`.
 // ===========================================================================
-describe('KNOWN ISSUE — the expand-all header button must collapse as well as expand', () => {
+describe('Regression — the expand-all header button must collapse as well as expand', () => {
   it('flips its label once every row is open', async () => {
     renderTable();
 

@@ -302,6 +302,8 @@ describe('ExportMenu, a format it does not know', () => {
     await userEvent.click(screen.getByRole('button', {name: DEFAULT_LABELS.exportLabel}));
     const items = await screen.findAllByRole('menuitem');
     expect(items).toHaveLength(2);
+    // There is no label for it, and an item with no name cannot be chosen by anyone.
+    expect(items[1]).toHaveAccessibleName('pdf');
 
     await userEvent.click(items[1]);
 

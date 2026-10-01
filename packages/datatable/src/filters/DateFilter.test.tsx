@@ -366,7 +366,7 @@ describe('DateFilter — External filter value sync', () => {
 });
 
 // ===========================================================================
-// KNOWN ISSUE — filters/DateFilter.tsx:70-77 (single) and 119-129 (range)
+// REGRESSION — filters/DateFilter.tsx:70-77 (single) and 119-129 (range)
 //
 //   const [local, setLocal] = useState<Dayjs | null>(toDayjs(filterValue));
 //   const [prev, setPrev] = useState(filterValue);
@@ -384,10 +384,10 @@ describe('DateFilter — External filter value sync', () => {
 // app does is leave the column in place and change its filter value, which is what these
 // two tests do.
 //
-// EXPECTED TO FAIL until the filter value reaches the field as a real input, either as a
-// prop from FilterPanel or with the component opted out via 'use no memo'.
+// Failed when written; passes now that the component is opted out via 'use no memo' and
+// hands the filter value to each picker as a prop.
 // ===========================================================================
-describe('KNOWN ISSUE — an external change to the filter must reach the pickers', () => {
+describe('Regression — an external change to the filter must reach the pickers', () => {
   it('follows the column when a single date is set from elsewhere', () => {
     const column = createMockColumn();
     const {rerender} = render(<DateFilter column={column} showRange={false} />, {wrapper: Wrapper});

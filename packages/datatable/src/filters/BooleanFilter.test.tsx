@@ -123,7 +123,7 @@ describe('BooleanFilter', () => {
 });
 
 // ===========================================================================
-// KNOWN ISSUE — filters/BooleanFilter.tsx:28-40, and every other filter in this folder
+// REGRESSION — filters/BooleanFilter.tsx:28-40, and every other filter in this folder
 //
 //   const filterValue = column.getFilterValue() as boolean | undefined;
 //   const [localValue, setLocalValue] = useState<string>(initialValue);
@@ -160,7 +160,7 @@ describe('BooleanFilter', () => {
 //
 // The same shape sits in SelectFilter.tsx:29-44, DateFilter.tsx:70-77 and 119-129, and
 // TextFilter.tsx:17-23 (an effect there, whose dependency is the same cached value).
-// Each has its own KNOWN ISSUE block. NumberFilter.tsx carries the identical block and
+// Each has its own regression block. NumberFilter.tsx carries the identical block and
 // is the one filter that does resync, so its passing pair of tests is a working
 // reference for what the fix has to achieve.
 //
@@ -169,9 +169,9 @@ describe('BooleanFilter', () => {
 // 'use no memo' the way `useColumnVisibility` now does. Reading it off `column` cannot
 // work while `column` is a stable reference.
 //
-// EXPECTED TO FAIL until an external filter change reaches the field.
+// Failed when written; passes now that the component is opted out via 'use no memo'.
 // ===========================================================================
-describe('KNOWN ISSUE — an external change to the filter must reach the dropdown', () => {
+describe('Regression — an external change to the filter must reach the dropdown', () => {
   /** Fully controlled: the filter value comes from outside, as it does after a reset. */
   function ControlledHarness({filters}: Readonly<{filters: ColumnFiltersState}>) {
     const table = useReactTable({

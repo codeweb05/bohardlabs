@@ -2,10 +2,10 @@
  * Coverage for `ResizeHandle`, previously 75%.
  *
  * The component is three event props on a styled `Box`; its mouse and touch paths are
- * exercised through `TableHeader` and `useColumnResize`. What is not exercised
- * anywhere, and cannot be, is using it without a mouse.
+ * exercised through `TableHeader` and `useColumnResize`. What was not exercised
+ * anywhere, and could not be, was using it without a mouse.
  *
- * The whole file is a KNOWN ISSUE and is EXPECTED TO FAIL.
+ * The whole file is a regression test: it failed when it was written.
  */
 import userEvent from '@testing-library/user-event';
 import {describe, expect, it, vi} from 'vitest';
@@ -21,7 +21,7 @@ const handlers = {
 };
 
 // ===========================================================================
-// KNOWN ISSUE — core/ResizeHandle.tsx:12
+// REGRESSION — core/ResizeHandle.tsx:12
 //
 //   <Box onMouseDown={…} onTouchStart={…} onDoubleClick={…} sx={{…}} />
 //
@@ -46,9 +46,10 @@ const handlers = {
 // from a test without walking the DOM, which the testing-library lint rules forbid, so
 // that function stays uncovered until the fix below lands. It is worth re-checking then.
 //
-// EXPECTED TO FAIL until the handle is reachable without a pointer.
+// Failed when written; passes now that the handle is a labelled, focusable separator
+// that takes the arrow keys.
 // ===========================================================================
-describe('KNOWN ISSUE — the resize handle must be reachable without a mouse', () => {
+describe('Regression — the resize handle must be reachable without a mouse', () => {
   it('exposes itself as a labelled separator', () => {
     render(<ResizeHandle isResizing={false} {...handlers} />);
 

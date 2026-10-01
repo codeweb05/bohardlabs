@@ -165,11 +165,11 @@ describe('TableContainer, measuring where a frozen column sits', () => {
 
   it('still places the frozen columns in a browser with no ResizeObserver', () => {
     // An embedded webview or an old Safari: the offsets are measured once per render and
-    // simply do not follow a window resize. Wrapping headers, because a truncating header
-    // keeps an observer of its own.
+    // simply do not follow a window resize. The headers truncate, which is the default, so
+    // the observer each of them keeps for its tooltip has to be optional as well.
     vi.stubGlobal('ResizeObserver', undefined);
     stubHeaderWidth(120);
-    render(<Pinned pinned={['name', 'email']} overflow="wrap" />);
+    render(<Pinned pinned={['name', 'email']} />);
     const table = screen.getByRole('table', {name: 'Products'});
 
     expect(table.style.getPropertyValue('--dt-pin-name')).toBe('0px');

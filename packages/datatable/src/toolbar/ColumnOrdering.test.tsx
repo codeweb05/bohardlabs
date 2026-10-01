@@ -5,8 +5,8 @@
  * goes to the header's drag handles (via `useColumnOrdering`), not here, and the only
  * reference to this file in the repo is the barrel export in `index.ts`. It is a
  * second, independent implementation of column ordering that has drifted from the
- * hook the DataTable actually uses — the two KNOWN ISSUE blocks at the bottom are
- * both places where it disagrees with `useColumnOrdering`.
+ * hook the DataTable actually uses — the two regression blocks at the bottom are
+ * both places where it disagreed with `useColumnOrdering`.
  *
  * It is tested here because it is exported from the package surface: either it gets
  * reconciled with the hook, or it gets deleted before this ships.
@@ -256,7 +256,7 @@ describe('ColumnOrdering', () => {
 });
 
 // ===========================================================================
-// KNOWN ISSUE — toolbar/ColumnOrdering.tsx:141, :208 and :215
+// REGRESSION — toolbar/ColumnOrdering.tsx:141, :208 and :215
 //
 //   <Typography …>Drag columns to reorder them</Typography>
 //   <Button onClick={handleReset} …>Reset</Button>
@@ -272,7 +272,7 @@ describe('ColumnOrdering', () => {
 // which turns every translated string into its own key, and then checks the English
 // literals are gone. Any correct fix passes it whichever key names are chosen.
 //
-// EXPECTED TO FAIL until all three strings come from `t()`.
+// Failed when written; passes now that all three strings come from `labels`.
 // ===========================================================================
 
 describe('every string in the reorder dialog comes from `labels`', () => {
@@ -297,7 +297,7 @@ describe('every string in the reorder dialog comes from `labels`', () => {
 });
 
 // ===========================================================================
-// KNOWN ISSUE — toolbar/ColumnOrdering.tsx:37 and :84-94
+// REGRESSION — toolbar/ColumnOrdering.tsx:37 and :84-94
 //
 //   const columns = table.getAllLeafColumns().filter((col) => col.id !== 'select' && col.id !== 'actions');
 //   const fullOrder = [...select, ...localOrder, ...actions];
@@ -314,10 +314,10 @@ describe('every string in the reorder dialog comes from `labels`', () => {
 //      of the pinned block at the front of the row. The header keeps painting them from
 //      `columnPinning.left`, so the frozen header cells end up over the wrong body cells.
 //
-// EXPECTED TO FAIL until this component reuses `useColumnOrdering`/`orderWithPinned`
-// (the straightforward fix, since that hook already handles both) or repeats both guards.
+// Failed when written; passes now that `expand` is treated as a system column and the
+// order goes through `orderWithPinned`.
 // ===========================================================================
-describe('KNOWN ISSUE — applying an order must respect system columns and pinning', () => {
+describe('Regression — applying an order must respect system columns and pinning', () => {
   const withExpand: ColumnDef<Item>[] = [
     {id: 'select', header: () => <span>select</span>, cell: () => null},
     {id: 'expand', header: () => <span>expand</span>, cell: () => null},

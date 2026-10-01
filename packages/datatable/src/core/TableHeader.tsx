@@ -354,6 +354,9 @@ function useHeaderTruncation(
     }
     // v8 ignore stop
 
+    // Without one the header is measured once, on mount, and does not follow a resize.
+    if (typeof ResizeObserver === 'undefined') return () => clearTimeout(timeoutId);
+
     const resizeObserver = new ResizeObserver(checkTruncation);
     resizeObserver.observe(initialElement);
 

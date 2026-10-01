@@ -22,23 +22,39 @@ type NumberRangeTuple = readonly [number | null, number | null];
 /** What this column's filter can hold: a range, a single bound, or nothing. */
 type NumberFilterValue = NumberRangeTuple | number | undefined;
 
+/** `filterConfig.min` and `max`: the lowest and highest number the filter will ask for. */
+interface Limits {
+  readonly min?: number;
+  readonly max?: number;
+}
+
 /**
- * A bound the user has actually finished typing. `Number('-')`, `Number('.')` and
- * `Number('-.')` are all NaN, and NaN is not null, so committing them straight would
- * hand `[NaN, null]` to the row model and then paint the literal text "NaN" back into
- * the box the user is still typing in.
+ * A bound the user has actually finished typing, held to the limits. `Number('-')`,
+ * `Number('.')` and `Number('-.')` are all NaN, and NaN is not null, so committing them
+ * straight would hand `[NaN, null]` to the row model and then paint the literal text "NaN"
+ * back into the box the user is still typing in.
  */
-function toBound(raw: string): number | null {
+function toBound(raw: string, limits: Limits): number | null {
   if (raw === '') return null;
   const parsed = Number(raw);
-  return Number.isFinite(parsed) ? parsed : null;
+  if (!Number.isFinite(parsed)) return null;
+  return Math.min(Math.max(parsed, limits.min ?? -Infinity), limits.max ?? Infinity);
 }
 
 /** The range filter value for a pair of raw entries, or `undefined` when neither is a bound. */
-function toRangeValue(minRaw: string, maxRaw: string): NumberRangeTuple | undefined {
-  const min = toBound(minRaw);
-  const max = toBound(maxRaw);
+function toRangeValue(minRaw: string, maxRaw: string, limits: Limits): NumberRangeTuple | undefined {
+  const min = toBound(minRaw, limits);
+  const max = toBound(maxRaw, limits);
   return min === null && max === null ? undefined : [min, max];
+}
+
+/**
+ * What a box shows once it is left: the limit, when the number typed was past it, so the
+ * box agrees with what was filtered. Anything else stays as typed, a partial "2." included.
+ */
+function heldToLimits(raw: string, limits: Limits): string {
+  const bound = toBound(raw, limits);
+  return bound === null || bound === Number(raw) ? raw : String(bound);
 }
 
 function isSameFilterValue(a: unknown, b: unknown): boolean {
@@ -98,6 +114,7 @@ export function NumberFilter<TData>({
   label,
   placeholder,
   min: minLimit,
+  max: maxLimit,
   debounceMs = 500,
   showRange = true,
 }: Readonly<NumberFilterProps<TData>>) {
@@ -131,6 +148,7 @@ export function NumberFilter<TData>({
   const localSingleRef = useRef(localSingle);
   const columnRef = useRef(column);
   const isRangeModeRef = useRef(isRangeMode);
+  const limitsRef = useRef<Limits>({min: minLimit, max: maxLimit});
 
   useEffect(() => {
     localMinRef.current = localMin;
@@ -138,6 +156,7 @@ export function NumberFilter<TData>({
     localSingleRef.current = localSingle;
     columnRef.current = column;
     isRangeModeRef.current = isRangeMode;
+    limitsRef.current = {min: minLimit, max: maxLimit};
   });
 
   const filterValueKey = keyOf(filterValue);
@@ -151,11 +170,18 @@ export function NumberFilter<TData>({
   // Flush pending value immediately — used on blur and on unmount
   const flushFilter = () => {
     const next = isRangeModeRef.current
-      ? toRangeValue(localMinRef.current, localMaxRef.current)
-      : (toBound(localSingleRef.current) ?? undefined);
+      ? toRangeValue(localMinRef.current, localMaxRef.current, limitsRef.current)
+      : (toBound(localSingleRef.current, limitsRef.current) ?? undefined);
 
     setCommittedKey(keyOf(next));
     commitFilterValue(columnRef.current, next);
+  };
+
+  const handleBlur = () => {
+    flushFilter();
+    setLocalMin(heldToLimits(localMin, limitsRef.current));
+    setLocalMax(heldToLimits(localMax, limitsRef.current));
+    setLocalSingle(heldToLimits(localSingle, limitsRef.current));
   };
 
   // Flush on unmount so closing the drawer always commits pending values
@@ -186,13 +212,13 @@ export function NumberFilter<TData>({
     if (!isRangeMode) return;
 
     const timer = setTimeout(() => {
-      const next = toRangeValue(localMin, localMax);
+      const next = toRangeValue(localMin, localMax, {min: minLimit, max: maxLimit});
       setCommittedKey(keyOf(next));
       commitFilterValue(columnRef.current, next);
     }, debounceMs);
 
     return () => clearTimeout(timer);
-  }, [localMin, localMax, debounceMs, isRangeMode]);
+  }, [localMin, localMax, minLimit, maxLimit, debounceMs, isRangeMode]);
 
   // Debounce filter changes for single value mode.
   // Same reasoning as above — columnRef.current avoids the infinite re-render loop.
@@ -200,13 +226,13 @@ export function NumberFilter<TData>({
     if (isRangeMode) return;
 
     const timer = setTimeout(() => {
-      const next = toBound(localSingle) ?? undefined;
+      const next = toBound(localSingle, {min: minLimit, max: maxLimit}) ?? undefined;
       setCommittedKey(keyOf(next));
       commitFilterValue(columnRef.current, next);
     }, debounceMs);
 
     return () => clearTimeout(timer);
-  }, [localSingle, debounceMs, isRangeMode]);
+  }, [localSingle, minLimit, maxLimit, debounceMs, isRangeMode]);
 
   const handleClear = () => {
     setLocalMin('');
@@ -229,7 +255,7 @@ export function NumberFilter<TData>({
         onChange={(e) => {
           if (isValidPartialNumber(e.target.value)) setLocalSingle(e.target.value);
         }}
-        onBlur={flushFilter}
+        onBlur={handleBlur}
         placeholder={placeholder ?? labels.enterValue}
         slotProps={{
           htmlInput: {'aria-label': label},
@@ -263,7 +289,7 @@ export function NumberFilter<TData>({
         onChange={(e) => {
           if (isValidPartialNumber(e.target.value)) setLocalMin(e.target.value);
         }}
-        onBlur={flushFilter}
+        onBlur={handleBlur}
         placeholder={labels.from}
         slotProps={{htmlInput: {'aria-label': labels.from}}}
         sx={{
@@ -283,7 +309,7 @@ export function NumberFilter<TData>({
         onChange={(e) => {
           if (isValidPartialNumber(e.target.value)) setLocalMax(e.target.value);
         }}
-        onBlur={flushFilter}
+        onBlur={handleBlur}
         placeholder={labels.to}
         slotProps={{htmlInput: {'aria-label': labels.to}}}
         sx={{

@@ -125,7 +125,7 @@ describe('GlobalSearch', () => {
 });
 
 // ===========================================================================
-// KNOWN ISSUE — toolbar/GlobalSearch.tsx:103
+// REGRESSION — toolbar/GlobalSearch.tsx:103
 //
 //   <IconButton size="small" onClick={handleClear} edge="end" aria-label="Clear search" …>
 //
@@ -141,7 +141,7 @@ describe('GlobalSearch', () => {
 // into its own key, and then checks the English literal is gone — so any correct fix
 // passes it whichever key name is chosen.
 //
-// EXPECTED TO FAIL until the label comes from `t()`.
+// Failed when written; passes now that the label is `labels.clearSearch`.
 // ===========================================================================
 
 // A consumer's own wording has to reach the button. If the label were hardcoded the
@@ -160,7 +160,7 @@ describe('the clear-search label comes from `labels`', () => {
 });
 
 // ===========================================================================
-// KNOWN ISSUE — toolbar/GlobalSearch.tsx:73
+// REGRESSION — toolbar/GlobalSearch.tsx:73
 //
 //   <TextField
 //     …
@@ -176,9 +176,9 @@ describe('the clear-search label comes from `labels`', () => {
 // The fix is to pass it through the input slot instead:
 //   slotProps={{htmlInput: {'aria-describedby': helperText ? helperTextId : undefined}}}
 //
-// EXPECTED TO FAIL until the input itself carries the attribute.
+// Failed when written; passes now that the input itself carries the attribute.
 // ===========================================================================
-describe('KNOWN ISSUE — the helper text must be linked to the input', () => {
+describe('Regression — the helper text must be linked to the input', () => {
   it('describes the input with the helper text', () => {
     render(<GlobalSearch value="" onChange={onChange} helperText="Searches name and email" />);
 

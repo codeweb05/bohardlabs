@@ -232,6 +232,18 @@ describe('useDataTableState, updater shapes', () => {
     expect(result.current.pagination).toEqual({pageIndex: 3, pageSize: 50});
   });
 
+  it('keeps the pagination object when the same page is set again', () => {
+    // A new object with the old numbers would read as a change and be reported twice.
+    const {result} = renderHook(() => useDataTableState(baseOptions()));
+    const before = result.current.pagination;
+
+    act(() => {
+      result.current.handlePaginationChange((prev) => ({...prev}));
+    });
+
+    expect(result.current.pagination).toBe(before);
+  });
+
   it('applies a plain sorting array', () => {
     const {result} = renderHook(() => useDataTableState(baseOptions()));
 

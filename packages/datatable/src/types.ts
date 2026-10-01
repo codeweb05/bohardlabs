@@ -129,7 +129,16 @@ export interface ColumnFilterConfig {
   readonly operator?: FilterOperator;
   readonly options?: readonly FilterOption[];
   readonly placeholder?: string;
+  /**
+   * The lowest number a number filter asks for. One typed below it is filtered as `min`,
+   * and the box shows `min` once it is left. A `min` of zero or more also keeps a minus
+   * sign from being typed.
+   */
   readonly min?: number;
+  /**
+   * The highest number a number filter asks for. One typed above it is filtered as `max`,
+   * and the box shows `max` once it is left.
+   */
   readonly max?: number;
   readonly renderFilter?: (props: CustomFilterProps) => ReactNode;
 }
@@ -399,7 +408,11 @@ export interface BulkAction<TData> {
   readonly label: string;
   /** Optional leading icon. Deep-path import only. */
   readonly icon?: ReactNode;
-  /** Runs over every selected row at once. Not awaited by the table. */
+  /**
+   * Runs over every selected row at once. Return the promise and the bulk buttons stay
+   * disabled until it settles. One that rejects is logged and the selection is kept, so
+   * the same rows can be tried again; telling the user is the action's own job.
+   */
   readonly onClick: (selectedRows: TData[]) => void | Promise<void>;
   /** Disable based on the selection, e.g. a limit on how many rows the endpoint takes. */
   readonly disabled?: boolean | ((selectedRows: TData[]) => boolean);

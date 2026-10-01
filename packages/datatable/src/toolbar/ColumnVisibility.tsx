@@ -176,8 +176,6 @@ export function ColumnVisibility<TData extends RowData>({
               overflow: 'hidden',
               mt: 0.5,
               border: (theme) => `1px solid ${theme.palette.divider}`,
-              boxShadow: (theme) =>
-                theme.palette.mode === 'dark' ? '0 4px 20px rgba(0, 0, 0, 0.4)' : '0 4px 20px rgba(0, 0, 0, 0.08)',
             },
           },
         }}

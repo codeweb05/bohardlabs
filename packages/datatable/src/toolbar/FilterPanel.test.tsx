@@ -399,7 +399,7 @@ describe('FilterPanel — the hidden clear-all button stays out of reach', () =>
 });
 
 // ===========================================================================
-// KNOWN ISSUE — the end-to-end symptom of the filter defect
+// REGRESSION — the end-to-end symptom of the filter defect
 //
 // The per-component write-up is in filters/BooleanFilter.test.tsx: the filter fields read
 // their value off `column`, which is a stable object, so React Compiler caches their
@@ -414,12 +414,12 @@ describe('FilterPanel — the hidden clear-all button stays out of reach', () =>
 // Kept separate from the unit tests on purpose. A fix that resyncs the components in
 // isolation but leaves this failing has not fixed the bug the user actually hits.
 //
-// EXPECTED TO FAIL until an external filter change reaches the fields.
+// Failed when written; passes now that an external filter change reaches the fields.
 // ===========================================================================
 const resetColumns: readonly DataTableColumnDef<Item>[] = [nameColumn];
 const resetTableColumns = resetColumns as ColumnDef<Item>[];
 
-describe('KNOWN ISSUE — clearing every filter must empty the fields', () => {
+describe('Regression — clearing every filter must empty the fields', () => {
   /**
    * Both column arrays are hoisted out of the component on purpose. A consumer that
    * builds its columns with `useMemo`, which is what every page in this app does, hands

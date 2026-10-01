@@ -40,6 +40,10 @@ export function BulkActions<TData extends RowData>({table, actions}: Readonly<Bu
     try {
       await action.onClick(selectedRows);
       table.resetRowSelection();
+    } catch (error) {
+      // Nothing awaits the click, so a throw from here would be a rejection nobody is
+      // listening for. The selection is left alone so the same rows can be tried again.
+      console.error(`Bulk action "${action.id}" failed:`, error);
     } finally {
       setIsLoading(false);
       setLoadingActionId(null);

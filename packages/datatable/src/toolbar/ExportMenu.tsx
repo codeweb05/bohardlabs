@@ -136,6 +136,8 @@ export function ExportMenu<TData extends RowData>({
         return labels.exportExcel;
       case 'json':
         return labels.exportJson;
+      default:
+        return format;
     }
   };
 

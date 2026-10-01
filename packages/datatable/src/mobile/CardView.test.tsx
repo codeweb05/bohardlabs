@@ -522,7 +522,7 @@ describe('CardView — dark theme', () => {
 });
 
 // ===========================================================================
-// KNOWN ISSUE — mobile/CardView.tsx:39
+// REGRESSION — mobile/CardView.tsx:39
 //
 //   return Boolean(expanded[String(row.original.id)]);
 //
@@ -542,9 +542,9 @@ describe('CardView — dark theme', () => {
 // The fix is `expanded[row.id]`, which is correct for the default case too, since the
 // default `getRowId` produces exactly that string.
 //
-// EXPECTED TO FAIL until the lookup uses the table's row id.
+// Failed when written; passes now that the lookup uses the table's row id.
 // ===========================================================================
-describe('KNOWN ISSUE — an expanded card must open under a custom row id', () => {
+describe('Regression — an expanded card must open under a custom row id', () => {
   it('shows the expanded panel when the table has its own getRowId', async () => {
     render(
       <DataTable

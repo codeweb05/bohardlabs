@@ -104,6 +104,20 @@ describe('BulkActions', () => {
     });
   });
 
+  it('logs an action that fails and keeps the selection, so it can be tried again', async () => {
+    const failure = new Error('the server said no');
+    onClick.mockRejectedValue(failure);
+    const logged = vi.spyOn(console, 'error').mockImplementation(() => {});
+    renderBulkActions([deleteAction()], {'row-1': true, 'row-3': true});
+
+    await userEvent.click(screen.getByRole('button', {name: 'Delete'}));
+
+    await waitFor(() => expect(logged).toHaveBeenCalledWith('Bulk action "delete" failed:', failure));
+    expect(screen.getByText(`2 ${DEFAULT_LABELS.selected}`)).toBeInTheDocument();
+    expect(screen.getByRole('button', {name: 'Delete'})).toBeEnabled();
+    logged.mockRestore();
+  });
+
   it('clears the selection from the close button without running anything', async () => {
     renderBulkActions([deleteAction()]);
 
