@@ -27,13 +27,17 @@ function push<S>(past: S[], state: S): S[] {
   return [...past, state].slice(-HISTORY_LIMIT);
 }
 
-function commit<S>(history: History<S>): History<S> {
+function commit<S>(history: History<S>, same: (a: S, b: S) => boolean): History<S> {
   if (history.pending === null) return history;
-  if (history.pending === history.present) return {...history, pending: null};
+  if (same(history.pending, history.present)) return {...history, pending: null};
   return {past: push(history.past, history.pending), present: history.present, future: [], pending: null};
 }
 
-export function historyReducer<S, A>(reducer: (state: S, action: A) => S) {
+/**
+ * `same` decides whether a gesture ended where it began, in which case it records nothing.
+ * Identity is not enough for a state that is rebuilt on the way out and back.
+ */
+export function historyReducer<S, A>(reducer: (state: S, action: A) => S, same: (a: S, b: S) => boolean = Object.is) {
   return (history: History<S>, action: HistoryAction<S, A>): History<S> => {
     switch (action.type) {
       case 'apply': {
@@ -44,9 +48,9 @@ export function historyReducer<S, A>(reducer: (state: S, action: A) => S) {
         return {past: push(history.past, before), present, future: [], pending: null};
       }
       case 'commit':
-        return commit(history);
+        return commit(history, same);
       case 'undo': {
-        const settled = commit(history);
+        const settled = commit(history, same);
         const previous = settled.past.at(-1);
         if (previous === undefined) return settled;
         return {
@@ -57,7 +61,7 @@ export function historyReducer<S, A>(reducer: (state: S, action: A) => S) {
         };
       }
       case 'redo': {
-        const settled = commit(history);
+        const settled = commit(history, same);
         const [following, ...rest] = settled.future;
         if (following === undefined) return settled;
         return {past: push(settled.past, settled.present), present: following, future: rest, pending: null};

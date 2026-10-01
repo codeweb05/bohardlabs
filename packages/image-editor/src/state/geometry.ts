@@ -116,6 +116,71 @@ export function clampRect(rect: Rect, frame: Size): Rect {
 }
 
 /** The largest centred crop of a shape, or the whole frame for a free crop. */
+/** How close two stage coordinates are before an edge counts as not having moved. */
+const EDGE_EPSILON = 1e-6;
+
+/**
+ * Where along one axis a resize is pinned, as a fraction of the new extent: 0 when the low
+ * edge stayed put, 1 when the high edge did, and the middle when a fixed shape grew both ways.
+ */
+function anchorOf(low: number, extent: number, previousLow: number, previousExtent: number): number {
+  const lowMoved = Math.abs(low - previousLow) > EDGE_EPSILON;
+  const highMoved = Math.abs(low + extent - previousLow - previousExtent) > EDGE_EPSILON;
+  if (lowMoved === highMoved) return 0.5;
+  return lowMoved ? 1 : 0;
+}
+
+/**
+ * How far an extent can be scaled before it no longer fits in `0..limit`. Pinned at an edge,
+ * it has the room from that edge to the far side. Grown about its middle, nothing is pinned
+ * and it may slide, so it has the whole limit.
+ */
+function axisRoom(low: number, extent: number, anchor: number, limit: number): number {
+  if (anchor === 0.5) return limit / extent;
+  return anchor === 0 ? (limit - low) / extent : (low + extent) / extent;
+}
+
+/** Where a scaled extent starts: against its pinned edge, or about its middle and slid back inside. */
+function axisStart(low: number, extent: number, scaled: number, anchor: number, limit: number): number {
+  const start = low + anchor * (extent - scaled);
+  return anchor === 0.5 ? Math.min(Math.max(start, 0), limit - scaled) : start;
+}
+
+/**
+ * Keeps a resized rectangle inside the frame without moving the edges the gesture left alone.
+ * `clampRect` is the wrong tool for a resize: it shifts the whole rectangle back inside, so
+ * dragging one edge past the image would push the opposite edge away from where it was.
+ *
+ * A free shape is cut off at the frame. A `locked` one keeps its ratio, so it is scaled
+ * about whatever stayed put, which `previous` (the rectangle before the gesture) tells. An
+ * edge handle grows a locked shape both ways on the other axis, and there it may slide.
+ */
+export function fitResize(rect: Rect, previous: Rect, frame: Size, locked: boolean): Rect {
+  const left = Math.max(rect.x, 0);
+  const top = Math.max(rect.y, 0);
+  const right = Math.min(rect.x + rect.width, frame.width);
+  const bottom = Math.min(rect.y + rect.height, frame.height);
+  const cut = {x: left, y: top, width: right - left, height: bottom - top};
+  if (cut.width === rect.width && cut.height === rect.height) return rect;
+  if (!locked) return cut;
+
+  const ax = anchorOf(rect.x, rect.width, previous.x, previous.width);
+  const ay = anchorOf(rect.y, rect.height, previous.y, previous.height);
+  const shrink = Math.min(
+    1,
+    axisRoom(rect.x, rect.width, ax, frame.width),
+    axisRoom(rect.y, rect.height, ay, frame.height),
+  );
+  const width = rect.width * shrink;
+  const height = rect.height * shrink;
+  return {
+    x: axisStart(rect.x, rect.width, width, ax, frame.width),
+    y: axisStart(rect.y, rect.height, height, ay, frame.height),
+    width,
+    height,
+  };
+}
+
 export function largestCrop(frame: Size, aspect: number | null): Rect {
   if (aspect === null) return {x: 0, y: 0, width: frame.width, height: frame.height};
   const width = maxCropWidth(frame, aspect);

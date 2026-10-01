@@ -28,7 +28,7 @@ import {
 import {createHistory, historyReducer} from '../state/history.js';
 import type {ImageEditorProps} from '../types.js';
 import {AdjustControls} from './AdjustControls.js';
-import {CanvasArea, visuallyHidden} from './CanvasArea.js';
+import {CanvasArea, STAGE_MIN_HEIGHT, visuallyHidden} from './CanvasArea.js';
 import {CropControls, type CropControlsProps} from './CropControls.js';
 import {HistoryButtons} from './HistoryButtons.js';
 import {errorMessage, useLabels} from './LabelsContext.js';
@@ -36,11 +36,13 @@ import {MobileToolbar} from './MobileToolbar.js';
 import {FileButton, Picker} from './Picker.js';
 import {useLoadedImage} from './useLoadedImage.js';
 
-const reducer = historyReducer(editorReducer);
+const reducer = historyReducer(editorReducer, sameState);
 
 /** What the live region says after an action, given the state it produced. */
 function describe(labels: ImageEditorLabels, action: EditorAction, next: EditorState): string | null {
+  /* v8 ignore start -- 'setCrop' and 'straighten' only arrive mid-gesture, which is never described */
   switch (action.type) {
+    /* v8 ignore stop */
     case 'rotate':
       return labels.rotated(action.direction * 90);
     case 'flip':
@@ -62,7 +64,7 @@ function describe(labels: ImageEditorLabels, action: EditorAction, next: EditorS
   }
 }
 
-type SessionProps = Omit<ImageEditorProps, 'open' | 'labels'> & {readonly titleId: string; readonly mobile: boolean};
+type SessionProps = Omit<ImageEditorProps, 'labels'> & {readonly titleId: string; readonly mobile: boolean};
 
 function Header({titleId, onClose, actions}: Readonly<{titleId: string; onClose: () => void; actions?: ReactNode}>) {
   const labels = useLabels();
@@ -191,6 +193,12 @@ function Dock({mobile, ...props}: Readonly<DockProps>) {
   );
 }
 
+/**
+ * A column, so the stage gives up height before the dialog has to scroll, and a positioned
+ * one, so the hidden live region scrolls with the content instead of hanging off the dialog.
+ */
+const content = {display: 'flex', flexDirection: 'column', position: 'relative'} as const;
+
 type WorkspaceProps = Omit<SessionProps, 'features'> & {
   readonly features: ResolvedFeatures;
   readonly image: LoadedImage;
@@ -207,6 +215,7 @@ function Workspace({
   onClose,
   onError,
   onPick,
+  open,
   titleId,
   mobile,
 }: Readonly<WorkspaceProps>) {
@@ -216,27 +225,38 @@ function Workspace({
   const state = history.present;
   const [applying, setApplying] = useState(false);
   const [failure, setFailure] = useState<string | null>(null);
-  const [announcement, announce] = useState('');
+  // A live region is read when its content changes, so saying the same thing twice in a row
+  // (two flips) would be silent the second time. Each announcement gets its own node instead.
+  const [announcement, setAnnouncement] = useState({text: '', turn: 0});
+  const announce = (text: string) => setAnnouncement((last) => ({text, turn: last.turn + 1}));
   // State updates are not synchronous, so a second click in the same frame would still
   // see `applying` false. The ref is what makes Apply run once.
   const busy = useRef(false);
-  const mounted = useRef(true);
+  // False once the editor is closed, which is before it is gone: the session stays mounted
+  // while the dialog fades out, and nothing may reach the consumer after they closed it.
+  const wanted = useRef(open);
   useEffect(() => {
-    mounted.current = true;
+    wanted.current = open;
     return () => {
-      mounted.current = false;
+      wanted.current = false;
     };
-  }, []);
+  }, [open]);
 
+  const say = (action: EditorAction, next: EditorState) => {
+    const message = describe(labels, action, next);
+    if (message) announce(message);
+  };
   const onAction = (action: EditorAction, options?: {transient?: boolean}) => {
     if (!features.zoom && (action.type === 'zoomBy' || action.type === 'zoomTo')) return;
     dispatch({type: 'apply', action, transient: options?.transient});
     // A gesture is announced once, where it ends; a single step is announced as it lands.
-    if (options?.transient) return;
-    const message = describe(labels, action, editorReducer(state, action));
-    if (message) announce(message);
+    if (!options?.transient) say(action, editorReducer(state, action));
   };
   const onCommit = () => dispatch({type: 'commit'});
+  const onHoldEnd = (action: EditorAction) => {
+    onCommit();
+    say(action, state);
+  };
   const canUndo = history.past.length > 0 || history.pending !== null;
   const canRedo = history.future.length > 0;
   const undo = () => {
@@ -264,17 +284,18 @@ function Workspace({
         output: output ?? {},
       }).catch((error: unknown) => {
         if (!(error instanceof EditorError)) throw error;
+        if (!wanted.current) return null;
         setFailure(errorMessage(labels, error.code));
         onError?.({code: error.code});
         return null;
       });
       // Closed while exporting: the consumer has moved on, so the file goes nowhere.
-      if (result && mounted.current) await onApply(result);
+      if (result && wanted.current) await onApply(result);
     } catch {
-      if (mounted.current) setFailure(labels.applyFailed);
+      if (wanted.current) setFailure(labels.applyFailed);
     } finally {
       busy.current = false;
-      if (mounted.current) setApplying(false);
+      if (wanted.current) setApplying(false);
     }
   };
 
@@ -293,6 +314,7 @@ function Workspace({
       onCommit={onCommit}
       onUndo={features.history ? undo : null}
       onRedo={features.history ? redo : null}
+      onHoldEnd={onHoldEnd}
     />
   );
   const dock = (
@@ -318,7 +340,7 @@ function Workspace({
   const live = (
     <>
       <Box role="status" aria-live="polite" sx={visuallyHidden}>
-        {announcement}
+        {announcement.text && <span key={announcement.turn}>{announcement.text}</span>}
       </Box>
       {failure && (
         <Alert severity="error" sx={{mb: 1}}>
@@ -335,8 +357,8 @@ function Workspace({
             {applying ? labels.applying : labels.done}
           </Button>
         </MobileHeader>
-        <DialogContent sx={{display: 'flex', flexDirection: 'column', px: 2, pt: 2, pb: 1}}>
-          <Box sx={{position: 'relative'}}>
+        <DialogContent sx={{...content, px: 2, pt: 2, pb: 1}}>
+          <Box sx={{position: 'relative', display: 'flex', flexDirection: 'column', minHeight: STAGE_MIN_HEIGHT}}>
             {canvas}
             <MobileToolbar
               features={features}
@@ -363,7 +385,7 @@ function Workspace({
         onClose={onClose}
         actions={features.history && <HistoryButtons onUndo={canUndo ? undo : null} onRedo={canRedo ? redo : null} />}
       />
-      <DialogContent sx={{px: 3, pb: 0}}>
+      <DialogContent sx={{...content, px: 3, pb: 0}}>
         {canvas}
         {dock}
         {live}

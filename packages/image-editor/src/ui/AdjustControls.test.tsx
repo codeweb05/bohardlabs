@@ -31,6 +31,24 @@ describe('AdjustControls', () => {
     expect(screen.queryByRole('group', {name: L.presets})).not.toBeInTheDocument();
   });
 
+  it('shows only the presets when every value is off', async () => {
+    const {user, onAction} = setup({brightness: false, contrast: false, saturation: false, presets: true});
+    expect(screen.queryByRole('slider')).not.toBeInTheDocument();
+    expect(screen.queryByRole('group', {name: L.adjustment})).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', {name: L.presetFade}));
+    expect(onAction).toHaveBeenCalledTimes(1);
+  });
+
+  it('falls back to the first value when the picked one is turned off', async () => {
+    const user = userEvent.setup();
+    const props = {adjust: NEUTRAL_ADJUSTMENTS, onAction: vi.fn(), onCommit: vi.fn(), disabled: false};
+    const {rerender} = render(<AdjustControls {...props} tools={ALL} />);
+    await user.click(screen.getByRole('button', {name: new RegExp(L.saturation)}));
+    expect(screen.getByRole('slider', {name: L.saturation})).toBeInTheDocument();
+    rerender(<AdjustControls {...props} tools={{...ALL, saturation: false}} />);
+    expect(screen.getByRole('slider', {name: L.brightness})).toBeInTheDocument();
+  });
+
   it('moves the slider for the picked value as one gesture', async () => {
     const {user, onAction, onCommit} = setup();
     await user.click(screen.getByRole('button', {name: new RegExp(L.saturation)}));

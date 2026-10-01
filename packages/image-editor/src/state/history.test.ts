@@ -45,6 +45,28 @@ describe('history', () => {
     expect(history.pending).toBeNull();
   });
 
+  it('records nothing for a gesture that ends where it began', () => {
+    const history = run(createHistory(0), add(1, true), add(-1, true), {type: 'commit'});
+    expect(history).toEqual(createHistory(0));
+    expect(run(history, {type: 'undo'}).present).toBe(0);
+  });
+
+  it('compares the two ends of a gesture with the given test, not by identity', () => {
+    const boxes = historyReducer<{n: number}, number>(
+      (state, by) => ({n: state.n + by}),
+      (a, b) => a.n === b.n,
+    );
+    const start = createHistory({n: 0});
+    const moved = boxes(boxes(start, {type: 'apply', action: 1, transient: true}), {
+      type: 'apply',
+      action: -1,
+      transient: true,
+    });
+    const settled = boxes(moved, {type: 'commit'});
+    expect(settled.past).toEqual([]);
+    expect(settled.pending).toBeNull();
+  });
+
   it('commits a pending gesture before a normal action, an undo or a redo', () => {
     expect(run(createHistory(0), add(1, true), add(2)).past).toEqual([0]);
     const undone = run(createHistory(0), add(1, true), add(1, true), {type: 'undo'});

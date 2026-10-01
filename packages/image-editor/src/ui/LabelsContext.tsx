@@ -16,10 +16,12 @@ interface LabelsProviderProps {
 export function LabelsProvider({labels, children}: Readonly<LabelsProviderProps>) {
   // `labels` is usually an inline object; merging once per change keeps every reader's
   // context value stable across the parent's renders.
-  const value = useMemo<ImageEditorLabels>(
-    () => (labels ? {...DEFAULT_IMAGE_EDITOR_LABELS, ...labels} : DEFAULT_IMAGE_EDITOR_LABELS),
-    [labels],
-  );
+  const value = useMemo<ImageEditorLabels>(() => {
+    if (!labels) return DEFAULT_IMAGE_EDITOR_LABELS;
+    // A key passed as `undefined` keeps its default; a plain spread would erase it.
+    const given = Object.fromEntries(Object.entries(labels).filter(([, label]) => label !== undefined));
+    return {...DEFAULT_IMAGE_EDITOR_LABELS, ...given};
+  }, [labels]);
 
   return <LabelsContext.Provider value={value}>{children}</LabelsContext.Provider>;
 }

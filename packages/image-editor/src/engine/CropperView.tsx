@@ -4,7 +4,7 @@ import type {CropperCanvas, CropperImage, CropperSelection, CropperShade} from '
 import {useLayoutEffect, useRef, useState} from 'react';
 
 import type {EditorAction, EditorState} from '../state/editorState.js';
-import {clampRect, stageToCrop, type Rect, type Size, type StageLayout} from '../state/geometry.js';
+import {fitResize, stageToCrop, type Rect, type Size, type StageLayout} from '../state/geometry.js';
 import type {CropShape} from '../types.js';
 import {loadCropper} from './loadCropper.js';
 
@@ -62,7 +62,9 @@ function build(host: HTMLElement): Elements | null {
   const shade = host.querySelector<CropperShade>('cropper-shade');
   const selection = host.querySelector<CropperSelection>('cropper-selection');
   const grid = host.querySelector<HTMLElement>('cropper-grid');
+  /* v8 ignore start -- TEMPLATE holds all five, so none can be missing */
   if (!canvas || !image || !shade || !selection || !grid) return null;
+  /* v8 ignore stop */
   const resizeHandles = Array.from(host.querySelectorAll<HTMLElement>('cropper-handle[action$="-resize"]'));
   shade.$addStyles(CIRCLE_STYLE);
   selection.$addStyles(CIRCLE_STYLE);
@@ -134,7 +136,9 @@ export function CropperView(props: CropperViewProps) {
   // Build once per source. The import happens here, so the server never reaches it.
   useLayoutEffect(() => {
     const host = hostRef.current;
+    /* v8 ignore start -- a layout effect runs after the ref is attached */
     if (!host) return undefined;
+    /* v8 ignore stop */
     let cancelled = false;
     let wheelTimer: ReturnType<typeof setTimeout> | undefined;
 
@@ -183,8 +187,16 @@ export function CropperView(props: CropperViewProps) {
         event.preventDefault();
         return;
       }
-      const {frame} = latest.current.layout;
-      const inside = clampRect({...rect, x: rect.x - frame.x, y: rect.y - frame.y}, frame);
+      const {layout: current, state: now} = latest.current;
+      const {frame} = current;
+      // The selection still holds what it was before this change, which says what was dragged.
+      const {x, y, width, height} = live.selection;
+      const inside = fitResize(
+        {...rect, x: rect.x - frame.x, y: rect.y - frame.y},
+        {x: x - frame.x, y: y - frame.y, width, height},
+        frame,
+        now.ratio !== null,
+      );
       const clamped = {...inside, x: inside.x + frame.x, y: inside.y + frame.y};
       if (
         Math.abs(clamped.x - rect.x) + Math.abs(clamped.y - rect.y) > 1e-6 ||
@@ -203,7 +215,9 @@ export function CropperView(props: CropperViewProps) {
       await loadCropper();
       if (cancelled) return;
       const created = build(host);
+      /* v8 ignore start -- build returns null only for the missing element ruled out above */
       if (!created) return;
+      /* v8 ignore stop */
       const {image, canvas, selection} = created;
       elements.current = created;
       host.addEventListener('action', onActionCapture, {capture: true});

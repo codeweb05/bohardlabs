@@ -1,6 +1,7 @@
 import {describe, expect, it} from 'vitest';
 
 import {DEFAULT_RATIOS, parseRatio, resolveFeatures} from './features.js';
+import type {CropRatio} from './types.js';
 
 describe('parseRatio', () => {
   it.each([
@@ -15,6 +16,12 @@ describe('parseRatio', () => {
     [Number.POSITIVE_INFINITY, null],
   ] as const)('%s is %s', (ratio, expected) => {
     expect(parseRatio(ratio)).toBe(expected);
+  });
+
+  it('reads a ratio string with a zero side as unusable', () => {
+    // The type stops these, an untyped caller does not: they divide to 0, Infinity and NaN.
+    const odd: string[] = ['0:1', '1:0', '0:0'];
+    for (const ratio of odd) expect(parseRatio(ratio as CropRatio)).toBeNull();
   });
 });
 

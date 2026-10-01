@@ -79,6 +79,51 @@ describe('CropControls', () => {
     expect(screen.getByRole('button', {name: '4:3'})).toHaveAttribute('aria-pressed', 'true');
   });
 
+  it('marks the ratio in use, not its reciprocal, when both are offered', () => {
+    const features = resolveFeatures({crop: {ratios: ['4:3', 3 / 4]}});
+    const state = editorReducer(initialEditorState({width: 800, height: 600}, features), {
+      type: 'setRatio',
+      ratio: 3 / 4,
+    });
+    render(
+      <CropControls
+        state={state}
+        features={features}
+        onAction={vi.fn()}
+        onCommit={vi.fn()}
+        announce={vi.fn()}
+        disabled={false}
+      />,
+    );
+    expect(screen.getByRole('button', {name: L.ratioName(3 / 4)})).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', {name: '4:3'})).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  it('marks no ratio when the one in use is not among those offered', () => {
+    const state = initialEditorState({width: 800, height: 600}, resolveFeatures({crop: {ratios: ['16:9']}}));
+    render(
+      <CropControls
+        state={state}
+        features={resolveFeatures({crop: {ratios: ['4:3', '1:1']}})}
+        onAction={vi.fn()}
+        onCommit={vi.fn()}
+        announce={vi.fn()}
+        disabled={false}
+      />,
+    );
+    for (const name of ['4:3', '1:1']) {
+      expect(screen.getByRole('button', {name})).toHaveAttribute('aria-pressed', 'false');
+    }
+  });
+
+  it('keeps the ratio when the pressed button is clicked again', async () => {
+    const {user, onAction} = setup();
+    const free = screen.getByRole('button', {name: L.ratioName('free')});
+    expect(free).toHaveAttribute('aria-pressed', 'true');
+    await user.click(free);
+    expect(onAction).not.toHaveBeenCalled();
+  });
+
   it('dispatches a ratio, a rotation and a flip', async () => {
     const {user, onAction} = setup();
     await user.click(screen.getByRole('button', {name: '16:9'}));

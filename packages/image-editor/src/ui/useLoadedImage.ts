@@ -52,6 +52,8 @@ export function useLoadedImage(
     return () => {
       cancelled = true;
       loaded?.revoke();
+      // The working copy is gone, so the same source coming back has to load again.
+      setSettled(null);
     };
   }, [source]);
 

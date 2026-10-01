@@ -23,6 +23,23 @@ describe('Picker', () => {
     expect(onPick).toHaveBeenCalledWith(file);
   });
 
+  it('opens the file dialog from the button', () => {
+    zone();
+    const input = screen.getByLabelText(L.pickerChoose);
+    const opened = vi.fn();
+    // A click on a file input is what opens the browser's dialog.
+    input.addEventListener('click', opened);
+    fireEvent.click(screen.getByRole('button', {name: L.pickerChoose}));
+    expect(opened).toHaveBeenCalledTimes(1);
+  });
+
+  it('ignores a dialog that is closed without a file', () => {
+    onPick.mockClear();
+    zone();
+    fireEvent.change(screen.getByLabelText(L.pickerChoose), {target: {files: []}});
+    expect(onPick).not.toHaveBeenCalled();
+  });
+
   it('ignores a drop that carries no file', () => {
     onPick.mockClear();
     fireEvent.drop(zone(), {dataTransfer: {files: []}});

@@ -5,6 +5,10 @@ import {resolveFeatures} from '../features.js';
 import {initialEditorState, type EditorState} from '../state/editorState.js';
 import {layoutStage, type Rect} from '../state/geometry.js';
 import {CropperView, type CropperViewProps} from './CropperView.js';
+import {loadCropper} from './loadCropper.js';
+
+// What the fakes below do, so one test can stand in for a slow decode or an older handle.
+const fake = vi.hoisted(() => ({ready: Promise.resolve(), stylable: true}));
 
 // Stand-ins for the cropperjs elements with just the surface the adapter uses. The real
 // ones run in the Storybook project, in Chromium.
@@ -14,8 +18,16 @@ class FakeElement extends HTMLElement {
 
 class FakeImage extends FakeElement {
   $setTransform = vi.fn();
-  $ready() {
-    return Promise.resolve(new Image());
+  async $ready() {
+    await fake.ready;
+    return new Image();
+  }
+}
+
+class FakeHandle extends HTMLElement {
+  constructor() {
+    super();
+    if (fake.stylable) Object.assign(this, {$addStyles: vi.fn()});
   }
 }
 
@@ -45,7 +57,7 @@ vi.mock('./loadCropper.js', () => ({
     define('cropper-shade', class extends FakeElement {});
     define('cropper-selection', FakeSelection);
     define('cropper-grid', class extends FakeElement {});
-    define('cropper-handle', class extends FakeElement {});
+    define('cropper-handle', FakeHandle);
   }),
 }));
 
@@ -96,6 +108,8 @@ describe('CropperView', () => {
   });
   afterEach(() => {
     vi.useRealTimers();
+    fake.ready = Promise.resolve();
+    fake.stylable = true;
   });
 
   it('lays the image and the selection out from state', async () => {
@@ -160,18 +174,53 @@ describe('CropperView', () => {
   it('ignores a selection change it cannot read', async () => {
     const {query, layout} = setup();
     const {selection} = await ready(query);
-    const event = new CustomEvent('change', {detail: {x: 1}, bubbles: true, cancelable: true});
-    selection.dispatchEvent(event);
+    const options = {bubbles: true, cancelable: true};
+    for (const event of [
+      new CustomEvent('change', {detail: {x: 1}, ...options}),
+      new CustomEvent('change', {detail: null, ...options}),
+      new Event('change', options),
+    ]) {
+      selection.dispatchEvent(event);
+      expect(event.defaultPrevented).toBe(false);
+    }
+    expect(selectionRect(selection)).toEqual(layout.selection);
+  });
+
+  it('leaves a change that bubbles up from inside the selection alone', async () => {
+    const {query, layout} = setup();
+    const {selection} = await ready(query);
+    // Too small for the selection itself, which is how a refusal would show.
+    const detail = {x: layout.frame.x, y: layout.frame.y, width: 4, height: 4};
+    const event = new CustomEvent('change', {detail, bubbles: true, cancelable: true});
+    query('cropper-grid')?.dispatchEvent(event);
     expect(event.defaultPrevented).toBe(false);
     expect(selectionRect(selection)).toEqual(layout.selection);
   });
 
-  it('keeps a resize inside the image', async () => {
+  it('stops a resize at the edge of the image, leaving the opposite edge where it was', async () => {
     const {query, layout} = setup();
     const {selection} = await ready(query);
     const {frame} = layout;
-    selection.$change(frame.x - 50, frame.y, 100, 100);
-    expect(selectionRect(selection)).toEqual({x: frame.x, y: frame.y, width: 100, height: 100});
+    selection.$change(frame.x + 100, frame.y, 100, 100);
+    // The west edge dragged 150 past the image: the east edge stays at frame.x + 200.
+    selection.$change(frame.x - 50, frame.y, 250, 100);
+    expect(selectionRect(selection)).toEqual({x: frame.x, y: frame.y, width: 200, height: 100});
+  });
+
+  it('keeps the shape of a fixed-ratio resize that reaches the edge', async () => {
+    const base = initialEditorState({width: 400, height: 300}, resolveFeatures(undefined));
+    const {query, layout} = setup({state: {...base, ratio: 1}});
+    const {selection} = await ready(query);
+    const {frame} = layout;
+    selection.$change(frame.x + 100, frame.y + 50, 100, 100);
+    // The south-east corner dragged out past the right edge, the north-west corner fixed.
+    const wide = frame.width - 100 + 60;
+    selection.$change(frame.x + 100, frame.y + 50, wide, wide);
+    const rect = selectionRect(selection);
+    expect(rect.x).toBeCloseTo(frame.x + 100);
+    expect(rect.y).toBeCloseTo(frame.y + 50);
+    expect(rect.width).toBeCloseTo(Math.min(frame.width - 100, frame.height - 50));
+    expect(rect.height).toBeCloseTo(rect.width);
   });
 
   it('refuses a selection smaller than a handle', async () => {
@@ -206,6 +255,62 @@ describe('CropperView', () => {
     const {selection} = await ready(query);
     expect(selection.dataset.shape).toBe('circle');
     expect(query<HTMLElement>('cropper-shade')?.dataset.shape).toBe('circle');
+  });
+
+  it('builds with handles that cannot take extra styles', async () => {
+    fake.stylable = false;
+    const {query, view} = setup({editable: false});
+    const {selection} = await ready(query);
+    expect(selection.$addStyles).toHaveBeenCalledTimes(1);
+    const handles = view.container.querySelectorAll<HTMLElement>('cropper-handle[action$="-resize"]');
+    expect(Array.from(handles).every((handle) => handle.hidden)).toBe(true);
+  });
+
+  it('leaves the stage empty when cropperjs fails to load', async () => {
+    vi.mocked(loadCropper).mockRejectedValueOnce(new Error('chunk lost'));
+    const {props} = setup();
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(screen.getByTestId('image-editor-stage')).toBeEmptyDOMElement();
+    expect(props.onAction).not.toHaveBeenCalled();
+  });
+
+  it('builds nothing when it is unmounted before cropperjs has loaded', async () => {
+    let finish: () => void = () => undefined;
+    vi.mocked(loadCropper).mockImplementationOnce(() => new Promise<void>((resolve) => (finish = resolve)));
+    const {view} = setup();
+    const stage = screen.getByTestId('image-editor-stage');
+    view.unmount();
+    await act(async () => {
+      finish();
+      await Promise.resolve();
+    });
+    expect(stage).toBeEmptyDOMElement();
+  });
+
+  it('does not lay out again when the image finishes loading after unmount', async () => {
+    let finish: () => void = () => undefined;
+    fake.ready = new Promise<void>((resolve) => (finish = resolve));
+    const {query, view} = setup();
+    const {image} = await ready(query);
+    await waitFor(() => expect(image.$setTransform).toHaveBeenCalled());
+    const calls = image.$setTransform.mock.calls.length;
+    view.unmount();
+    await act(async () => {
+      finish();
+      await Promise.resolve();
+    });
+    expect(image.$setTransform).toHaveBeenCalledTimes(calls);
+  });
+
+  it('reports nothing for a gesture that ends after unmount', async () => {
+    const {query, view, props} = setup();
+    const {canvas} = await ready(query);
+    view.unmount();
+    canvas.dispatchEvent(new CustomEvent('actionend', {bubbles: true}));
+    expect(props.onAction).not.toHaveBeenCalled();
+    expect(props.onCommit).not.toHaveBeenCalled();
   });
 
   it('tears the elements down on unmount', async () => {

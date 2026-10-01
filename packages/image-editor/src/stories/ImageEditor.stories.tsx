@@ -1,9 +1,9 @@
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import {createTheme, ThemeProvider, type Theme} from '@mui/material/styles';
-import type {Meta, StoryObj} from '@storybook/react-vite';
+import type {Decorator, Meta, StoryObj} from '@storybook/react-vite';
 import {useState} from 'react';
-import {expect, fn, mocked, screen, userEvent, waitFor, within} from 'storybook/test';
+import {expect, fireEvent, fn, mocked, screen, userEvent, waitFor, within} from 'storybook/test';
 
 import {ImageEditor, type ImageEditorProps, type ImageEditorResult} from '../index.js';
 import {noiseUrl, pixelAt, QUADRANT_COLOURS, quadrantsUrl, rgba, urlToFile} from './fixtures.js';
@@ -106,10 +106,17 @@ async function applyEdits(dialog: HTMLElement, onApply: ImageEditorProps['onAppl
   return result;
 }
 
+/** The dialog holds everything it shows: nothing in it hangs past an edge and makes it scroll. */
+async function expectNoScroll(dialog: HTMLElement) {
+  await expect(dialog.scrollWidth).toBe(dialog.clientWidth);
+  await expect(dialog.scrollHeight).toBe(dialog.clientHeight);
+}
+
 /** The defaults, every tool on. Apply with nothing changed returns the whole picture. */
 export const Basic: Story = {
   play: async ({args, canvasElement}) => {
     const dialog = await openEditor(canvasElement);
+    await expectNoScroll(dialog);
     const result = await applyEdits(dialog, args.onApply);
 
     // The first ratio is free, so the untouched crop is the whole 1200 × 800 picture.
@@ -204,6 +211,12 @@ export const Minimal: Story = {
     await expect(ui.queryByRole('tab')).not.toBeInTheDocument();
     await expect(ui.queryByRole('button', {name: 'Undo'})).not.toBeInTheDocument();
     await expect(ui.queryByRole('button', {name: 'Replace image'})).not.toBeInTheDocument();
+
+    // With history off the edit still lands, and Reset is the way back.
+    await userEvent.click(ui.getByRole('button', {name: 'Rotate right'}));
+    await expect(ui.getByRole('status')).toHaveTextContent('Rotated 90°');
+    await expect(ui.getByRole('button', {name: 'Reset'})).toBeEnabled();
+    await expect(ui.queryByRole('button', {name: 'Undo'})).not.toBeInTheDocument();
   },
 };
 
@@ -278,7 +291,12 @@ export const Adjust: Story = {
     const dialog = await openEditor(canvasElement);
     const ui = within(dialog);
     await userEvent.click(ui.getByRole('tab', {name: 'Adjust'}));
-    await userEvent.click(await ui.findByRole('button', {name: 'Mono'}));
+    await expect(await ui.findByRole('slider', {name: 'Brightness'})).toBeInTheDocument();
+    await userEvent.click(ui.getByRole('button', {name: /^Contrast/}));
+    await expect(ui.getByRole('slider', {name: 'Contrast'})).toBeInTheDocument();
+    await expect(ui.queryByRole('slider', {name: 'Brightness'})).not.toBeInTheDocument();
+
+    await userEvent.click(ui.getByRole('button', {name: 'Mono'}));
     await expect(ui.getByRole('button', {name: /^Saturation/})).toHaveTextContent('-100');
 
     const result = await applyEdits(dialog, args.onApply);
@@ -286,6 +304,25 @@ export const Adjust: Story = {
     // The red quadrant, drained of colour.
     await expect(Math.max(r, g, b) - Math.min(r, g, b)).toBeLessThanOrEqual(2);
     await expect([r, g, b]).not.toEqual(rgba(QUADRANT_COLOURS.topLeft).slice(0, 3));
+  },
+};
+
+/** The three sliders switched off: the Adjust tab is a row of one-tap looks. */
+export const Presets: Story = {
+  parameters: showcase('features'),
+  args: {features: {adjust: {brightness: false, contrast: false, saturation: false}}},
+  play: async ({canvasElement}) => {
+    const dialog = await openEditor(canvasElement);
+    const ui = within(dialog);
+    await userEvent.click(ui.getByRole('tab', {name: 'Adjust'}));
+    const presets = await ui.findByRole('group', {name: 'Presets'});
+    await expect(ui.queryByRole('slider')).not.toBeInTheDocument();
+    await expect(ui.queryByRole('group', {name: 'Adjustment'})).not.toBeInTheDocument();
+
+    await userEvent.click(within(presets).getByRole('button', {name: 'Vivid'}));
+    await expect(within(presets).getByRole('button', {name: 'Vivid'})).toHaveAttribute('aria-pressed', 'true');
+    await expect(within(presets).getByRole('button', {name: 'Original'})).toHaveAttribute('aria-pressed', 'false');
+    await expect(ui.getByRole('button', {name: 'Reset'})).toBeEnabled();
   },
 };
 
@@ -335,6 +372,34 @@ export const PickerAndReplace: Story = {
     await userEvent.upload(ui.getByLabelText('Choose image'), await urlToFile(quadrantsUrl(), 'wide.png'));
     await ui.findByTestId('image-editor-stage');
     await userEvent.upload(ui.getByLabelText('Replace image'), await urlToFile(quadrantsUrl(600, 600), 'square.png'));
+    await waitFor(() => expect(ui.getByTestId('image-editor-stage').querySelector('cropper-selection')).not.toBeNull());
+
+    const result = await applyEdits(dialog, args.onApply);
+    await expect(result).toEqual(expect.objectContaining({width: 600, height: 600}));
+  },
+};
+
+/** The drop zone lights up while a file is held over it, and a dropped file opens like a picked one. */
+export const DragAndDrop: Story = {
+  parameters: showcase('source', 'input'),
+  render: (args) => <EditPhoto {...args} picker />,
+  play: async ({args, canvasElement}) => {
+    await userEvent.click(within(canvasElement).getByRole('button', {name: 'Edit photo'}));
+    const dialog = await screen.findByRole('dialog', {name: 'Edit image'});
+    const ui = within(dialog);
+    const zone = (await ui.findByText('Drop an image here')).parentElement;
+    if (!zone) throw new Error('The prompt has no drop zone around it');
+    const resting = getComputedStyle(zone).borderColor;
+
+    await fireEvent.dragOver(zone);
+    await waitFor(() => expect(getComputedStyle(zone).borderColor).not.toBe(resting));
+    await fireEvent.dragLeave(zone);
+    await waitFor(() => expect(getComputedStyle(zone).borderColor).toBe(resting));
+
+    const dropped = new DataTransfer();
+    dropped.items.add(await urlToFile(quadrantsUrl(600, 600), 'square.png'));
+    // Dispatched by hand: `fireEvent.drop` swaps the DataTransfer for an empty one.
+    zone.dispatchEvent(new DragEvent('drop', {bubbles: true, cancelable: true, dataTransfer: dropped}));
     await waitFor(() => expect(ui.getByTestId('image-editor-stage').querySelector('cropper-selection')).not.toBeNull());
 
     const result = await applyEdits(dialog, args.onApply);
@@ -416,6 +481,14 @@ const phoneTheme = (outer: Theme): Theme => ({
     .breakpoints,
 });
 
+const onPhone: Decorator = (Story) => (
+  <ThemeProvider theme={phoneTheme}>
+    <Box sx={{p: 2}}>
+      <Story />
+    </Box>
+  </ThemeProvider>
+);
+
 /**
  * Below `sm` the editor fills the screen: Cancel, the title and Done across the top, a
  * floating pill over the picture, and the tools at the bottom.
@@ -424,22 +497,53 @@ export const Mobile: Story = {
   parameters: {...showcase('features'), layout: 'fullscreen'},
   globals: {viewport: {value: 'iphone14', isRotated: false}},
   args: {features: {history: true}},
-  decorators: [
-    (Story) => (
-      <ThemeProvider theme={phoneTheme}>
-        <Box sx={{p: 2}}>
-          <Story />
-        </Box>
-      </ThemeProvider>
-    ),
-  ],
+  decorators: [onPhone],
   play: async ({args, canvasElement}) => {
     const dialog = await openEditor(canvasElement);
+    await expectNoScroll(dialog);
     const toolbar = within(dialog).getByRole('toolbar', {name: 'Image tools'});
     await userEvent.click(within(toolbar).getByRole('button', {name: 'Rotate right'}));
     await expect(within(toolbar).getByRole('button', {name: 'Undo'})).toBeEnabled();
 
     const result = await applyEdits(dialog, args.onApply, 'Done');
     await expect(result).toEqual(expect.objectContaining({width: 800, height: 1200}));
+  },
+};
+
+/**
+ * A profile picture on a phone: a round crop moved and pinched by hand. With rotate, flip and
+ * history off, the pill is down to Reset and nothing sits under the picture.
+ */
+export const MobileAvatar: Story = {
+  parameters: {...showcase('features', 'output'), layout: 'fullscreen'},
+  globals: {viewport: {value: 'iphone14', isRotated: false}},
+  args: {
+    features: {
+      crop: {shape: 'circle'},
+      zoom: {slider: false},
+      rotate: false,
+      flip: false,
+      straighten: false,
+      adjust: false,
+      history: false,
+      replace: false,
+    },
+    output: {type: 'image/png', maxWidth: 256, maxHeight: 256},
+  },
+  decorators: [onPhone],
+  play: async ({args, canvasElement}) => {
+    const dialog = await openEditor(canvasElement);
+    const ui = within(dialog);
+    const toolbar = ui.getByRole('toolbar', {name: 'Image tools'});
+    await expect(within(toolbar).getAllByRole('button')).toHaveLength(1);
+    await expect(within(toolbar).getByRole('button', {name: 'Reset'})).toBeDisabled();
+    await expect(ui.queryByRole('slider')).not.toBeInTheDocument();
+    await expect(ui.queryByRole('group', {name: 'Aspect ratio'})).not.toBeInTheDocument();
+
+    // Done with nothing touched still hands back the round crop from the middle of the picture.
+    const result = await applyEdits(dialog, args.onApply, 'Done');
+    await expect(result).toEqual(expect.objectContaining({type: 'image/png', width: 256, height: 256}));
+    const [, , , cornerAlpha] = await pixelAt(result.file, 2, 2);
+    await expect(cornerAlpha).toBe(0);
   },
 };

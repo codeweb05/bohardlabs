@@ -1,4 +1,4 @@
-import {render, screen, waitFor} from '@testing-library/react';
+import {act, render, screen, waitFor} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 
@@ -9,7 +9,11 @@ import type {EditorState} from '../state/editorState.js';
 import type {ImageEditorFeatures} from '../types.js';
 import {ImageEditor} from './ImageEditor.js';
 
-const view = vi.hoisted(() => ({state: null as EditorState | null, filter: true}));
+const view = vi.hoisted(() => ({
+  state: null as EditorState | null,
+  props: null as CropperViewProps | null,
+  filter: true,
+}));
 
 vi.mock(import('../input/loadSource.js'), async (original) => ({
   ...(await original()),
@@ -27,8 +31,9 @@ vi.mock(import('../output/filters.js'), async (original) => ({
   supportsCanvasFilter: () => view.filter,
 }));
 vi.mock('../engine/CropperView.js', () => ({
-  CropperView: ({state}: CropperViewProps) => {
-    view.state = state;
+  CropperView: (props: CropperViewProps) => {
+    view.state = props.state;
+    view.props = props;
     return null;
   },
 }));
@@ -120,6 +125,25 @@ describe('history', () => {
     await user.click(redo);
     expect(orientation()).toEqual([0, -1, 1, 0]);
     expect(redo).toBeDisabled();
+  });
+
+  it('records no step for a gesture that ends where it began', async () => {
+    await setup({history: true});
+    act(() => view.props?.onAction({type: 'straighten', degrees: 5}, {transient: true}));
+    act(() => view.props?.onAction({type: 'straighten', degrees: 0}, {transient: true}));
+    act(() => view.props?.onCommit());
+    expect(screen.getByRole('button', {name: L.undo})).toBeDisabled();
+    expect(screen.getByRole('button', {name: L.reset})).toBeDisabled();
+  });
+
+  it('says the same thing twice as two announcements', async () => {
+    const user = await setup();
+    const flip = screen.getByRole('button', {name: L.flipHorizontal});
+    await user.click(flip);
+    const first = screen.getByText(L.flipped);
+    await user.click(flip);
+    // A live region whose text does not change is not read again; a new node is.
+    expect(screen.getByText(L.flipped)).not.toBe(first);
   });
 
   it('resets to the start, and the reset can be undone', async () => {

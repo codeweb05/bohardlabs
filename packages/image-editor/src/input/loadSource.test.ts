@@ -128,11 +128,37 @@ describe('loadSource', () => {
   });
 });
 
+// jsdom has no canvas, so the context is a stand-in that records what was drawn.
+function fakeContext() {
+  const drawImage = vi.fn();
+  const context: Partial<CanvasRenderingContext2D> = {drawImage};
+  return {context: context as CanvasRenderingContext2D, drawImage};
+}
+
 describe('browserDecoder.downscale', () => {
   it('rejects when the canvas has no 2d context', async () => {
     vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null);
     await expect(browserDecoder.downscale({} as HTMLImageElement, 10, 10, 'image/png')).rejects.toThrow(
       'No 2d context',
+    );
+  });
+
+  it('draws the image at the smaller size and hands back the encoded copy', async () => {
+    const {context, drawImage} = fakeContext();
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(context);
+    const smaller = new Blob(['small'], {type: 'image/png'});
+    const toBlob = vi.spyOn(HTMLCanvasElement.prototype, 'toBlob').mockImplementation((callback) => callback(smaller));
+    const image = {} as HTMLImageElement;
+    await expect(browserDecoder.downscale(image, 40, 30, 'image/png')).resolves.toBe(smaller);
+    expect(drawImage).toHaveBeenCalledWith(image, 0, 0, 40, 30);
+    expect(toBlob).toHaveBeenCalledWith(expect.any(Function), 'image/png');
+  });
+
+  it('rejects when the browser cannot encode the smaller copy', async () => {
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(fakeContext().context);
+    vi.spyOn(HTMLCanvasElement.prototype, 'toBlob').mockImplementation((callback) => callback(null));
+    await expect(browserDecoder.downscale({} as HTMLImageElement, 10, 10, 'image/png')).rejects.toThrow(
+      'Encode failed',
     );
   });
 });

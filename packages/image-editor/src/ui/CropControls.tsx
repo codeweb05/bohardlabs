@@ -26,14 +26,25 @@ export interface CropControlsProps {
 
 const STRAIGHTEN_STEP = 0.5;
 
-/** A rotation turns 4:3 into 3:4 in the frame; to the user it is still 4:3. */
 function sameRatio(option: number | null, current: number | null): boolean {
   if (option === null || current === null) return option === current;
-  return Math.abs(option - current) < 1e-3 || Math.abs(1 / option - current) < 1e-3;
+  return Math.abs(option - current) < 1e-3;
+}
+
+/**
+ * The offered ratio the crop is at. A rotation turns 4:3 into 3:4 in the frame; to the user
+ * it is still 4:3, so the reciprocal counts, but only when no ratio matches as it stands.
+ */
+function ratioInUse(options: readonly (number | null)[], current: number | null): number {
+  const exact = options.findIndex((option) => sameRatio(option, current));
+  if (exact >= 0 || current === null) return exact;
+  return options.findIndex((option) => sameRatio(option, 1 / current));
 }
 
 function single(value: number | number[]): number {
+  /* v8 ignore start -- MUI passes an array only for a range slider, and every slider here has one thumb */
   return Array.isArray(value) ? (value[0] ?? 0) : value;
+  /* v8 ignore stop */
 }
 
 /** The context row under the canvas on the Crop tab. Each tool shows only when enabled. */
@@ -50,7 +61,10 @@ export function CropControls({
   const {crop, straighten, zoom, rotate, flip} = features;
   const ratios = crop.ratios.map((ratio) => ({ratio, value: parseRatio(ratio)}));
   const showRatios = crop.enabled && crop.shape === 'rect' && ratios.length > 1;
-  const selected = ratios.findIndex(({value}) => sameRatio(value, state.ratio));
+  const selected = ratioInUse(
+    ratios.map(({value}) => value),
+    state.ratio,
+  );
 
   const tool = (label: string, icon: ReactNode, action: EditorAction) => (
     <Tooltip title={label}>

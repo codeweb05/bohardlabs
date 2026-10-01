@@ -31,7 +31,9 @@ const PRESET_LABELS: Record<PresetId, `preset${Capitalize<PresetId>}`> = {
 };
 
 function single(value: number | number[]): number {
+  /* v8 ignore start -- MUI passes an array only for a range slider, and every slider here has one thumb */
   return Array.isArray(value) ? (value[0] ?? 0) : value;
+  /* v8 ignore stop */
 }
 
 /** The Adjust tab: pick a value, move its one slider, or jump to a preset. */

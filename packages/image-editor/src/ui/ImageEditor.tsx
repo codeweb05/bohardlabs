@@ -21,6 +21,10 @@ export function ImageEditor({open, labels, ...props}: Readonly<ImageEditorProps>
   if (shown.open !== open) {
     setShown(open ? {open, present: true, round: shown.round + 1} : {...shown, open});
   }
+  // `open={file !== null} source={file}` clears the source in the same render that closes the
+  // editor. The fading dialog keeps the image it had, instead of flashing the picker.
+  const [source, setSource] = useState(props.source);
+  if (open && source !== props.source) setSource(props.source);
 
   return (
     <LabelsProvider labels={labels}>
@@ -33,7 +37,9 @@ export function ImageEditor({open, labels, ...props}: Readonly<ImageEditorProps>
         aria-labelledby={titleId}
         slotProps={{transition: {onExited: () => setShown((current) => ({...current, present: current.open}))}}}
       >
-        {shown.present && <EditorSession key={shown.round} {...props} titleId={titleId} mobile={mobile} />}
+        {shown.present && (
+          <EditorSession key={shown.round} {...props} open={open} source={source} titleId={titleId} mobile={mobile} />
+        )}
       </Dialog>
     </LabelsProvider>
   );

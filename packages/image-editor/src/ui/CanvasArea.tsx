@@ -1,5 +1,5 @@
 import Box from '@mui/material/Box';
-import {useEffect, useId, useRef, useState, type KeyboardEvent} from 'react';
+import {useEffect, useId, useMemo, useRef, useState, type KeyboardEvent} from 'react';
 
 import {CropperView, type CropperViewProps} from '../engine/CropperView.js';
 import type {ResolvedFeatures} from '../features.js';
@@ -13,11 +13,16 @@ const STAGE_PADDING = 24;
 const KEY_STEP = 10;
 const FINE_KEY_STEP = 1;
 const KEY_ZOOM = 1.1;
+/** The stage's height with room to spare, and the least it shrinks to before the dialog scrolls. */
+const STAGE_HEIGHT = 420;
+export const STAGE_MIN_HEIGHT = 240;
 
+// Sizes are strings on purpose: `sx` reads a bare `1` as 100%, which makes the hidden box as
+// large as its container and lets it hang past the dialog's edge, where it adds scrollbars.
 export const visuallyHidden = {
   position: 'absolute',
-  width: 1,
-  height: 1,
+  width: '1px',
+  height: '1px',
   m: '-1px',
   p: 0,
   overflow: 'hidden',
@@ -31,6 +36,8 @@ export interface CanvasAreaProps extends Omit<CropperViewProps, 'stage' | 'layou
   /** `null` when history is off, so the keys do nothing. */
   readonly onUndo: (() => void) | null;
   readonly onRedo: (() => void) | null;
+  /** A held key was let go: `action` is the step it was repeating. */
+  readonly onHoldEnd: (action: EditorAction) => void;
 }
 
 const ARROWS: Record<string, [number, number]> = {
@@ -65,15 +72,19 @@ function keyAction(event: KeyboardEvent, features: ResolvedFeatures, k: number):
  * stand-in for the canvas: the cropper itself is hidden from assistive technology, and
  * every pointer gesture has a key here.
  */
-export function CanvasArea({features, onUndo, onRedo, ...props}: Readonly<CanvasAreaProps>) {
+export function CanvasArea({features, onUndo, onRedo, onHoldEnd, ...props}: Readonly<CanvasAreaProps>) {
   const labels = useLabels();
   const helpId = useId();
   const box = useRef<HTMLDivElement>(null);
   const [stage, setStage] = useState<Size | null>(null);
+  // The step a held key is repeating, until the key is let go.
+  const held = useRef<EditorAction | null>(null);
 
   useEffect(() => {
     const element = box.current;
+    /* v8 ignore start -- an effect runs after the ref is attached */
     if (!element) return;
+    /* v8 ignore stop */
     // A ResizeObserver reports once on observe, so this also takes the first measurement.
     const observer = new ResizeObserver(([entry]) => {
       if (!entry) return;
@@ -84,11 +95,17 @@ export function CanvasArea({features, onUndo, onRedo, ...props}: Readonly<Canvas
     return () => observer.disconnect();
   }, []);
 
-  const {state} = props;
-  const layout =
-    stage !== null && stage.width > 0 && stage.height > 0
-      ? layoutStage(stage, STAGE_PADDING, state.image, state.orientation, state.straighten, state.crop)
-      : null;
+  const {image, orientation, straighten, crop} = props.state;
+  // The same object until something it is made from changes. The cropper lays the selection
+  // out again whenever the layout does, and a re-render that changed nothing (a consumer's
+  // timer, say) must not put a selection that is being dragged back where it started.
+  const layout = useMemo(
+    () =>
+      stage !== null && stage.width > 0 && stage.height > 0
+        ? layoutStage(stage, STAGE_PADDING, image, orientation, straighten, crop)
+        : null,
+    [stage, image, orientation, straighten, crop],
+  );
 
   const onKeyDown = (event: KeyboardEvent) => {
     if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'z') {
@@ -102,7 +119,21 @@ export function CanvasArea({features, onUndo, onRedo, ...props}: Readonly<Canvas
     const action = keyAction(event, features, layout.k);
     if (!action) return;
     event.preventDefault();
-    props.onAction(action);
+    // A key held down repeats many times a second. Its repeats are one gesture, so they are
+    // one step to undo and one announcement. A rotation stays a step of its own each time.
+    if (event.repeat && action.type !== 'rotate') {
+      held.current = action;
+      props.onAction(action, {transient: true});
+    } else {
+      props.onAction(action);
+    }
+  };
+
+  const endHold = () => {
+    const action = held.current;
+    if (!action) return;
+    held.current = null;
+    onHoldEnd(action);
   };
 
   return (
@@ -113,12 +144,15 @@ export function CanvasArea({features, onUndo, onRedo, ...props}: Readonly<Canvas
       aria-label={labels.canvas}
       aria-describedby={helpId}
       onKeyDown={onKeyDown}
+      onKeyUp={endHold}
+      onBlur={endHold}
       sx={{
         position: 'relative',
         width: '100%',
-        height: 420,
+        // The height it would like, given up to the controls under it in a short window.
+        flex: `0 1 ${STAGE_HEIGHT}px`,
         maxHeight: '60vh',
-        minHeight: 240,
+        minHeight: STAGE_MIN_HEIGHT,
         bgcolor: 'grey.900',
         outline: 'none',
         '&:focus-visible': {outline: 2, outlineColor: 'primary.main', outlineOffset: 2},

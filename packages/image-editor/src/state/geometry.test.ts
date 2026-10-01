@@ -9,6 +9,7 @@ import {
   apply,
   clampRect,
   coverScale,
+  fitResize,
   frameSize,
   invert,
   largestCrop,
@@ -155,5 +156,63 @@ describe('layoutStage', () => {
 
   it('survives a stage too small for the padding', () => {
     expect(layoutStage({width: 0, height: 0}, 20, image, IDENTITY, 0, crop).k).toBeGreaterThan(0);
+  });
+});
+
+describe('fitResize', () => {
+  const frame = {width: 400, height: 300};
+  const previous = {x: 100, y: 50, width: 100, height: 100};
+
+  it('leaves a resize that stays inside alone', () => {
+    const rect = {x: 100, y: 50, width: 150, height: 120};
+    expect(fitResize(rect, previous, frame, false)).toEqual(rect);
+    expect(fitResize({...rect, height: 150}, previous, frame, true)).toEqual({...rect, height: 150});
+  });
+
+  it('cuts a free resize off at each edge it crosses', () => {
+    expect(fitResize({x: -40, y: -10, width: 240, height: 160}, previous, frame, false)).toEqual({
+      x: 0,
+      y: 0,
+      width: 200,
+      height: 150,
+    });
+    expect(fitResize({x: 100, y: 50, width: 400, height: 400}, previous, frame, false)).toEqual({
+      x: 100,
+      y: 50,
+      width: 300,
+      height: 250,
+    });
+  });
+
+  it('scales a fixed shape about the corner that did not move', () => {
+    // Dragged from the south-east corner: the north-west one is the anchor.
+    expect(fitResize({x: 100, y: 50, width: 400, height: 400}, previous, frame, true)).toEqual({
+      x: 100,
+      y: 50,
+      width: 250,
+      height: 250,
+    });
+    // Dragged from the north-west corner: the south-east one is.
+    expect(fitResize({x: -100, y: -150, width: 300, height: 300}, previous, frame, true)).toEqual({
+      x: 50,
+      y: 0,
+      width: 150,
+      height: 150,
+    });
+  });
+
+  it('lets a fixed shape slide on the axis an edge handle grows both ways', () => {
+    // The east edge dragged out: the west edge is pinned, and the height, which grows about
+    // its middle, slides down off the top edge instead of stopping the resize there.
+    const rect = {x: 100, y: -100, width: 400, height: 400};
+    expect(fitResize(rect, previous, frame, true)).toEqual({x: 100, y: 0, width: 300, height: 300});
+    // The north edge dragged up from the bottom-right corner: it slides left.
+    const flush = {x: 300, y: 200, width: 100, height: 100};
+    expect(fitResize({x: 250, y: 100, width: 200, height: 200}, flush, frame, true)).toEqual({
+      x: 200,
+      y: 100,
+      width: 200,
+      height: 200,
+    });
   });
 });
