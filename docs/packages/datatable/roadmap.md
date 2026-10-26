@@ -15,6 +15,8 @@ The table already owns its state (`useDataTableState`) and persists all of it pe
 
 A second reference implementation now informs several items: the ScaffPlan WebUI table at `packages/ui/src/components/data-table` (shadcn/Tailwind, ~10k lines, client-side-first). Items sourced from it are marked **[SP]**, and the adoption notes at the end of this document say what to copy, what to change, and what to leave.
 
+Items with `app` in the Source column came from a consuming admin app that asked for them while building on the published package (2026-10-26). Where an existing item already covered the ask, the need is recorded under that item as **Consumer need** instead of as a new item: 9, 16, 19 and 29.
+
 ## Prior generations
 
 Two earlier versions of this same component exist in the `smart` repos: `smarthip-admin/src/components/DataTable` (~7.5k lines) and `admin-v2/src/components/DataTable` (~6.9k lines). Both share this component's architecture and file layout, and their `enable*` flag surfaces are identical to ours. They are ancestors, not alternatives, so they are a source of regression tests and one missing file rather than of new features.
@@ -70,6 +72,10 @@ Their test suites are worth mining when porting anything: `DataTable.persistence
 | 37  | Effect churn in state management         | Perf      |        | proposed                            |
 | 38  | Explicit column memoization              | Perf      |        | proposed                            |
 | 39  | Measurement harness and perf budget      | Perf      |        | proposed                            |
+| 40  | Keep a column out of the export          | Data out  | app    | proposed                            |
+| 41  | Card tap and keyboard behaviour          | UX        | app    | proposed                            |
+| 42  | Card view selection and sort controls    | UX        | app    | proposed                            |
+| 43  | Consumer controls in the toolbar         | UX        | app    | proposed (plan drafted)             |
 
 ## Hardening pass (2026-08-28)
 
@@ -217,6 +223,8 @@ A side panel showing one row in full, with prev/next stepping through the list a
 
 **Enhancement over ScaffPlan:** theirs finds the current row with `findIndex(r => r.original === data)`, an identity comparison that breaks the moment a refetch replaces the row objects. Key by row id. Theirs also stops at the page boundary; ours should advance server state and continue into the next page. Render as an MUI `Drawer` so the theme and breakpoints come for free.
 
+**Consumer need (2026-10-26):** a consuming admin app wants to open one row's detail beside the list without leaving it. Either shape serves it: this panel inside the table, or a separate side panel package that the table can open from a row (`onRowClick` or a row action) and that other screens can use on their own. Decide which before building; a separate package would leave this item as the prev/next wiring only.
+
 ## 10. Display controls: cell wrap, fullscreen, fit-to-content **[SP]**
 
 Three small toolbar toggles.
@@ -261,6 +269,41 @@ After a background refetch, briefly highlight rows whose values changed.
 
 **[lib]** Previously deferred because 50 rows is not a bottleneck. As a library this matters more, since consumers will pass client-side datasets in the thousands. Note that virtualized rows and item 4's DOM-measured pin offsets interact: measure off the header row, not the body, since body rows unmount as they scroll out.
 
+## 41. Card tap and keyboard behaviour
+
+Below `mobileBreakpoint` a card tap should do one thing, and a keyboard user should be able to reach and open a card.
+
+**Why it matters:** a consuming app wants a tap on a card to open the row, and only that. Today `CardItem`'s `handleCardClick` toggles selection when the row is selectable, toggles expansion when the table expands, and then calls `onRowClick`, all from one tap. A user who meant to open a record also selects it, and a user who meant to select one navigates away.
+
+**What exists:** `onRowClick` on `DataTable`, passed to `CardView` and `CardItem`. The card's checkbox and actions button already stop propagation. The card itself is a clickable `Box` with no `tabIndex`, no role and no key handler, so it cannot be focused or opened without a pointer.
+
+**What is missing:**
+
+- One rule for what a tap does. When `onRowClick` is set, a tap opens the row and selection moves to the checkbox alone; without it, a tap selects (or expands) as today. Write the rule down in the prop's JSDoc, since it is the contract.
+- A keyboard path: a tab stop on the card (or on one button inside it that carries the open action), `Enter` to open, `Space` to select, a focus ring from the theme, and an accessible name taken from the primary column (item 29's row naming applies here too).
+
+**Risk:** changing what a tap does is a behaviour change for consumers that rely on tap-to-select with `onRowClick` set. Ship it behind an option first, or as a minor with the old behaviour named in the changeset.
+
+## 42. Card view selection and sort controls
+
+Select all, a sort control and clear selection in the card layout.
+
+**Why it matters:** the card layout drops the header row, and with it the select-all checkbox and every sort control. A consuming app's list therefore cannot be sorted on a phone, and a selection can only be built and cleared one card at a time.
+
+**What exists:** `SelectHeaderCell` and the header sort buttons on the desktop table; `rowSelection` and `sorting` live in table state, so the card view needs controls, not new state. `BulkActions` already renders above the cards.
+
+**What is missing:** a small bar above the card list with a select-all checkbox (indeterminate when some rows are selected, page-scoped to match the desktop header), a clear-selection action, and a sort control: a menu of the sortable columns plus a direction toggle, writing the same `sorting` state the headers write. Every string goes through `labels`. Pairs with item 8, which wants the same selection count kept in view.
+
+## 43. Consumer controls in the toolbar
+
+A place in the toolbar for a screen's own buttons, such as a status menu that drives a query param the table knows nothing about.
+
+**Why it matters:** without it a consuming app renders its controls above or beside the table, out of line with search and filters, and they wrap differently from the table's own toolbar on a narrow screen.
+
+**What exists:** `DataTableToolbar` is internal; its contents are fixed by the `enable*` flags.
+
+**What is missing:** one `toolbarContent?: ReactNode` prop on `DataTableProps`, rendered after the search box. A plan for exactly this is drafted on the `docs/datatable-consumer-plans` branch (`2026-09-30-datatable-toolbar-slot.md`), with the design argued there: a `ReactNode` rather than a `slots` entry, one position rather than two, and no new export. Pick it up from that plan rather than writing a second one.
+
 ---
 
 # Track C: Data out
@@ -285,6 +328,8 @@ Export every row matching the current filters, not just the loaded page.
 
 **Note:** ScaffPlan has nothing here. Their export assumes the full dataset is already in the client, which is exactly the assumption our state model breaks.
 
+**Consumer need (2026-10-26):** a consuming admin app with server-paginated lists needs export to cover every row matching the current filters, not the loaded page. The shape that fits it is a consumer-supplied fetcher (`exportRows?: (state: ServerTableState) => Promise<readonly TData[]>`, or one that returns a file from the consumer's own export endpoint), so the table never guesses a maximum page size the API may refuse.
+
 ## 17. Faceted filters with counts **[SP]**
 
 Multi-select filter popovers showing how many rows carry each value.
@@ -292,6 +337,16 @@ Multi-select filter popovers showing how many rows carry each value.
 **Adopt from:** `data-table-faceted-filter.tsx`. The interaction (searchable command list, selected-count badge, per-option counts, clear) is good and worth matching.
 
 **Enhancement over ScaffPlan:** theirs reads counts from `getFacetedUniqueValues()`, the client row model, which under server pagination counts one page. Counts have to come from the API as a facets block on the list response. **Confirm BE support before building.** The UI can ship first with counts omitted, and light up when the facets land.
+
+## 40. Keep a column out of the export
+
+A column option that leaves a column out of every export while it stays visible on screen.
+
+**Why it matters:** a consuming app shows columns that make no sense in a file: a thumbnail, a status chip that only repeats another column, a cell holding buttons. Today the only way to keep one out of the file is to hide it, which also takes it off the screen.
+
+**What exists:** `ExportMenu` skips `select` and `actions` by id and exports every other visible column.
+
+**What is missing:** a per-column flag on `DataTableColumnDef` (`enableExport: false`, matching the TanStack `enable*` naming the defs already use), read in `ExportMenu`'s column filter. Optionally the reverse too, a column hidden on screen but included in the file, though nobody has asked for that yet. Touches the same column list as item 15; do them together.
 
 ---
 
@@ -314,6 +369,8 @@ Bulk actions currently fire and forget: the whole selection succeeds or the toas
 **What is missing:** a per-row result shape from the BE (or per-row calls with a concurrency cap), row-level status decoration, and a retry affordance.
 
 **Depends on:** BE support for partial success. Confirm before building.
+
+**Consumer need (2026-10-26):** a consuming admin app needs to tell its user when a bulk action partly failed. The smallest slice needs no BE change and no row decoration: let `BulkAction.onClick` resolve to a result (`{succeeded, failed}` row ids, or counts), and hand that result to an `onResult` callback (or to the confirm dialog's closing message) so the consumer can report "8 updated, 2 failed". Selection is kept for the failed rows. Per-row status and retry stay the larger part of this item.
 
 ---
 
@@ -423,6 +480,8 @@ Every user-facing string currently goes through our `t()`, and every colour thro
 **Partial, 2026-08-28.** The resize handle was a bare `<div>`: no role, no name, no tab stop, so column widths were mouse-only and the double-click reset was unreachable without a pointer. It is now the ARIA window-splitter pattern: `role="separator"`, `aria-orientation`, a translated label, `aria-valuenow/min/max`, a tab stop, and a focus ring. Arrow keys nudge the width by 8px (32px with Shift) through a new `resizeColumnBy` on `useColumnResize`, and Home resets the column. The global search box also got its helper text linked to the input, which needed `slotProps.htmlInput` rather than a prop on the `TextField` (MUI forwards unknown props to the root `FormControl`, where no screen reader looks).
 
 Still open: `role="grid"` semantics, roving focus (item 7), `aria-sort`, announced loading and empty states, and a keyboard path to reordering and pinning.
+
+**Consumer need (2026-10-26):** a consuming admin app needs each row's menu button to say which row it belongs to; today every one is named "Actions", so a screen reader user hears the same name down the whole page. A plan covering this is drafted on the `docs/datatable-consumer-plans` branch (`2026-09-30-datatable-row-labels.md`): a `getRowLabel` prop that names the actions button, the expand chevron and the selection checkbox on both the table row and the card. Pick it up from that plan.
 
 ## 30. Docs site and examples
 

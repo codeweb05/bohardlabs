@@ -77,7 +77,7 @@ one a demo, an interaction test and an axe check.
 
 ### Feature backlog
 
-[`packages/datatable/roadmap.md`](packages/datatable/roadmap.md) ranks 39 candidate
+[`packages/datatable/roadmap.md`](packages/datatable/roadmap.md) ranks 43 candidate
 features across seven tracks (state foundations, UX, data out, editing, analytics, library
 packaging, performance) and carries its own status table, which is the source of truth.
 Its suggested sequence starts with item 1, preferences-only persistence, because items 2,
@@ -88,7 +88,7 @@ Its suggested sequence starts with item 1, preferences-only persistence, because
 | done            | 0a column reordering, 0b header casing, 4 column pinning from the popover |
 | partial         | 18 inline edit, 29 accessibility conformance                              |
 | wired, unused   | 14 virtualization (a port exists in `admin-v2`)                           |
-| proposed        | the other 35                                                              |
+| proposed        | the other 39, including 40 to 43 from a consuming admin app (2026-10-26)  |
 
 ## 3. New packages
 
@@ -106,6 +106,12 @@ no longer depends on admin-ui.
 |   3   | [form](superpowers/plans/done/2026-09-29-form-package.md)                 | `@vt-labs/form`         | redesign  | 14/14 | done (2026-09-30) | nothing ([spec](superpowers/specs/2026-09-29-form-package-design.md))                                                                   |
 |   4   | [api-client](superpowers/plans/open/2026-08-28-api-client-package.md)     | `@vt-labs/api-client`   | 1200 loc  |  0/9  | blocked           | [open question B](decisions/open-questions.md#b-do-skipwash-api-and-smarthip-backend-share-the-response-envelope), a check, not a build |
 |   5   | [admin-shell](superpowers/plans/open/2026-08-28-admin-shell-package.md)   | `@vt-labs/admin-shell`  | 1120 loc  |  0/8  | blocked           | plan 2                                                                                                                                  |
+
+Each package that has shipped keeps its feature backlog beside the datatable's:
+[`packages/form/roadmap.md`](packages/form/roadmap.md) (4 proposed) and
+[`packages/image-editor/roadmap.md`](packages/image-editor/roadmap.md) (2 proposed), both
+from a consuming admin app's requests on 2026-10-26. Each backlog's status table is the
+source of truth for its items.
 
 When a plan starts, its status becomes `in progress (owner, task N)`. When its last task
 is checked off, the file moves to `superpowers/plans/done/`, the link here follows it, and
