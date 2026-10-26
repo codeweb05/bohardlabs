@@ -12,12 +12,12 @@ asked for them while building on the published package (2026-10-26).
 
 ## Status
 
-| #   | Feature                                  | Source | Status   |
-| --- | ---------------------------------------- | ------ | -------- |
-| 1   | A field for a list of whole numbers      | app    | proposed |
-| 2   | Number field: unit, min, max, step       | app    | proposed |
-| 3   | File or photo field                      | app    | proposed |
-| 4   | A size option for denser forms           | app    | proposed |
+| #   | Feature                             | Source | Status   |
+| --- | ----------------------------------- | ------ | -------- |
+| 1   | A field for a list of whole numbers | app    | proposed |
+| 2   | Number field: unit, min, max, step  | app    | proposed |
+| 3   | File or photo field                 | app    | proposed |
+| 4   | A size option for denser forms      | app    | proposed |
 
 ---
 
