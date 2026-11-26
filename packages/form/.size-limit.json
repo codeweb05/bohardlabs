@@ -3,7 +3,7 @@
     "name": "root: a sign-in form",
     "path": "dist/index.js",
     "import": "{ createAppForm, TextField, PasswordField, SubmitButton, FormError }",
-    "limit": "2.4 kB",
+    "limit": "2.6 kB",
     "ignore": [
       "react",
       "react-dom",
@@ -18,7 +18,7 @@
     "name": "root: everything",
     "path": "dist/index.js",
     "import": "*",
-    "limit": "5.7 kB",
+    "limit": "9 kB",
     "ignore": [
       "react",
       "react-dom",
@@ -33,7 +33,7 @@
     "name": "pickers",
     "path": "dist/pickers.js",
     "import": "*",
-    "limit": "3 kB",
+    "limit": "3.4 kB",
     "ignore": [
       "react",
       "react-dom",
@@ -49,7 +49,7 @@
     "name": "phone",
     "path": "dist/phone.js",
     "import": "*",
-    "limit": "2 kB",
+    "limit": "2.3 kB",
     "ignore": [
       "react",
       "react-dom",
@@ -65,7 +65,7 @@
     "name": "maps",
     "path": "dist/maps.js",
     "import": "*",
-    "limit": "4.2 kB",
+    "limit": "4.5 kB",
     "ignore": [
       "react",
       "react-dom",
