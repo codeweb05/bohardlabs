@@ -32,7 +32,8 @@ const rowActions: RowAction<TestRole>[] = [{id: 'edit', label: 'Edit', onClick: 
 
 /**
  * The declarations MUI generated for an element. jsdom's `getComputedStyle` drops values it
- * cannot resolve, `calc()` among them, so those are read from the injected rules instead.
+ * cannot resolve, `calc()` among them, and resolves `var()` to its fallback, so those are
+ * read from the injected rules instead.
  */
 function generatedCss(element: HTMLElement | null): string {
   if (!element) throw new Error('Expected an element to read styles from');
@@ -59,7 +60,8 @@ describe('DataTable, sticky header', () => {
     render(<DataTable columns={columns} data={data} stickyHeader ariaLabel="Roles" />);
 
     expect(generatedCss(parentOf(screen.getByRole('table', {name: 'Roles'})))).toContain(
-      'max-height: calc(100vh - 330px)',
+      // jsdom serialises a calc() the way the spec orders its terms, by unit.
+      'max-height: calc(-330px + 100vh)',
     );
   });
 
@@ -101,14 +103,10 @@ describe('DataTable, a column declared sticky', () => {
   it('lets a runtime pin take over, so the offset is the measured one', () => {
     render(<DataTable columns={stickyColumns} data={data} initialColumnPinning={{left: ['name']}} />);
 
-    expect(screen.getByRole('columnheader', {name: 'Name'})).toHaveStyle({
-      position: 'sticky',
-      left: 'var(--dt-pin-name, 0px)',
-    });
-    expect(screen.getByRole('cell', {name: 'Role 1'})).toHaveStyle({
-      position: 'sticky',
-      left: 'var(--dt-pin-name, 0px)',
-    });
+    for (const cell of [screen.getByRole('columnheader', {name: 'Name'}), screen.getByRole('cell', {name: 'Role 1'})]) {
+      expect(cell).toHaveStyle({position: 'sticky'});
+      expect(generatedCss(cell)).toContain('left: var(--dt-pin-name, 0px)');
+    }
   });
 });
 

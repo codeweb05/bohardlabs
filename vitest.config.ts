@@ -61,14 +61,17 @@ export default defineConfig({
       // The published sources, and only those. Anything outside a package's `src` is
       // tooling rather than something a consumer runs.
       //
-      // Absolute, and paired with `allowExternal`, because of how Vitest scopes coverage
-      // when a run is filtered to one project (`--project storybook`, which is exactly what
-      // the Storybook test panel does). In that case the provider replaces the config root
-      // with the roots of the surviving projects, so the scope collapses to
-      // `apps/storybook`: a relative glob is then resolved from there and finds nothing, and
-      // every file that the stories did cover is dropped for sitting outside the root. An
-      // absolute glob survives the first, `allowExternal` the second.
-      include: [fileURLToPath(new URL('./packages/*/src/**/*.{ts,tsx}', import.meta.url))],
+      // Twice, because Vitest matches a file inside the root only by its root-relative path,
+      // and a file outside it only by its absolute path. A full run needs the relative glob.
+      // A run filtered to one project (`--project storybook`, which is exactly what the
+      // Storybook test panel does) needs the absolute one: the provider then replaces the
+      // config root with the roots of the surviving projects, so the scope collapses to
+      // `apps/storybook`, and every package file the stories covered sits outside it.
+      // `allowExternal` keeps those files from being dropped outright.
+      include: [
+        'packages/*/src/**/*.{ts,tsx}',
+        fileURLToPath(new URL('./packages/*/src/**/*.{ts,tsx}', import.meta.url)),
+      ],
       allowExternal: true,
       exclude: [
         // The test suite is not its own subject.
