@@ -36,6 +36,12 @@ export interface FormLabels {
   region: string;
   postalCode: string;
   country: string;
+  /** NumberField's helper line when it has `min` and `max` and no `description`. */
+  numberRange: (min: number, max: number) => string;
+  /** NumberField's helper line when it has only `min`. */
+  numberMin: (min: number) => string;
+  /** NumberField's helper line when it has only `max`. */
+  numberMax: (max: number) => string;
 }
 
 export const DEFAULT_FORM_LABELS: FormLabels = {
@@ -62,4 +68,7 @@ export const DEFAULT_FORM_LABELS: FormLabels = {
   region: 'State or region',
   postalCode: 'Postal code',
   country: 'Country code',
+  numberRange: (min, max) => `Between ${min} and ${max}`,
+  numberMin: (min) => `At least ${min}`,
+  numberMax: (max) => `At most ${max}`,
 };

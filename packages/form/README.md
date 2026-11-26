@@ -119,6 +119,22 @@ array when the user picks something else, and `DurationField` adds it to its cho
 `SelectField`, `RadioGroupField` and `SearchableSelectField` leave such a value in the form but
 show the field as blank.
 
+## Numbers
+
+`NumberField` takes a `unit`, shown at the end of the input, and `min`, `max` and `step`.
+The bounds are announced (`aria-valuemin`, `aria-valuemax`) and shown as the helper line when
+the field has no `description`. `ArrowUp` and `ArrowDown` move the value by `step` (default 1)
+and stop at the bounds. Typing is never clamped: reject an out-of-range value in your schema,
+which stays the one place a value fails.
+
+```tsx
+<form.AppField name="gracePeriod">
+  {(field) => <field.NumberField label="Grace period" unit="minutes" min={5} max={120} step={5} />}
+</form.AppField>
+```
+
+With a bound or a `step` the input's role is `spinbutton`; without one it stays a `textbox`.
+
 ## Heavy fields
 
 `createAppForm` needs a component for every field up front. `lazyField` hands it a small stub,
@@ -269,7 +285,8 @@ export function FormTranslations({children}: {readonly children: ReactNode}) {
 validator arrives as `{message}`. Keep `labels` and `formatError` stable (module level or
 `useMemo`) so the provider does not rebuild its value on every render.
 
-Every key of `DEFAULT_FORM_LABELS`, with its English default:
+Every key of `DEFAULT_FORM_LABELS`, with its English default. The `number*` keys are
+functions that take the bounds, so a translation can format them:
 
 | Key                 | Default                      | Where                                         |
 | ------------------- | ---------------------------- | --------------------------------------------- |
@@ -296,6 +313,9 @@ Every key of `DEFAULT_FORM_LABELS`, with its English default:
 | `region`            | State or region              | `AddressField`                                |
 | `postalCode`        | Postal code                  | `AddressField`                                |
 | `country`           | Country code                 | `AddressField`                                |
+| `numberRange`       | Between {min} and {max}      | `NumberField` with `min` and `max`            |
+| `numberMin`         | At least {min}               | `NumberField` with only `min`                 |
+| `numberMax`         | At most {max}                | `NumberField` with only `max`                 |
 
 ## Server errors
 
