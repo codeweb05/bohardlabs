@@ -634,6 +634,8 @@ export interface PersistedTableState {
   readonly pageSize?: number;
   readonly pageIndex?: number;
   readonly grouping?: string[];
+  /** The Display menu's "Wrap cells" */
+  readonly wrapCells?: boolean;
 }
 
 /** Main table configuration props */
@@ -1073,6 +1075,17 @@ export interface DataTableProps<TData extends RowData> extends TableEventHandler
   readonly density?: TableDensity;
   /** Let the user switch density from the toolbar. */
   readonly enableDensityToggle?: boolean;
+  /**
+   * A Display menu in the toolbar: wrap cells, fullscreen, and fit columns to content.
+   *
+   * "Wrap cells" switches `cellOverflow` to `'wrap'` and back, and is persisted per `tableId`.
+   * A column's own `overflow` still wins. "Fullscreen" is offered only where the browser
+   * allows it, and `Escape` leaves it. "Fit columns to content" sizes each resizable column
+   * to its widest rendered cell, header included, within its `minSize` and `maxSize`. It
+   * needs `enableColumnResizing`, since without it the table does not apply column widths,
+   * and it is not offered on the mobile card view.
+   */
+  readonly enableDisplayMenu?: boolean;
   /** Header stays visible while the body scrolls. Needs `maxHeight` to have a scroll container. */
   readonly stickyHeader?: boolean;
   /** Cap on the scroll container: `480`, `'60vh'`. What `stickyHeader` and virtualization scroll inside. */

@@ -546,6 +546,7 @@ describe('useTableStatePersistence, filters and a reset during a pending write',
       columnSizing: {name: 240},
       columnVisibility: {status: false},
       grouping: ['status'],
+      wrapCells: true,
     };
     localStorageMock.setItem(getTableStateStorageKey('filter-table'), JSON.stringify(state));
     const {result} = renderHook(() => useTableStatePersistence('filter-table'));
@@ -568,6 +569,7 @@ describe('useTableStatePersistence, filters and a reset during a pending write',
     {name: 'a density that is only a property every object has', saved: {density: 'toString'}},
     {name: 'a column visibility that is not true or false', saved: {columnVisibility: {name: 'no'}}},
     {name: 'a version that is not a number', saved: {version: '2'}},
+    {name: 'a cell wrap that is not true or false', saved: {wrapCells: 'yes'}},
   ])('drops $name', ({saved}) => {
     localStorageMock.setItem(getTableStateStorageKey('filter-table'), JSON.stringify({...saved, pageSize: 25}));
     const {result} = renderHook(() => useTableStatePersistence('filter-table'));

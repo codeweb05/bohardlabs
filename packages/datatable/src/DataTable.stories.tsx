@@ -1174,6 +1174,38 @@ export const CompactDensity: Story = {
 };
 
 /**
+ * `enableDisplayMenu` puts three view controls behind one toolbar button. "Wrap cells" lets
+ * long values break onto more lines instead of clipping, and is remembered per `tableId`.
+ * "Fullscreen" covers the page with the table (offered only where the browser allows it).
+ * "Fit columns to content" sizes every resizable column to its widest cell in one click,
+ * which is why it needs `enableColumnResizing`.
+ */
+export const DisplayMenu: Story = {
+  name: 'Display menu',
+  parameters: showcase('enableDisplayMenu', 'enableColumnResizing', 'cellOverflow'),
+  args: {enableDisplayMenu: true, enableColumnResizing: true},
+  play: async ({canvasElement}) => {
+    const canvas = within(canvasElement);
+    const firstCell = () => canvasElement.querySelector<HTMLElement>('tbody td[data-column-id] .cell-content');
+    const menuClosed = () => waitFor(() => expect(screen.queryByRole('menu')).not.toBeInTheDocument());
+
+    await expect(getComputedStyle(firstCell()!).whiteSpace).toBe('nowrap');
+    await userEvent.click(canvas.getByRole('button', {name: 'Display'}));
+    await userEvent.click(await screen.findByRole('menuitemcheckbox', {name: 'Wrap cells'}));
+    await menuClosed();
+    await waitFor(() => expect(getComputedStyle(firstCell()!).whiteSpace).toBe('normal'));
+
+    const widths = () =>
+      Array.from(canvasElement.querySelectorAll<HTMLElement>('thead th[data-column-id]'), (th) => th.offsetWidth);
+    const before = widths();
+    await userEvent.click(canvas.getByRole('button', {name: 'Display'}));
+    await userEvent.click(await screen.findByRole('menuitem', {name: 'Fit columns to content'}));
+    await menuClosed();
+    await waitFor(() => expect(widths()).not.toEqual(before));
+  },
+};
+
+/**
  * Where the scrolling happens is a layout decision, and it is one prop.
  *
  * By default the table has no height of its own: it grows to fit its rows and the **page**
@@ -1498,6 +1530,12 @@ const HINDI_LABELS: DataTableLabels = {
   densityCompact: 'सघन',
   densityComfortable: 'सामान्य',
   densitySpacious: 'विस्तृत',
+
+  display: 'प्रदर्शन',
+  wrapCells: 'सेल लपेटें',
+  fullscreen: 'पूर्ण स्क्रीन',
+  exitFullscreen: 'पूर्ण स्क्रीन से बाहर निकलें',
+  fitColumns: 'कॉलम सामग्री के अनुसार करें',
 
   pinColumn: 'बाईं ओर स्थिर करें',
   pinColumnLabel: (column) => `${column} को बाईं ओर स्थिर करें`,

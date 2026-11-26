@@ -3,10 +3,12 @@ import {useEffect, useMemo, useRef} from 'react';
 
 import {chromeColumn} from './chromeColumn';
 import {DataTableConfigProvider} from './config/ConfigContext';
+import {fitColumnSizing, measureContentWidths} from './core/measureColumns';
 import {TableContainer} from './core/TableContainer';
 import {DataTableProvider} from './DataTableContext';
 import {DATE_API_FORMAT} from './filters/dateFormats';
 import {defaultFilterFn} from './filters/filterFns';
+import {useFullscreen} from './hooks/useFullscreen';
 import {useIdentityVersion} from './hooks/useIdentityVersion';
 import {DataTableLabelsProvider} from './i18n';
 import {CardView} from './mobile/CardView';
@@ -158,6 +160,7 @@ export function DataTable<TData extends RowData>(props: Readonly<DataTableProps<
     // UI
     density: initialDensity = 'comfortable',
     enableDensityToggle = false,
+    enableDisplayMenu = false,
     stickyHeader = false,
     maxHeight,
     emptyMessage,
@@ -315,6 +318,17 @@ export function DataTable<TData extends RowData>(props: Readonly<DataTableProps<
     state.handleGlobalFilterChange('');
   };
 
+  // The Display menu. Fullscreen covers the page with the Paper; fitting measures the
+  // rendered table, which is absent while loading, empty or in an error state.
+  const paperRef = useRef<HTMLDivElement>(null);
+  const fullscreen = useFullscreen();
+  const handleFitColumns = () => {
+    const tableEl = paperRef.current?.querySelector('table');
+    if (!tableEl) return;
+    const fitted = fitColumnSizing(table.getVisibleLeafColumns(), measureContentWidths(tableEl));
+    state.handleColumnSizingChange((sizing) => ({...sizing, ...fitted}));
+  };
+
   // Determine what to render
   const showMobileView = isMobile && enableMobileCardView;
   const hasData = data.length > 0;
@@ -357,6 +371,7 @@ export function DataTable<TData extends RowData>(props: Readonly<DataTableProps<
           columnsVersion={columnsVersion}
         >
           <Paper
+            ref={paperRef}
             elevation={0}
             sx={{
               width: '100%',
@@ -365,6 +380,15 @@ export function DataTable<TData extends RowData>(props: Readonly<DataTableProps<
               borderRadius: 2,
               bgcolor: 'background.paper',
               ...containerSx,
+              // Over the page, under the table's own menus, drawers and dialogs
+              ...(fullscreen.isFullscreen && {
+                position: 'fixed',
+                inset: 0,
+                zIndex: theme.zIndex.appBar + 1,
+                overflow: 'auto',
+                border: 'none',
+                borderRadius: 0,
+              }),
             }}
           >
             {/* Toolbar */}
@@ -382,6 +406,12 @@ export function DataTable<TData extends RowData>(props: Readonly<DataTableProps<
                 enableDensityToggle={enableDensityToggle}
                 density={state.density}
                 onDensityChange={state.setDensity}
+                enableDisplayMenu={enableDisplayMenu}
+                wrapCells={state.wrapCells}
+                onWrapCellsChange={state.setWrapCells}
+                isFullscreen={fullscreen.isFullscreen}
+                onFullscreenToggle={fullscreen.toggle}
+                onFitColumns={enableColumnResizing && !showMobileView ? handleFitColumns : undefined}
                 enableFiltering={enableFiltering}
                 columnFilters={state.columnFilters}
                 onFiltersReset={handleFiltersReset}
@@ -489,7 +519,7 @@ export function DataTable<TData extends RowData>(props: Readonly<DataTableProps<
                       rowActions={rowActions}
                       onRowClick={onRowClick}
                       onRowDoubleClick={onRowDoubleClick}
-                      defaultOverflow={cellOverflow}
+                      defaultOverflow={state.wrapCells ? 'wrap' : cellOverflow}
                       headerCase={headerCase}
                       enableExpanding={enableExpanding}
                       expandTrigger={expandTrigger}

@@ -66,7 +66,7 @@ function sanitizeLayout(
     'version' | 'pageIndex' | 'pageSize' | 'sorting' | 'columnFilters' | 'globalFilter'
   >,
 ): PersistedTableState {
-  const {density, columnOrder, columnPinning, columnSizing, columnVisibility, grouping} = layout;
+  const {density, columnOrder, columnPinning, columnSizing, columnVisibility, grouping, wrapCells} = layout;
   return {
     ...(isString(density) && Object.hasOwn(DENSITY_CONFIG, density) ? {density} : {}),
     ...(isListOf(columnOrder, isString) ? {columnOrder} : {}),
@@ -74,6 +74,7 @@ function sanitizeLayout(
     ...(isRecord(columnSizing) && isListOf(Object.values(columnSizing), isWidth) ? {columnSizing} : {}),
     ...(isRecord(columnVisibility) && isListOf(Object.values(columnVisibility), isBoolean) ? {columnVisibility} : {}),
     ...(isListOf(grouping, isString) ? {grouping} : {}),
+    ...(isBoolean(wrapCells) ? {wrapCells} : {}),
   };
 }
 

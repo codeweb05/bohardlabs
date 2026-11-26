@@ -42,7 +42,7 @@ Their test suites are worth mining when porting anything: `DataTable.persistence
 | 7   | Keyboard-first navigation                | UX        | SP     | proposed                            |
 | 8   | Sticky selection summary bar             | UX        | SP     | done (2026-11-27)                   |
 | 9   | Row detail panel with prev/next          | UX        | SP     | proposed                            |
-| 10  | Display controls (wrap, fullscreen, fit) | UX        | SP     | proposed                            |
+| 10  | Display controls (wrap, fullscreen, fit) | UX        | SP     | done (2026-11-27)                   |
 | 11  | Row grouping UI                          | UX        |        | proposed                            |
 | 12  | "Why is this row here?"                  | UX        |        | proposed                            |
 | 13  | Diff highlighting on refetch             | UX        |        | proposed                            |

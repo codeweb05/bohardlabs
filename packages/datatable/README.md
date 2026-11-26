@@ -240,8 +240,8 @@ export function OrdersPage() {
 ## Persistence
 
 Pass `tableId` and the table writes sorting, filters, search, column order, sizing,
-visibility, pinning, density and page size to `localStorage`, then restores them on the next
-mount. Omit it and the table is stateless, which is what a modal or a story usually wants.
+visibility, pinning, density, cell wrap and page size to `localStorage`, then restores them
+on the next mount. Omit it and the table is stateless, which is what a modal or a story usually wants.
 
 Two tables sharing an id share their state, so a detail-page sub-list gets its own id even
 when it reuses the same columns. `getTableStateStorageKey(tableId)` is exported for apps

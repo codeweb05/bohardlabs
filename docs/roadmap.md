@@ -31,7 +31,7 @@ Status words, used the same way in every table below:
 | Workstream                                       | Status                                       | Next step                                       |
 | ------------------------------------------------ | -------------------------------------------- | ----------------------------------------------- |
 | [1. Publishing](#1-publishing)                   | four packages on npm; datatable at 1.0.0     | nothing queued                                  |
-| [2. `@vt-labs/datatable`](#2-vt-labsdatatable)   | ported, hardened, on MUI 9; 14 features done | `noUncheckedIndexedAccess`, then feature item 1 |
+| [2. `@vt-labs/datatable`](#2-vt-labsdatatable)   | ported, hardened, on MUI 9; 15 features done | `noUncheckedIndexedAccess`, then feature item 1 |
 | [3. New packages](#3-new-packages)               | 5 plans written, image-editor and form done  | start plan 2, admin-ui-kit                      |
 | [4. Deferred candidates](#4-deferred-candidates) | 4 deferred                                   | nothing until a trigger fires                   |
 | [5. Repo and tooling](#5-repo-and-tooling)       | hooks, jscpd; 3 upgrades deferred            | the monthly `pnpm outdated -r`                  |
@@ -84,12 +84,12 @@ packaging, performance) and carries its own status table, which is the source of
 Its suggested sequence starts with item 1, preferences-only persistence, because items 2,
 3, 6 and 26 sit on it.
 
-| Where it stands | Items                                                                  |
-| --------------- | ---------------------------------------------------------------------- |
-| done            | 0a, 0b, 1, 4, 5, 6, 8, 15, 16, 19 and 40 to 43; the backlog names each |
-| partial         | 18 inline edit, 29 accessibility conformance, 32 body-cell truncation  |
-| wired, unused   | 14 virtualization (a port exists in `admin-v2`)                        |
-| proposed        | the other 27                                                           |
+| Where it stands | Items                                                                      |
+| --------------- | -------------------------------------------------------------------------- |
+| done            | 0a, 0b, 1, 4, 5, 6, 8, 10, 15, 16, 19 and 40 to 43; the backlog names each |
+| partial         | 18 inline edit, 29 accessibility conformance, 32 body-cell truncation      |
+| wired, unused   | 14 virtualization (a port exists in `admin-v2`)                            |
+| proposed        | the other 26                                                               |
 
 ## 3. New packages
 

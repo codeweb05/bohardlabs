@@ -32,6 +32,7 @@ import type {
 } from '../types';
 import {ColumnVisibility} from './ColumnVisibility';
 import {DensityToggle} from './DensityToggle';
+import {DisplayMenu} from './DisplayMenu';
 import {ExportMenu} from './ExportMenu';
 import {FilterPanel} from './FilterPanel';
 import {GlobalSearch} from './GlobalSearch';
@@ -65,6 +66,14 @@ interface DataTableToolbarProps<TData extends RowData> {
   readonly enableDensityToggle?: boolean;
   readonly density?: TableDensity;
   readonly onDensityChange?: (density: TableDensity) => void;
+
+  // Display menu
+  readonly enableDisplayMenu?: boolean;
+  readonly wrapCells?: boolean;
+  readonly onWrapCellsChange?: (wrapCells: boolean) => void;
+  readonly isFullscreen?: boolean;
+  readonly onFullscreenToggle?: () => void;
+  readonly onFitColumns?: () => void;
 
   // Filtering
   readonly enableFiltering?: boolean;
@@ -113,6 +122,12 @@ export function DataTableToolbar<TData extends RowData>({
   enableDensityToggle = false,
   density = 'comfortable',
   onDensityChange,
+  enableDisplayMenu = false,
+  wrapCells = false,
+  onWrapCellsChange,
+  isFullscreen = false,
+  onFullscreenToggle,
+  onFitColumns,
   enableFiltering = true,
   columnFilters = [],
   onFiltersReset,
@@ -136,6 +151,7 @@ export function DataTableToolbar<TData extends RowData>({
   toolbarContent,
 }: Readonly<DataTableToolbarProps<TData>>) {
   const labels = useLabels();
+  const showDisplayMenu = enableDisplayMenu && onWrapCellsChange !== undefined && onFullscreenToggle !== undefined;
   const [bulkMenuAnchor, setBulkMenuAnchor] = useState<HTMLElement | null>(null);
   const [isBulkActionLoading, setIsBulkActionLoading] = useState(false);
   const [confirmAction, setConfirmAction] = useState<BulkAction<TData> | null>(null);
@@ -340,10 +356,21 @@ export function DataTableToolbar<TData extends RowData>({
         {/* Density toggle */}
         {enableDensityToggle && onDensityChange && <DensityToggle density={density} onChange={onDensityChange} />}
 
+        {/* Display menu: wrap, fullscreen, fit */}
+        {showDisplayMenu && (
+          <DisplayMenu
+            wrapCells={wrapCells}
+            onWrapCellsChange={onWrapCellsChange}
+            isFullscreen={isFullscreen}
+            onFullscreenToggle={onFullscreenToggle}
+            onFitColumns={onFitColumns}
+          />
+        )}
+
         {/* Column Visibility */}
         {enableColumnVisibility && (
           <>
-            {enableDensityToggle && <Divider orientation="vertical" flexItem sx={{mx: 0.5}} />}
+            {(enableDensityToggle || showDisplayMenu) && <Divider orientation="vertical" flexItem sx={{mx: 0.5}} />}
             <ColumnVisibility
               table={table}
               enableReordering={enableColumnOrdering}
@@ -357,7 +384,7 @@ export function DataTableToolbar<TData extends RowData>({
         {/* Filter Panel */}
         {enableFiltering && (
           <>
-            {(enableDensityToggle || enableColumnVisibility) && (
+            {(enableDensityToggle || showDisplayMenu || enableColumnVisibility) && (
               <Divider orientation="vertical" flexItem sx={{mx: 0.5}} />
             )}
             <FilterPanel table={table} columns={columns} onReset={onFiltersReset} columnFilters={columnFilters} />

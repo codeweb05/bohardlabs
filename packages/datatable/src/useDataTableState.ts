@@ -139,6 +139,7 @@ export function useDataTableState(options: UseDataTableStateOptions) {
 
   // State declarations - use persisted values as defaults when available
   const [density, setDensity] = useState<TableDensity>(persistedState?.density ?? initialDensity);
+  const [wrapCells, setWrapCells] = useState(persistedState?.wrapCells ?? false);
   const [sorting, setSortingInternal] = useState<SortingState>(persistedState?.sorting ?? initialSorting);
   const [columnFilters, setColumnFiltersInternal] = useState<ColumnFiltersState>(
     persistedState?.columnFilters ?? initialFilters,
@@ -371,6 +372,7 @@ export function useDataTableState(options: UseDataTableStateOptions) {
       pageSize: internalPagination.pageSize,
       pageIndex: internalPagination.pageIndex,
       grouping,
+      wrapCells,
     });
   }, [
     isPersistenceEnabled,
@@ -387,6 +389,7 @@ export function useDataTableState(options: UseDataTableStateOptions) {
     internalPagination.pageSize,
     internalPagination.pageIndex,
     grouping,
+    wrapCells,
   ]);
 
   // --- Clear selection on page change for server-side (P2 fix) ---
@@ -444,6 +447,7 @@ export function useDataTableState(options: UseDataTableStateOptions) {
     setColumnPinning(defColumnPinning);
 
     setDensity(defDensity);
+    setWrapCells(false);
 
     const resetPagination = {pageIndex: 0, pageSize: defPageSize};
     setInternalPaginationRaw(resetPagination);
@@ -472,6 +476,8 @@ export function useDataTableState(options: UseDataTableStateOptions) {
     // State values
     density,
     setDensity,
+    wrapCells,
+    setWrapCells,
     sorting,
     columnFilters,
     globalFilter,

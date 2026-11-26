@@ -174,6 +174,24 @@ describe('DataTableToolbar — optional controls', () => {
     expect(screen.getByRole('button', {name: DEFAULT_LABELS.densityLabel})).toBeInTheDocument();
   });
 
+  it('renders the Display menu only when both handlers come with the flag', () => {
+    const onWrapCellsChange = vi.fn();
+    const onFullscreenToggle = vi.fn();
+    const display = () => screen.queryByRole('button', {name: DEFAULT_LABELS.display});
+
+    const view = renderToolbar({enableDisplayMenu: true});
+    expect(display()).not.toBeInTheDocument();
+    view.unmount();
+
+    const {unmount} = renderToolbar({enableDisplayMenu: true, onWrapCellsChange});
+    expect(display()).not.toBeInTheDocument();
+    unmount();
+
+    renderToolbar({enableDisplayMenu: true, onWrapCellsChange, onFullscreenToggle, enableColumnVisibility: true});
+    expect(display()).toBeInTheDocument();
+    expect(screen.getByRole('button', {name: DEFAULT_LABELS.columns})).toBeInTheDocument();
+  });
+
   it('renders the column-visibility and export controls behind their flags', () => {
     renderToolbar({enableColumnVisibility: true, enableExport: true});
 

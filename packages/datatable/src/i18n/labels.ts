@@ -99,6 +99,13 @@ export interface DataTableLabels {
   readonly densityComfortable: string;
   readonly densitySpacious: string;
 
+  // Display menu (`enableDisplayMenu`)
+  readonly display: string;
+  readonly wrapCells: string;
+  readonly fullscreen: string;
+  readonly exitFullscreen: string;
+  readonly fitColumns: string;
+
   // Columns
   readonly pinColumn: string;
   readonly pinColumnLabel: (column: string) => string;
@@ -267,6 +274,12 @@ export const DEFAULT_LABELS: DataTableLabels = {
   densityCompact: 'Compact',
   densityComfortable: 'Comfortable',
   densitySpacious: 'Spacious',
+
+  display: 'Display',
+  wrapCells: 'Wrap cells',
+  fullscreen: 'Fullscreen',
+  exitFullscreen: 'Exit fullscreen',
+  fitColumns: 'Fit columns to content',
 
   pinColumn: 'Freeze to the left',
   pinColumnLabel: (column) => `Freeze ${column} to the left`,

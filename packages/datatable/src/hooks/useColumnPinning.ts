@@ -3,6 +3,7 @@ import {alpha} from '@mui/material';
 import type {ColumnPinningState, Table} from '@tanstack/react-table';
 import {useEffect} from 'react';
 
+import {headerCells} from '../core/measureColumns';
 import {useTableUI} from '../DataTableContext.hooks';
 import type {RowData} from '../types';
 
@@ -182,9 +183,7 @@ export function useStickyColumnOffsets(
     const sticky = new Set(pinnedColumns.split(PINNED_SEPARATOR));
 
     const measure = () => {
-      const cells = Array.from(
-        tableEl.querySelectorAll<HTMLTableCellElement>('thead tr:first-of-type > th[data-column-id]'),
-      );
+      const cells = headerCells(tableEl);
 
       let offset = 0;
       let remaining = sticky.size;
