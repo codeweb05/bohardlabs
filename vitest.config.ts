@@ -67,9 +67,13 @@ export default defineConfig({
       // Storybook test panel does) needs the absolute one: the provider then replaces the
       // config root with the roots of the surviving projects, so the scope collapses to
       // `apps/storybook`, and every package file the stories covered sits outside it.
-      // `allowExternal` keeps those files from being dropped outright.
+      // `allowExternal` keeps those files from being dropped outright. A run filtered to one
+      // package (`--project @vt-labs/form`) has that package as its root, so its own files
+      // show up as `src/...` and need the third glob. The floors below still run there and
+      // fail, since they hold only for the full run; read such a run for its rows.
       include: [
         'packages/*/src/**/*.{ts,tsx}',
+        'src/**/*.{ts,tsx}',
         fileURLToPath(new URL('./packages/*/src/**/*.{ts,tsx}', import.meta.url)),
       ],
       allowExternal: true,
