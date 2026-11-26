@@ -23,6 +23,7 @@ const ROOT_API = [
   'FieldShell',
   'FormConfigProvider',
   'FormError',
+  'IntegerListField',
   'MultiSelectField',
   'NumberField',
   'PasswordField',

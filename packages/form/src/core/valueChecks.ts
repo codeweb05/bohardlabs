@@ -29,6 +29,11 @@ export const SCALAR_ARRAY: ValueExpectation = {
   description: 'an array of strings or numbers',
 };
 
+export const NUMBER_ARRAY: ValueExpectation = {
+  test: (value) => Array.isArray(value) && value.every((item) => Number.isFinite(item)),
+  description: 'an array of finite numbers',
+};
+
 // Declared here rather than pulling in `@types/node`: this is browser code, and the only use
 // is the `NODE_ENV` read below.
 declare const process: {readonly env: {readonly NODE_ENV?: string}};

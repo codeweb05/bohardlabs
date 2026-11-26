@@ -17,6 +17,8 @@ export type {FieldShellProps} from './core/FieldShell.js';
 export type {CommonFieldProps, Option} from './core/types.js';
 export {useFieldBinding} from './core/useFieldBinding.js';
 export type {FieldBinding} from './core/useFieldBinding.js';
+export {IntegerListField} from './fields/IntegerListField.js';
+export type {IntegerListFieldProps} from './fields/IntegerListField.js';
 export {MultiSelectField} from './fields/MultiSelectField.js';
 export type {MultiSelectFieldProps} from './fields/MultiSelectField.js';
 export {NumberField} from './fields/NumberField.js';

@@ -97,6 +97,7 @@ A field reads and writes one shape. An empty single choice is `null`, never `''`
 | ---------------------------------------- | ------------------------------------------------ |
 | `TextField`, `TextArea`, `PasswordField` | `string`                                         |
 | `NumberField`                            | `number \| null`                                 |
+| `IntegerListField`                       | `number[]`                                       |
 | `CheckboxField`, `SwitchField`           | `boolean`                                        |
 | `SelectField`, `SearchableSelectField`   | `V \| null` (an option's `value`)                |
 | `RadioGroupField`                        | `V \| null`                                      |
@@ -134,6 +135,20 @@ which stays the one place a value fails.
 ```
 
 With a bound or a `step` the input's role is `spinbutton`; without one it stays a `textbox`.
+
+`IntegerListField` holds a list of whole numbers, such as reminder offsets, as chips. Comma,
+`Enter` or leaving the field commits the typed entry, and a pasted "15, 30, 60" becomes three
+chips. `Backspace` in the empty input removes the last chip. An entry that is not a whole
+number, falls outside `min` and `max`, or repeats one already there (unless
+`allowDuplicates`) stays on screen as an error chip. It never reaches the value, and the field
+shows its message and blocks submit until the user fixes or removes it. `sorted` orders the
+list on every commit; `unit` labels each chip.
+
+```tsx
+<form.AppField name="reminders">
+  {(field) => <field.IntegerListField label="Reminder offsets" unit="min" min={5} max={1440} sorted />}
+</form.AppField>
+```
 
 ## Dense forms
 
@@ -300,37 +315,42 @@ export function FormTranslations({children}: {readonly children: ReactNode}) {
 validator arrives as `{message}`. Keep `labels` and `formatError` stable (module level or
 `useMemo`) so the provider does not rebuild its value on every render.
 
-Every key of `DEFAULT_FORM_LABELS`, with its English default. The `number*` keys are
-functions that take the bounds, so a translation can format them:
+Every key of `DEFAULT_FORM_LABELS`, with its English default. The `number*`, `integerList*`
+and `removeEntry` keys are functions that take the bounds or the entry, so a translation can
+format them:
 
-| Key                 | Default                      | Where                                         |
-| ------------------- | ---------------------------- | --------------------------------------------- |
-| `showPassword`      | Show password                | `PasswordField` toggle, password hidden       |
-| `hidePassword`      | Hide password                | `PasswordField` toggle, password visible      |
-| `moreInfo`          | More information             | the info button beside a label with `tooltip` |
-| `hours`             | Hours                        | `DurationField`                               |
-| `minutes`           | Minutes                      | `DurationField`                               |
-| `cancel`            | Cancel                       | `CancelButton` with no children               |
-| `noOptions`         | No options                   | autocomplete fields                           |
-| `loading`           | Loading…                     | autocomplete fields                           |
-| `loadFailed`        | Could not load options       | autocomplete fields                           |
-| `clear`             | Clear                        | autocomplete fields                           |
-| `open`              | Open                         | autocomplete fields                           |
-| `close`             | Close                        | autocomplete fields                           |
-| `rangeStart`        | Start                        | `DateRangeField`                              |
-| `rangeEnd`          | End                          | `DateRangeField`                              |
-| `selectCountry`     | Select country               | `PhoneField` country button                   |
-| `placeLookupFailed` | Could not look up that place | maps fields, when a pick cannot be resolved   |
-| `searchAddress`     | Search for an address        | `AddressField` search box                     |
-| `addressLine1`      | Address line 1               | `AddressField`                                |
-| `addressLine2`      | Address line 2               | `AddressField`                                |
-| `city`              | City                         | `AddressField`                                |
-| `region`            | State or region              | `AddressField`                                |
-| `postalCode`        | Postal code                  | `AddressField`                                |
-| `country`           | Country code                 | `AddressField`                                |
-| `numberRange`       | Between {min} and {max}      | `NumberField` with `min` and `max`            |
-| `numberMin`         | At least {min}               | `NumberField` with only `min`                 |
-| `numberMax`         | At most {max}                | `NumberField` with only `max`                 |
+| Key                     | Default                                | Where                                         |
+| ----------------------- | -------------------------------------- | --------------------------------------------- |
+| `showPassword`          | Show password                          | `PasswordField` toggle, password hidden       |
+| `hidePassword`          | Hide password                          | `PasswordField` toggle, password visible      |
+| `moreInfo`              | More information                       | the info button beside a label with `tooltip` |
+| `hours`                 | Hours                                  | `DurationField`                               |
+| `minutes`               | Minutes                                | `DurationField`                               |
+| `cancel`                | Cancel                                 | `CancelButton` with no children               |
+| `noOptions`             | No options                             | autocomplete fields                           |
+| `loading`               | Loading…                               | autocomplete fields                           |
+| `loadFailed`            | Could not load options                 | autocomplete fields                           |
+| `clear`                 | Clear                                  | autocomplete fields                           |
+| `open`                  | Open                                   | autocomplete fields                           |
+| `close`                 | Close                                  | autocomplete fields                           |
+| `rangeStart`            | Start                                  | `DateRangeField`                              |
+| `rangeEnd`              | End                                    | `DateRangeField`                              |
+| `selectCountry`         | Select country                         | `PhoneField` country button                   |
+| `placeLookupFailed`     | Could not look up that place           | maps fields, when a pick cannot be resolved   |
+| `searchAddress`         | Search for an address                  | `AddressField` search box                     |
+| `addressLine1`          | Address line 1                         | `AddressField`                                |
+| `addressLine2`          | Address line 2                         | `AddressField`                                |
+| `city`                  | City                                   | `AddressField`                                |
+| `region`                | State or region                        | `AddressField`                                |
+| `postalCode`            | Postal code                            | `AddressField`                                |
+| `country`               | Country code                           | `AddressField`                                |
+| `numberRange`           | Between {min} and {max}                | `NumberField` with `min` and `max`            |
+| `numberMin`             | At least {min}                         | `NumberField` with only `min`                 |
+| `numberMax`             | At most {max}                          | `NumberField` with only `max`                 |
+| `integerListInvalid`    | {entry} is not a whole number          | `IntegerListField` error chip                 |
+| `integerListDuplicate`  | {entry} is already in the list         | `IntegerListField` error chip                 |
+| `integerListOutOfRange` | {entry} is not between {min} and {max} | `IntegerListField` error chip                 |
+| `removeEntry`           | Remove {entry}                         | `IntegerListField` chip's accessible name     |
 
 ## Server errors
 

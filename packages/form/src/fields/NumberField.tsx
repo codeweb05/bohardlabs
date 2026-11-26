@@ -56,7 +56,8 @@ function stepFrom(value: number | null, delta: number, min: number | undefined, 
   return Math.min(Math.max(rounded, min ?? -Infinity), max ?? Infinity);
 }
 
-function rangeText(labels: FormLabels, min: number | undefined, max: number | undefined): string | undefined {
+/** The helper line for a field with bounds and no description. IntegerListField shares it. */
+export function rangeText(labels: FormLabels, min: number | undefined, max: number | undefined): string | undefined {
   if (min !== undefined && max !== undefined) return labels.numberRange(min, max);
   if (min !== undefined) return labels.numberMin(min);
   if (max !== undefined) return labels.numberMax(max);

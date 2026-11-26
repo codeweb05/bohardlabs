@@ -42,6 +42,14 @@ export interface FormLabels {
   numberMin: (min: number) => string;
   /** NumberField's helper line when it has only `max`. */
   numberMax: (max: number) => string;
+  /** IntegerListField's message for an entry that is not a whole number. */
+  integerListInvalid: (entry: string) => string;
+  /** IntegerListField's message for an entry already in the list. */
+  integerListDuplicate: (entry: string) => string;
+  /** IntegerListField's message for an entry outside `min` and `max`. */
+  integerListOutOfRange: (entry: string, min: number | undefined, max: number | undefined) => string;
+  /** The accessible name of an IntegerListField chip, which removes the entry when pressed. */
+  removeEntry: (entry: string) => string;
 }
 
 export const DEFAULT_FORM_LABELS: FormLabels = {
@@ -71,4 +79,12 @@ export const DEFAULT_FORM_LABELS: FormLabels = {
   numberRange: (min, max) => `Between ${min} and ${max}`,
   numberMin: (min) => `At least ${min}`,
   numberMax: (max) => `At most ${max}`,
+  integerListInvalid: (entry) => `${entry} is not a whole number`,
+  integerListDuplicate: (entry) => `${entry} is already in the list`,
+  integerListOutOfRange: (entry, min, max) => {
+    if (min !== undefined && max !== undefined) return `${entry} is not between ${min} and ${max}`;
+    if (min !== undefined) return `${entry} is below ${min}`;
+    return `${entry} is above ${max}`;
+  },
+  removeEntry: (entry) => `Remove ${entry}`,
 };

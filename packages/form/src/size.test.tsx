@@ -9,6 +9,7 @@ import {createAppForm} from './createAppForm.js';
 import {AsyncAutocompleteField} from './fields/AsyncAutocompleteField.js';
 import {CheckboxField} from './fields/CheckboxField.js';
 import {DurationField} from './fields/DurationField.js';
+import {IntegerListField} from './fields/IntegerListField.js';
 import {MultiSelectField} from './fields/MultiSelectField.js';
 import {NumberField} from './fields/NumberField.js';
 import {PasswordField} from './fields/PasswordField.js';
@@ -51,6 +52,7 @@ const FAMILIES: [string, unknown, (size: Size) => ReactNode][] = [
   ['TextArea', '', (size) => <TextArea label="F" size={size} />],
   ['PasswordField', '', (size) => <PasswordField label="F" size={size} />],
   ['NumberField', null, (size) => <NumberField label="F" size={size} />],
+  ['IntegerListField', [], (size) => <IntegerListField label="F" size={size} />],
   ['SelectField', null, (size) => <SelectField label="F" options={OPTIONS} size={size} />],
   ['SearchableSelectField', null, (size) => <SearchableSelectField label="F" options={OPTIONS} size={size} />],
   ['MultiSelectField', [], (size) => <MultiSelectField label="F" options={OPTIONS} size={size} />],
