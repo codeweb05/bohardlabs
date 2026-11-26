@@ -1,11 +1,27 @@
 # `@vt-labs/datatable`: next features
 
-Draft for discussion. Each item becomes a task-by-task plan in `docs/superpowers/plans/open/`
+Approved 2026-11-26, with the mocks, for building. Each item becomes a task-by-task plan in `docs/superpowers/plans/open/`
 when picked up. Item numbers match [`../../packages/datatable/roadmap.md`](../../packages/datatable/roadmap.md),
 which keeps the longer argument for each.
 
 Out of scope here: pivot (21 to 26), the performance track (31 to 39), i18n injection (28),
 keyboard navigation (7), saved views (2) and URL state (3).
+
+## Answers to the open questions (2026-11-26)
+
+Where an item below lists an open question, this table is the answer. The mocks were
+approved as drawn; where they show a choice, the choice stands.
+
+| #   | Question                      | Answer                                                                                                                   |
+| --- | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| 19  | Inline alert or callback only | Both: the inline alert (as mocked) and `onBulkActionResult`                                                              |
+| 41  | `cardTapAction` default       | `'select'`, today's behaviour; `'open'` is opt-in until a major                                                          |
+| 1   | Stored state in the old shape | Read it, keep the preference fields, drop the rest; never throw on a bad entry                                           |
+| 8   | The "all matching" contract   | The action gets `allMatching: true` and the current `ServerTableState`, not ids                                          |
+| 16  | Return a Blob; the cap        | Rows only; the cap is 10,000, overridable by a prop                                                                      |
+| 5   | Chips on by default           | No: opt in with `enableFilterChips`                                                                                      |
+| 10  | Density in the Display menu   | No: density stays where it is                                                                                            |
+| any | A question not answered here  | Take the option that adds no breaking change and the least public surface, and say which in the commit and the changeset |
 
 ## Recommended order
 

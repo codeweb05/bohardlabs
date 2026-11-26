@@ -1,9 +1,17 @@
 # `@vt-labs/image-editor`: next features
 
-Draft for discussion. Each item becomes a task-by-task plan in `docs/superpowers/plans/open/`
+Approved 2026-11-26, with the mocks, for building. Each item becomes a task-by-task plan in `docs/superpowers/plans/open/`
 when picked up. Item numbers match
 [`../../packages/image-editor/roadmap.md`](../../packages/image-editor/roadmap.md); both came
 from a consuming admin app (2026-10-26).
+
+## Answers to the open questions (2026-11-26)
+
+| #   | Question                         | Answer                                                                             |
+| --- | -------------------------------- | ---------------------------------------------------------------------------------- |
+| 1   | Fold the flips always, or narrow | Only on a narrow phone (as mocked: seven buttons at 390 px, a Flip menu at 320 px) |
+| 2   | Notice or a disabled tab         | The notice (as mocked)                                                             |
+| 1   | A new `labels.flip` key          | It makes #1 a minor, not a patch                                                   |
 
 ## Recommended order
 

@@ -1,8 +1,19 @@
 # `@vt-labs/form`: next features
 
-Draft for discussion. Each item becomes a task-by-task plan in `docs/superpowers/plans/open/`
+Approved 2026-11-26, with the mocks, for building. Each item becomes a task-by-task plan in `docs/superpowers/plans/open/`
 when picked up. Item numbers match [`../../packages/form/roadmap.md`](../../packages/form/roadmap.md);
 all four came from a consuming admin app (2026-10-26).
+
+## Answers to the open questions (2026-11-26)
+
+| #   | Question                        | Answer                                                                                                    |
+| --- | ------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| 2   | Does `step` limit decimals      | No: it drives the arrow keys and `aria` only; the schema validates                                        |
+| 1   | Invalid entries                 | Stay visible as error chips (as mocked), stay out of the value, and the field reports an error            |
+| 3   | Photo editing                   | The `onEdit` callback (as mocked); no subpath, no new peer                                                |
+| 3   | Drag and drop                   | Yes (the mock says "or drop it here")                                                                     |
+| 4   | Submit and cancel follow `size` | Yes, when set on `FormConfigProvider`                                                                     |
+| any | A question not answered here    | Take the option that adds no breaking change and the least public surface, and say which in the changeset |
 
 ## Recommended order
 
