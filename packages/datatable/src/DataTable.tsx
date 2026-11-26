@@ -3,6 +3,7 @@ import {useEffect, useMemo, useRef} from 'react';
 
 import {chromeColumn} from './chromeColumn';
 import {DataTableConfigProvider} from './config/ConfigContext';
+import {columnTotals} from './core/aggregate';
 import {fitColumnSizing, measureContentWidths} from './core/measureColumns';
 import {TableContainer} from './core/TableContainer';
 import {DataTableProvider} from './DataTableContext';
@@ -88,6 +89,7 @@ export function DataTable<TData extends RowData>(props: Readonly<DataTableProps<
     manualPagination = false,
     manualSorting = false,
     manualFiltering = false,
+    aggregates,
 
     // Pagination
     enablePagination = true,
@@ -329,6 +331,16 @@ export function DataTable<TData extends RowData>(props: Readonly<DataTableProps<
     state.handleColumnSizingChange((sizing) => ({...sizing, ...fitted}));
   };
 
+  // Footer totals. A server table holds one page, so it shows what the API computed and
+  // never works a total out itself. A client table totals the rows its filters keep; the
+  // filter state and the data are what tell this memo the filtered rows moved.
+  const isServerMode = manualPagination || manualFiltering;
+  const totals = useMemo(
+    () => (isServerMode ? aggregates : columnTotals(table)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [isServerMode, aggregates, table, state.columnFilters, state.globalFilter, state.dataVersion, columnsVersion], // oxlint-disable-line react/memo-dependencies
+  );
+
   // Determine what to render
   const showMobileView = isMobile && enableMobileCardView;
   const hasData = data.length > 0;
@@ -527,6 +539,7 @@ export function DataTable<TData extends RowData>(props: Readonly<DataTableProps<
                       animateExpansion={animateExpansion}
                       getRowSx={getRowSx}
                       ariaLabel={ariaLabel}
+                      totals={totals}
                     />
                   )}
                 </>

@@ -231,9 +231,10 @@ export function OrdersPage() {
   `onServerStateChange` reports and pass nothing back.
 - **Anything derived from `data` is derived from one page.** A footer total, "select all",
   and the built-in export all see the current page only. If a total has to mean the whole
-  set, it comes from the server. For export, pass `exportRows` and the menu also offers every
-  matching row (up to `exportRowLimit`, 10,000 by default); without it the menu says "Current
-  page only".
+  set, it comes from the server: pass it as `aggregates` and the footer shows it, while a
+  column's `meta.aggregate` is ignored. For export, pass `exportRows` and the menu also
+  offers every matching row (up to `exportRowLimit`, 10,000 by default); without it the menu
+  says "Current page only".
 - **Page reset is already handled.** The table returns to page 1 in the same commit as a
   filter change, so a consumer never has to reset it (and should not).
 

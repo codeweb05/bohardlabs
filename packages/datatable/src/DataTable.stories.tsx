@@ -1205,6 +1205,50 @@ export const DisplayMenu: Story = {
   },
 };
 
+const TOTALS_ORDERS = makeOrders(40);
+
+function formatMoney(value: number): string {
+  return `$${value.toFixed(2)}`;
+}
+
+function sumTotals(orders: readonly Order[]): string {
+  return formatMoney(orders.reduce((sum, order) => sum + order.total, 0));
+}
+
+/**
+ * A footer of totals, from `meta.aggregate` on each column: here the order count, the
+ * items summed, and the money summed and formatted with `meta.formatAggregate`.
+ *
+ * The totals cover every row the filters keep, on every page, not just the ten on screen.
+ * Search for a customer and they follow. A server-paged table cannot do that from one page,
+ * so with `manualPagination` it shows the `aggregates` the API sent instead.
+ */
+export const Totals: Story = {
+  parameters: showcase('aggregates', 'manualPagination'),
+  args: {
+    data: TOTALS_ORDERS,
+    pageSize: 10,
+    columns: columns.map((column) => {
+      if (column.id === 'reference') return {...column, meta: {aggregate: 'count'}};
+      if (column.id === 'items') return {...column, meta: {aggregate: 'sum'}};
+      if (column.id === 'total') return {...column, meta: {aggregate: 'sum', formatAggregate: formatMoney}};
+      return column;
+    }),
+  },
+  play: async ({canvasElement}) => {
+    const canvas = within(canvasElement);
+    const footer = () => within(canvas.getAllByRole('rowgroup')[2]);
+
+    await expect(footer().getByText(sumTotals(TOTALS_ORDERS))).toBeInTheDocument();
+
+    await userEvent.type(canvas.getByPlaceholderText(/search all columns/i), 'Amara');
+
+    const amara = TOTALS_ORDERS.filter((order) => order.customer.includes('Amara'));
+    await waitFor(() => expect(footer().getByText(sumTotals(amara))).toBeInTheDocument());
+    await expect(footer().getByText(String(amara.length))).toBeInTheDocument();
+  },
+};
+
 /**
  * Where the scrolling happens is a layout decision, and it is one prop.
  *

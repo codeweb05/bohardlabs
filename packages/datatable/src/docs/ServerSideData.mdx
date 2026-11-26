@@ -169,12 +169,12 @@ rest of the app's fetching lives, and the retry, error and cache policy stay uni
 
 Everything derived from `data` is derived from the current page:
 
-| Thing          | On the server-side path                                              |
-| -------------- | -------------------------------------------------------------------- |
-| Row count      | comes from `totalRows`, not `data.length`                            |
-| Select all     | selects the current page, so a bulk action should say so             |
-| Export         | exports the current page; use `onExport` to fetch the full set       |
-| A footer total | the server has to send it, the table cannot add up rows it never saw |
+| Thing          | On the server-side path                                               |
+| -------------- | --------------------------------------------------------------------- |
+| Row count      | comes from `totalRows`, not `data.length`                             |
+| Select all     | selects the current page, so a bulk action should say so              |
+| Export         | exports the current page; use `onExport` to fetch the full set        |
+| A footer total | the server sends it as `aggregates`; the table never adds up the page |
 
 ## Loading states
 

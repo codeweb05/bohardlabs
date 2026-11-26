@@ -71,6 +71,32 @@ export type CellOverflowMode = 'ellipsis' | 'wrap' | 'truncate';
  */
 export type HeaderCase = 'capitalize' | 'uppercase' | 'lowercase' | 'none';
 
+/**
+ * How a column's footer total is worked out, set as `meta: {aggregate: 'sum'}` on the
+ * column. The table then adds a footer row of totals, computed over every row the filters
+ * keep, not just the page on screen.
+ *
+ * The named ones read finite numbers and skip everything else, so a `null` amount is left
+ * out of `avg` rather than counted as zero. `count` and `distinct` count every value that
+ * is not `null` or `undefined`. `median` of an even number of values is the mean of the
+ * middle two. With no rows, every one of them gives `null`, which shows as an empty cell.
+ * A function gets the raw values and returns the total, or `null` for none.
+ *
+ * Give the column `meta: {formatAggregate: (value) => …}` to show the total as something
+ * other than a plain locale number, a currency for example.
+ *
+ * In server mode the table never computes: see {@link DataTableProps.aggregates}.
+ */
+export type Aggregate =
+  | 'sum'
+  | 'avg'
+  | 'count'
+  | 'min'
+  | 'max'
+  | 'median'
+  | 'distinct'
+  | ((values: readonly unknown[]) => number | null);
+
 /** Default header casing for every DataTable. */
 export const DEFAULT_HEADER_CASE: HeaderCase = 'capitalize';
 
@@ -734,6 +760,14 @@ export interface DataTableProps<TData extends RowData> extends TableEventHandler
    * but rows are not removed locally; the next response is expected to be filtered.
    */
   readonly manualFiltering?: boolean;
+  /**
+   * Footer totals the API computed, by column id: `{amount: 18250.5}`. Read in server mode
+   * (`manualPagination` or `manualFiltering`), where the table holds one page and a total
+   * worked out over it would be wrong, so the table never computes one there. A column
+   * that is missing or `null` here gets an empty footer cell, not a zero. The column's
+   * `meta.formatAggregate` still formats the value. See {@link Aggregate}.
+   */
+  readonly aggregates?: Readonly<Record<string, number | null>>;
 
   // Pagination
   /** Render the pager and page the rows. Default `true`. */

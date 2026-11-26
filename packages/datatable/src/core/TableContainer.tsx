@@ -8,6 +8,7 @@ import {PINNED_SEPARATOR, resolveStickyColumnIds, useStickyColumnOffsets} from '
 import type {CellOverflowMode, HeaderCase, RowAction, RowData} from '../types';
 import {DENSITY_CONFIG} from '../types';
 import {TableBody} from './TableBody';
+import {TableFooter} from './TableFooter';
 import {TableHeader} from './TableHeader';
 
 interface TableContainerProps<TData extends RowData> extends TableExpansionProps<TData> {
@@ -24,6 +25,8 @@ interface TableContainerProps<TData extends RowData> extends TableExpansionProps
   readonly headerCase?: HeaderCase;
   /** Accessible name for the table. Belongs here: `<table>` has an implicit `table` role. */
   readonly ariaLabel?: string;
+  /** Footer totals by column id; no footer row without one to show. */
+  readonly totals?: Readonly<Record<string, number | null>>;
 }
 
 export function TableContainerComponent<TData extends RowData>({
@@ -44,6 +47,7 @@ export function TableContainerComponent<TData extends RowData>({
   animateExpansion = true,
   getRowSx,
   ariaLabel,
+  totals,
 }: Readonly<TableContainerProps<TData>>) {
   // P0 fix (1.1): Use granular hook instead of merged context
   const {density, columnPinning, columnVisibility} = useTableUI();
@@ -131,6 +135,7 @@ export function TableContainerComponent<TData extends RowData>({
           getRowSx={getRowSx}
           pinnedColumns={pinnedColumns}
         />
+        <TableFooter table={table} totals={totals} pinnedColumns={pinnedColumns} />
       </Table>
     </MuiTableContainer>
   );

@@ -106,6 +106,7 @@ export {
 } from './DataTableContext.hooks';
 
 export type {
+  Aggregate,
   BulkAction,
   BulkActionContext,
   BulkActionResult,
