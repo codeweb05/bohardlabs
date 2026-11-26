@@ -102,7 +102,9 @@ function PhotoImage({file}: Readonly<{file: File}>) {
   const ref = useRef<HTMLImageElement>(null);
   useEffect(() => {
     const url = URL.createObjectURL(file);
+    /* v8 ignore start: the ref is attached before any effect runs */
     if (ref.current) ref.current.src = url;
+    /* v8 ignore stop */
     return () => URL.revokeObjectURL(url);
   }, [file]);
   return <img ref={ref} alt={file.name} style={PREVIEW_IMAGE} />;
@@ -172,12 +174,16 @@ export function FileField({
       else message ??= problem;
     }
     if (accepted.length === 0) write(binding.value, message);
+    /* v8 ignore start: `accepted` is not empty here, so `accepted[0]` is never undefined */
     else write(isList ? [...files, ...accepted] : (accepted[0] ?? null), message);
+    /* v8 ignore stop */
   };
 
   const remove = (index: number) => write(isList ? files.filter((_, at) => at !== index) : null, null);
 
+  /* v8 ignore start: the input renders beside every button that calls this, so the ref is always attached */
   const choose = () => inputRef.current?.click();
+  /* v8 ignore stop */
 
   const edit = async (file: File) => {
     const edited = await onEdit?.(file);
@@ -383,7 +389,9 @@ export function FileField({
           disabled={disabled}
           style={VISUALLY_HIDDEN}
           onChange={(event) => {
+            /* v8 ignore start: a file input's `files` is never null */
             take(Array.from(event.target.files ?? []));
+            /* v8 ignore stop */
             // Cleared so choosing the same file again still fires a change.
             event.target.value = '';
           }}

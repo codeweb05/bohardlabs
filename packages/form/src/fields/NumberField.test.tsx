@@ -251,6 +251,21 @@ describe('NumberField', () => {
       expect(input).toHaveValue('4');
     });
 
+    it('steps from 0 when empty and there is no minimum', async () => {
+      const user = userEvent.setup();
+      render(
+        <FieldHarness defaultValue={null}>
+          <NumberField label="Rate" max={10} />
+        </FieldHarness>,
+      );
+      const input = screen.getByLabelText('Rate');
+      await user.click(input);
+      await user.keyboard('{ArrowUp}');
+      expect(input).toHaveValue('0');
+      await user.keyboard('{ArrowUp}');
+      expect(input).toHaveValue('1');
+    });
+
     it('adds decimal steps exactly', async () => {
       const user = userEvent.setup();
       render(

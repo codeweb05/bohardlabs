@@ -82,5 +82,15 @@ export default tseslint.config(
     },
   },
 
+  {
+    // FileField's drop zone and photo frame are presentational boxes with no role or label,
+    // and their border or outline is the only drag feedback. The tests reach them as the
+    // parent of a button or image inside, since there is no query that finds them.
+    files: ['packages/form/src/fields/FileField.test.tsx'],
+    rules: {
+      'testing-library/no-node-access': 'off',
+    },
+  },
+
   ...storybook.configs['flat/recommended'],
 );

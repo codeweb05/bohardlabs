@@ -1,3 +1,4 @@
+import {createTheme} from '@mui/material/styles';
 import type {AnyFormApi} from '@tanstack/react-form';
 import {act, fireEvent, render, screen} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -96,6 +97,113 @@ describe('FileField', () => {
     expect(screen.getByText('a.PDF')).toBeInTheDocument();
     expect(screen.getByText('b.png')).toBeInTheDocument();
     expect(screen.getByText('“c.txt” is not a file type this field accepts.')).toBeInTheDocument();
+  });
+
+  it('shows a size of a gigabyte or more in GB', () => {
+    setup({}, fileOf('backup.zip', 'application/zip', 2_500_000_000));
+    expect(screen.getByText('2.5 GB')).toBeInTheDocument();
+  });
+
+  describe('drop zone', () => {
+    const {palette} = createTheme();
+    const zoneOf = (button: HTMLElement) => {
+      const zone = button.parentElement;
+      if (!zone) throw new Error('Expected the button to sit inside the drop zone');
+      return zone;
+    };
+    /** A dragleave whose pointer moves onto `into`. Built by hand so `relatedTarget` survives. */
+    const leave = (from: HTMLElement, into: Element | null) =>
+      fireEvent(from, new MouseEvent('dragleave', {bubbles: true, relatedTarget: into}));
+
+    it('highlights while a file is dragged over it and accepts the drop', () => {
+      setup();
+      const button = screen.getByRole('button', {name: 'Choose file'});
+      expect(zoneOf(button)).toHaveStyle({borderColor: palette.text.disabled});
+
+      // fireEvent returns false when the handler called preventDefault, which is what lets a drop land.
+      expect(fireEvent.dragOver(button)).toBe(false);
+      expect(zoneOf(button)).toHaveStyle({borderColor: palette.primary.main});
+    });
+
+    it('stays highlighted when the drag moves onto a child, and clears when it leaves', () => {
+      setup();
+      const button = screen.getByRole('button', {name: 'Choose file'});
+      const zone = zoneOf(button);
+      fireEvent.dragOver(button);
+
+      leave(zone, button);
+      expect(zone).toHaveStyle({borderColor: palette.primary.main});
+
+      leave(zone, document.body);
+      expect(zone).toHaveStyle({borderColor: palette.text.disabled});
+    });
+
+    it('neither highlights nor takes a drop while disabled', async () => {
+      const {user, onSubmit} = setup({disabled: true});
+      const zone = zoneOf(screen.getByRole('button', {name: 'Choose file'}));
+
+      expect(fireEvent.dragOver(zone)).toBe(true);
+      expect(zone).toHaveStyle({borderColor: palette.text.disabled});
+      expect(fireEvent.drop(zone, {dataTransfer: {files: [fileOf('a.pdf', 'application/pdf')]}})).toBe(true);
+      expect(screen.queryByText('a.pdf')).not.toBeInTheDocument();
+      await submit(user);
+      expect(onSubmit).toHaveBeenCalledWith(null);
+    });
+
+    it('ignores a drop that carries no file, such as dragged text', () => {
+      setup();
+      const button = screen.getByRole('button', {name: 'Choose file'});
+      fireEvent.drop(button, {dataTransfer: {files: []}});
+      expect(button).toHaveAttribute('aria-invalid', 'false');
+    });
+
+    it('highlights the current file, which a drop would replace', () => {
+      setup({}, fileOf('old.pdf', 'application/pdf'));
+      const row = zoneOf(screen.getByRole('button', {name: 'Replace'}));
+      expect(row).toHaveStyle({borderColor: palette.divider});
+      fireEvent.dragOver(row);
+      expect(row).toHaveStyle({borderColor: palette.primary.main});
+    });
+
+    it('highlights only the drop zone in a list, since a drop adds rather than replaces', () => {
+      setup({multiple: true}, [fileOf('a.pdf', 'application/pdf')]);
+      const row = zoneOf(screen.getByRole('button', {name: 'Remove a.pdf'}));
+      const zone = zoneOf(screen.getByRole('button', {name: 'Choose file'}));
+      fireEvent.dragOver(zone);
+      expect(zone).toHaveStyle({borderColor: palette.primary.main});
+      expect(row).toHaveStyle({borderColor: palette.divider});
+    });
+
+    it('outlines the photo while a replacement is dragged over it', () => {
+      setup({variant: 'photo'}, fileOf('storefront.jpg', 'image/jpeg'));
+      const frame = screen.getByRole('img', {name: 'storefront.jpg'}).parentElement;
+      if (!frame) throw new Error('Expected the photo inside its frame');
+      const highlight = {outline: `2px solid ${palette.primary.main}`};
+      expect(frame).not.toHaveStyle(highlight);
+      fireEvent.dragOver(frame);
+      expect(frame).toHaveStyle(highlight);
+    });
+  });
+
+  it('ignores an empty entry in accept, such as a trailing comma', () => {
+    setup({accept: '.pdf,'});
+    fireEvent.drop(screen.getByRole('button', {name: 'Choose file'}), {
+      dataTransfer: {files: [fileOf('notes.txt', 'text/plain')]},
+    });
+    expect(screen.getByText('“notes.txt” is not a file type this field accepts.')).toBeInTheDocument();
+  });
+
+  it.each([
+    ['Choose file', {}, null],
+    ['Replace', {}, fileOf('old.pdf', 'application/pdf')],
+    ['Add photo', {variant: 'photo'}, null],
+    ['Replace photo', {variant: 'photo'}, fileOf('storefront.jpg', 'image/jpeg')],
+  ] as const)('opens the file picker from "%s"', async (name, props, value) => {
+    const {user, input} = setup(props, value);
+    const opened = vi.fn();
+    input.addEventListener('click', opened);
+    await user.click(screen.getByRole('button', {name}));
+    expect(opened).toHaveBeenCalledTimes(1);
   });
 
   it('removes the file and offers the button again', async () => {

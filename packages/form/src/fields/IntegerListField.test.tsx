@@ -54,6 +54,36 @@ describe('IntegerListField', () => {
     expect(await submitted(user)).toBe('[15]');
   });
 
+  it('removes an error chip before a valid one on Backspace', async () => {
+    const {user, input} = setup([15]);
+    await user.type(input, 'x,');
+    await user.keyboard('{Backspace}');
+    expect(chipNames()).toEqual(['Remove 15']);
+    expect(screen.queryByText('x is not a whole number')).not.toBeInTheDocument();
+  });
+
+  it('does nothing on Backspace when the list and the input are empty', async () => {
+    const {user, input} = setup();
+    await user.click(input);
+    await user.keyboard('{Backspace}');
+    expect(chipNames()).toEqual([]);
+    expect(input).toHaveAttribute('aria-invalid', 'false');
+  });
+
+  it('lets Enter submit the form when the input is empty', async () => {
+    const {user, input, onSubmit} = setup([15]);
+    await user.type(input, '{Enter}');
+    expect(onSubmit).toHaveBeenCalledWith([15]);
+  });
+
+  it('leaves the value alone when the input is blurred empty', async () => {
+    const {user, input} = setup([15]);
+    await user.click(input);
+    await user.tab();
+    expect(chipNames()).toEqual(['Remove 15']);
+    expect(input).toHaveAttribute('aria-invalid', 'false');
+  });
+
   it('removes a chip when its remove button is pressed', async () => {
     const {user} = setup([15, 30, 60]);
     await user.click(screen.getByRole('button', {name: 'Remove 30'}));
@@ -68,6 +98,29 @@ describe('IntegerListField', () => {
     expect(chipNames()).toEqual(['Remove 15', 'Remove 30', 'Remove 60', 'Remove x']);
     expect(screen.getByText('x is not a whole number')).toBeInTheDocument();
     expect(input).toHaveAttribute('aria-invalid', 'true');
+  });
+
+  it('keeps a pasted entry with no comma in the input as a draft', async () => {
+    const {user, input} = setup();
+    await user.click(input);
+    await user.paste('15');
+    expect(input).toHaveValue('15');
+    expect(chipNames()).toEqual([]);
+  });
+
+  it('skips empty pieces in a pasted list', async () => {
+    const {user, input} = setup();
+    await user.click(input);
+    await user.paste('15, ,30,');
+    expect(chipNames()).toEqual(['Remove 15', 'Remove 30']);
+    expect(input).toHaveAttribute('aria-invalid', 'false');
+  });
+
+  it('shows no chips when the value is not an array', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    setup(null);
+    expect(chipNames()).toEqual([]);
+    warn.mockRestore();
   });
 
   it('keeps a bad entry out of the value and blocks submit until it is removed', async () => {
@@ -90,6 +143,16 @@ describe('IntegerListField', () => {
     await user.type(input, '500,');
     expect(screen.getByText('500 is not between 5 and 120')).toBeInTheDocument();
     expect(await submitted(user)).toBe('');
+  });
+
+  it.each([
+    [{min: 5}, 'At least 5', '2', '2 is below 5'],
+    [{max: 120}, 'At most 120', '500', '500 is above 120'],
+  ])('marks an entry past a one-sided bound %o as an error', async (bounds, helper, entry, message) => {
+    const {user, input} = setup([], bounds);
+    expect(screen.getByText(helper)).toBeInTheDocument();
+    await user.type(input, `${entry},`);
+    expect(screen.getByText(message)).toBeInTheDocument();
   });
 
   it('marks a repeat as an error unless duplicates are allowed', async () => {

@@ -117,7 +117,9 @@ function PlainMulti<V extends string | number>({
       value={selected.map((option) => String(option.value))}
       onChange={(event) => {
         const raw = event.target.value;
+        /* v8 ignore start: MUI 9's SelectInput passes an array whenever `multiple` is set, autofill included; the string side guards an odd MUI build */
         const values = typeof raw === 'string' ? raw.split(',') : raw;
+        /* v8 ignore stop */
         write(values.flatMap((value) => findOption(menu, value)?.value ?? []));
       }}
       onBlur={binding.onBlur}
