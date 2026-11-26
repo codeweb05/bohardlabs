@@ -1,0 +1,15 @@
+[
+  {
+    "name": "core",
+    "path": "dist/index.js",
+    "import": "{ createNotificationPreview }",
+    "limit": "1.5 kB"
+  },
+  {
+    "name": "react",
+    "path": "dist/react.js",
+    "import": "{ NotificationPreviewPage, createFetchClient }",
+    "limit": "9 kB",
+    "ignore": ["react", "react-dom"]
+  }
+]
