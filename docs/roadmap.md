@@ -64,17 +64,17 @@ ready to publish.
 The first package. The port is complete: 47 source files, 53 test files, 22 stories, each
 one a demo, an interaction test and an axe check.
 
-| Item                                                                | Status                                     | Detail                                                                                       |
-| ------------------------------------------------------------------- | ------------------------------------------ | -------------------------------------------------------------------------------------------- |
-| Port out of skipwash-admin, in one pass                             | done (2026-08-28)                          | [`packages/datatable/port.md`](packages/datatable/port.md)                                   |
-| Hardening pass: 805 tests, 27 written red against defects           | done (2026-08-28)                          | [`packages/datatable/roadmap.md`](packages/datatable/roadmap.md#hardening-pass-2026-08-28)   |
-| Stories with `play` functions and the a11y gate                     | done (2026-08-28)                          | port.md                                                                                      |
-| MUI 9 and pickers 9 support, peer ranges widened                    | done (2026-08-29)                          | [decision 0006](decisions/0006-mui-version.md)                                               |
-| `ConfirmDialog` exported, out of `src/internal/`                    | done (2026-08-29)                          | [`packages/datatable/port.md`](packages/datatable/port.md#what-is-public)                    |
-| Turn on `noUncheckedIndexedAccess`                                  | ready, in its own change                   | [decision 0004](decisions/0004-no-unchecked-indexed-access.md)                               |
-| Default palette contrast                                            | open                                       | [open question A](decisions/open-questions.md#a-the-default-palettes-contrast)               |
-| Lint findings left in the ported code (refs read in render, others) | done, ESLint findings now fail as errors   | port.md, "Left alone"                                                                        |
-| `@tanstack/react-table` 9                                           | deferred: semver-major, needs its own plan | [`repo/dependency-upgrades.md`](repo/dependency-upgrades.md#tanstackreact-table-923-on-8213) |
+| Item                                                                | Status                                   | Detail                                                                                     |
+| ------------------------------------------------------------------- | ---------------------------------------- | ------------------------------------------------------------------------------------------ |
+| Port out of skipwash-admin, in one pass                             | done (2026-08-28)                        | [`packages/datatable/port.md`](packages/datatable/port.md)                                 |
+| Hardening pass: 805 tests, 27 written red against defects           | done (2026-08-28)                        | [`packages/datatable/roadmap.md`](packages/datatable/roadmap.md#hardening-pass-2026-08-28) |
+| Stories with `play` functions and the a11y gate                     | done (2026-08-28)                        | port.md                                                                                    |
+| MUI 9 and pickers 9 support, peer ranges widened                    | done (2026-08-29)                        | [decision 0006](decisions/0006-mui-version.md)                                             |
+| `ConfirmDialog` exported, out of `src/internal/`                    | done (2026-08-29)                        | [`packages/datatable/port.md`](packages/datatable/port.md#what-is-public)                  |
+| Turn on `noUncheckedIndexedAccess`                                  | ready, in its own change                 | [decision 0004](decisions/0004-no-unchecked-indexed-access.md)                             |
+| Default palette contrast                                            | open                                     | [open question A](decisions/open-questions.md#a-the-default-palettes-contrast)             |
+| Lint findings left in the ported code (refs read in render, others) | done, ESLint findings now fail as errors | port.md, "Left alone"                                                                      |
+| `@tanstack/react-table` 9, shipped as datatable 2.0.0               | ready, after the queued mocked features  | [plan, 0/7](superpowers/plans/open/2026-11-27-datatable-react-table-9.md)                  |
 
 ### Feature backlog
 
@@ -146,11 +146,11 @@ The monthly routine and the ledger of upgrades deliberately not taken are in
 Husky, lint-staged, commitlint and jscpd landed 2026-08-29; the split is in
 [`repo/tooling.md`](repo/tooling.md).
 
-| Upgrade                                | Status   | Clears when                                                     |
-| -------------------------------------- | -------- | --------------------------------------------------------------- |
-| TypeScript 7 (on 6.0.3)                | deferred | typescript-eslint supports TS 7.1; then a one-line catalog bump |
-| `@tanstack/react-table` 9 (on 8.21.3)  | deferred | someone writes the plan; semver-major for `@vt-labs/datatable`  |
-| `oxc-transform-react` 0.147 (on 0.145) | deferred | `@vitejs/plugin-react` widens its peer; bump the two together   |
+| Upgrade                                | Status   | Clears when                                                                                  |
+| -------------------------------------- | -------- | -------------------------------------------------------------------------------------------- |
+| TypeScript 7 (on 6.0.3)                | deferred | typescript-eslint supports TS 7.1; then a one-line catalog bump                              |
+| `@tanstack/react-table` 9 (on 8.21.3)  | planned  | the [plan](superpowers/plans/open/2026-11-27-datatable-react-table-9.md) lands datatable 2.0 |
+| `oxc-transform-react` 0.147 (on 0.145) | deferred | `@vitejs/plugin-react` widens its peer; bump the two together                                |
 
 The repo's own Claude Code setup landed on 2026-08-29 and is in `.claude/`: five skills
 holding the situational rules `CLAUDE.md` points at (`library-boundaries`,
