@@ -32,7 +32,8 @@ The two projects are also in separate sequence groups on purpose. One Chromium c
 | `pnpm exec vitest run --project storybook`          | every story, in Chromium    |
 | `pnpm exec vitest run src/filters`                  | files matching a path       |
 
-Reach for the narrow one while iterating; run the whole thing before you call it done.
+Reach for the narrow one while iterating; run the whole thing before you call it done. Either way,
+`check-agent` runs it (see "Checks: one agent at a time" in `CLAUDE.md`), never a second agent.
 
 ## Writing a test
 
@@ -76,7 +77,8 @@ pnpm validate      # lint + format:check + typecheck + test + build
 pnpm validate:ci   # the same, plus the ESLint pass
 ```
 
-`validate:ci` is what CI runs and what a change should clear before it is handed over. It is
+`validate:ci` is what CI runs and what a change should clear before it is handed over, run by
+`check-agent`. It is
 also the honest answer to "does this work": a claim that something passes, without the output,
 is a claim.
 

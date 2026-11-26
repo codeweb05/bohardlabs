@@ -100,7 +100,8 @@ it is executed, and that date never changes.
 pnpm validate:ci
 ```
 
-lint + format:check + jscpd + typecheck + test + build + the ESLint pass. Report the result honestly:
+lint + format:check + jscpd + typecheck + test + build + the ESLint pass, run by `check-agent`
+(see "Checks: one agent at a time" in `CLAUDE.md`). Report the result honestly:
 if something fails, say so and paste the output; if you skipped a step, say which. A claim
 that it passes, without having run it, is a claim.
 
@@ -114,7 +115,7 @@ the change. Mention those rather than letting them ride along unannounced.
       output changed, and you said so.
 - [ ] `docs/roadmap.md` row edited, if this change moves anything it tracks.
 - [ ] README, MDX guides and the decision log still true.
-- [ ] `pnpm validate:ci` green, output reported.
+- [ ] `pnpm validate:ci` green from `check-agent`, output reported.
 - [ ] `git status` reviewed; incidental changes named.
 - [ ] Committed on a `<type>/<slug>` branch, files staged by name, hooks passed without
       `--no-verify`, rebased onto `main` with no merge commits. Nothing pushed, reset or

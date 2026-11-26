@@ -175,8 +175,8 @@ Two agents in `.claude/agents/` are review passes, not authors. Both are read-on
   or improve adjacent code on the way past; if you spot something unrelated, say so and leave
   it. Clean up only the orphans your own change created.
 - **Verify, do not assert.** "Add validation" becomes "write the failing test, then make it
-  pass". Run the command and report what it printed. A claim that something passes, without
-  the output, is a claim.
+  pass". Have `check-agent` run the command (see "Checks" below) and report what it printed.
+  A claim that something passes, without the output, is a claim.
 - **Match the surrounding code**, including its comment density and its naming, even where
   you would have done it differently.
 
@@ -198,6 +198,26 @@ Two agents in `.claude/agents/` are review passes, not authors. Both are read-on
 - Never `// eslint-disable` or `// oxlint-disable` a finding you have not understood. If a
   rule is wrong for this repo, turn it off in the config with a comment saying why, so the
   decision is in one place instead of scattered through the source.
+
+## Checks: one agent at a time
+
+Only one agent on this machine runs checks at a time. It is named `check-agent`. Checks are
+any lint, `format:check`, `jscpd`, `typecheck`, `build`, `validate`, `validate:ci` and every
+Vitest run, including a narrow `--project` or path run. Every other session and subagent
+writes and commits code without running them.
+
+- **Asking for a run.** Send `check-agent` the worktree path and the commands with
+  `SendMessage`. It runs them one at a time, in that worktree, and returns each result with its
+  error text. That output is what you report.
+- **Finding it.** Look for `check-agent` with `ListAgents` and spawn it if none is listed.
+  Never start a second one, and never hand checks to parallel subagents.
+- **Pushing.** A push the user approved goes through `check-agent` too, because pre-push runs
+  the whole gate.
+- **Hooks are the exception.** `pre-commit` and `commit-msg` run on every commit as usual.
+
+Several repositories share this machine, and each check run takes all of it. On 27 November
+2026 one lib session had subagents running the full gate in one worktree and Vitest in two
+others, while six other Claude sessions on the machine slowed to a crawl.
 
 ## Git
 
