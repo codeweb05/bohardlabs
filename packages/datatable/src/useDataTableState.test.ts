@@ -25,6 +25,7 @@ function baseOptions(overrides: Partial<UseDataTableStateOptions> = {}): UseData
     initialColumnOrder: [],
     initialColumnPinning: {},
     initialColumnVisibility: {},
+    columnIds: ['name', 'email'],
     initialRowSelection: {},
     manualPagination: false,
     initialDensity: 'comfortable',

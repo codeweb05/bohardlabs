@@ -33,7 +33,7 @@ Their test suites are worth mining when porting anything: `DataTable.persistence
 | --- | ---------------------------------------- | --------- | ------ | ----------------------------------- |
 | 0a  | Column reordering                        | UX        |        | done (2026-08-27)                   |
 | 0b  | Consistent header casing                 | UX        |        | done (2026-08-27, `headerCase`)     |
-| 1   | Preferences-only persistence             | Found.    | SP     | proposed                            |
+| 1   | Preferences-only persistence             | Found.    | SP     | done (2026-11-27)                   |
 | 2   | Saved views                              | Found.    |        | proposed                            |
 | 3   | Shareable state in the URL               | Found.    |        | proposed                            |
 | 4   | Column pinning from the popover          | UX        |        | done (2026-08-28)                   |

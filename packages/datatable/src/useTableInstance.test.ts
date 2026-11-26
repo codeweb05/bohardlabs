@@ -54,6 +54,7 @@ function renderTable(options: HarnessOptions = {}) {
       initialColumnOrder: [],
       initialColumnPinning: {},
       initialColumnVisibility: {},
+      columnIds: ['code', 'name'],
       initialRowSelection: {},
       manualPagination: options.manualPagination ?? false,
       initialDensity: 'comfortable',

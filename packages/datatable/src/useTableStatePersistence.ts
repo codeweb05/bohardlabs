@@ -14,8 +14,9 @@ const PERSIST_DEBOUNCE_MS = 150;
  * is what prevents a redundant initial fetch on mount.
  */
 function sanitizePersistedState(state: PersistedTableState): PersistedTableState {
-  const {pageIndex, pageSize, sorting, columnFilters, globalFilter, ...layout} = state;
+  const {version, pageIndex, pageSize, sorting, columnFilters, globalFilter, ...layout} = state;
   return {
+    ...(typeof version === 'number' ? {version} : {}),
     ...sanitizeLayout(layout),
     ...(typeof pageIndex === 'number' && Number.isInteger(pageIndex) && pageIndex >= 0 ? {pageIndex} : {}),
     ...(typeof pageSize === 'number' && Number.isInteger(pageSize) && pageSize > 0 ? {pageSize} : {}),
@@ -31,6 +32,10 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function isString(value: unknown): value is string {
   return typeof value === 'string';
+}
+
+function isBoolean(value: unknown): boolean {
+  return typeof value === 'boolean';
 }
 
 function hasId(value: unknown): boolean {
@@ -56,7 +61,10 @@ function isPinning(value: unknown): boolean {
  * wrong shape here is a table that throws on mount, for that user, until the entry goes.
  */
 function sanitizeLayout(
-  layout: Omit<PersistedTableState, 'pageIndex' | 'pageSize' | 'sorting' | 'columnFilters' | 'globalFilter'>,
+  layout: Omit<
+    PersistedTableState,
+    'version' | 'pageIndex' | 'pageSize' | 'sorting' | 'columnFilters' | 'globalFilter'
+  >,
 ): PersistedTableState {
   const {density, columnOrder, columnPinning, columnSizing, columnVisibility, grouping} = layout;
   return {
@@ -64,7 +72,7 @@ function sanitizeLayout(
     ...(isListOf(columnOrder, isString) ? {columnOrder} : {}),
     ...(isPinning(columnPinning) ? {columnPinning} : {}),
     ...(isRecord(columnSizing) && isListOf(Object.values(columnSizing), isWidth) ? {columnSizing} : {}),
-    ...(isRecord(columnVisibility) ? {columnVisibility} : {}),
+    ...(isRecord(columnVisibility) && isListOf(Object.values(columnVisibility), isBoolean) ? {columnVisibility} : {}),
     ...(isListOf(grouping, isString) ? {grouping} : {}),
   };
 }

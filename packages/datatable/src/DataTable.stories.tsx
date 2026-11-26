@@ -919,6 +919,51 @@ export const PersistedState: Story = {
   },
 };
 
+const PREFERENCES_TABLE_ID = 'storybook-orders-preferences';
+
+/**
+ * **Saved choices, not saved defaults.** The column layout is stored as what the user
+ * changed and nothing else. Here `placedAt` is declared `hidden: true`, so it starts hidden,
+ * and that default is never written down. Hide another column and only that one lands in
+ * storage.
+ *
+ * That is what lets a later release change a default: hide a column that used to show, or
+ * show one that used to hide, and every user who never touched that column gets the new
+ * default on their next visit. A user who did touch it keeps their choice. A column that no
+ * longer exists is dropped from the entry on load.
+ *
+ * An entry written by an earlier version, which stored the whole layout, is read as it is
+ * and written back once in this shape.
+ */
+export const SavedPreferences: Story = {
+  parameters: showcase('tableId', 'enableColumnVisibility', 'initialColumnVisibility'),
+  args: {
+    tableId: PREFERENCES_TABLE_ID,
+    enableColumnVisibility: true,
+    columns: columns.map((column) => (column.id === 'placedAt' ? {...column, hidden: true} : column)),
+  },
+  // Before the table mounts, so it reads nothing a previous run left behind.
+  beforeEach: () => {
+    localStorage.removeItem(getTableStateStorageKey(PREFERENCES_TABLE_ID));
+  },
+  play: async ({canvasElement}) => {
+    const canvas = within(canvasElement);
+    const body = within(canvasElement.ownerDocument.body);
+    const key = getTableStateStorageKey(PREFERENCES_TABLE_ID);
+
+    await expect(canvas.queryByRole('columnheader', {name: /placed/i})).not.toBeInTheDocument();
+
+    await userEvent.click(canvas.getByRole('button', {name: 'Columns'}));
+    await userEvent.click(await body.findByRole('checkbox', {name: 'Items'}));
+
+    await waitFor(async () => {
+      const saved = JSON.parse(localStorage.getItem(key) ?? '{}') as {columnVisibility?: unknown};
+      await expect(saved.columnVisibility).toEqual({items: false});
+    });
+    await expect(canvas.queryByRole('columnheader', {name: /items/i})).not.toBeInTheDocument();
+  },
+};
+
 /**
  * Three densities and a toggle. The row height, the padding and the font size move
  * together, so a compact table stays readable rather than only shorter.

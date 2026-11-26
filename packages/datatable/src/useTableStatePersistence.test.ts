@@ -539,6 +539,7 @@ describe('useTableStatePersistence, filters and a reset during a pending write',
 
   it('restores a saved layout', () => {
     const state: PersistedTableState = {
+      version: 2,
       density: 'compact',
       columnOrder: ['status', 'name'],
       columnPinning: {left: ['status']},
@@ -565,6 +566,8 @@ describe('useTableStatePersistence, filters and a reset during a pending write',
   it.each([
     {name: 'a column width that is not a number', saved: {columnSizing: {name: '240'}}},
     {name: 'a density that is only a property every object has', saved: {density: 'toString'}},
+    {name: 'a column visibility that is not true or false', saved: {columnVisibility: {name: 'no'}}},
+    {name: 'a version that is not a number', saved: {version: '2'}},
   ])('drops $name', ({saved}) => {
     localStorageMock.setItem(getTableStateStorageKey('filter-table'), JSON.stringify({...saved, pageSize: 25}));
     const {result} = renderHook(() => useTableStatePersistence('filter-table'));

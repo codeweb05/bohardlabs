@@ -195,7 +195,14 @@ export function DataTable<TData extends RowData>(props: Readonly<DataTableProps<
     initialGlobalFilter,
     initialColumnOrder,
     initialColumnPinning,
-    initialColumnVisibility,
+    // A column declared `hidden` starts hidden; `initialColumnVisibility` has the last word.
+    initialColumnVisibility: {
+      ...Object.fromEntries(
+        columns.filter((column) => column.hidden && column.enableHiding !== false).map((column) => [column.id, false]),
+      ),
+      ...initialColumnVisibility,
+    },
+    columnIds: columns.map((column) => column.id),
     onColumnOrderChange,
     onColumnVisibilityChange,
     initialRowSelection,

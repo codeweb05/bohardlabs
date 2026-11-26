@@ -247,7 +247,13 @@ export interface DataTableColumnDef<TData extends RowData, TValue = unknown> ext
   readonly header: string | ((props: HeaderContext<TData, TValue>) => ReactNode);
 
   // Display options
-  /** Initially hidden */
+  /**
+   * Hidden until the user shows it from the Columns menu. This is the column's default, not
+   * a saved choice: with `tableId` set, storage keeps only what the user changed, so a column
+   * that turns `hidden` in a later release is hidden for everyone who never toggled it.
+   * `initialColumnVisibility` on the table wins over it. Ignored when `enableHiding` is
+   * false, since the user would have no way to show the column.
+   */
   readonly hidden?: boolean;
   /** Enable hiding for this column (default: true) */
   readonly enableHiding?: boolean;
@@ -585,8 +591,13 @@ export interface ServerTableState {
   readonly globalFilter: string;
 }
 
-/** Persisted table state (saved to localStorage) */
+/**
+ * Persisted table state (saved to localStorage). The column layout fields hold only what the
+ * user changed; the column defs and the `initial*` props fill in the rest at mount.
+ */
 export interface PersistedTableState {
+  /** The entry's shape. Missing on an entry written before preferences-only persistence. */
+  readonly version?: number;
   readonly sorting?: SortingState;
   readonly columnFilters?: ColumnFiltersState;
   readonly globalFilter?: string;
@@ -633,6 +644,11 @@ export interface DataTableProps<TData extends RowData> extends TableEventHandler
    * Stable, unique id for this table. It is the persistence key: sorting, filters, column
    * order/sizing/visibility, density and page size are written to `localStorage` under it
    * and restored on the next mount.
+   *
+   * The column layout is stored as preferences: only the visibility, order, widths and
+   * pinning the user changed, never the defaults the column defs and the `initial*` props
+   * declare. A default changed in a later release therefore reaches every user who never
+   * touched that setting, and a column that no longer exists is dropped from storage on load.
    *
    * Omit it and the table keeps working, statelessly, which is what a story or a modal
    * usually wants. Two tables that share an id share their state, so a detail-page sub-list

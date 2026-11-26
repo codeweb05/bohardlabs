@@ -12,12 +12,17 @@ import type {
 import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 
 import {useIdentityVersion} from './hooks/useIdentityVersion';
+import {dropStaleColumns, PERSISTED_STATE_VERSION, toColumnPreferences} from './storage/preferences';
 import type {PersistedTableState, ServerTableState, TableDensity} from './types';
 import {useTableStatePersistence} from './useTableStatePersistence';
 
-/** Syncs persisted columnOrder/columnVisibility to parent callbacks on mount. */
+/**
+ * Syncs persisted columnOrder/columnVisibility to parent callbacks on mount. Visibility is
+ * reported resolved (defaults with the stored choices on top), since that is what renders.
+ */
 function syncPersistedColumnLayout(
   persistedState: PersistedTableState,
+  columnVisibility: VisibilityState,
   onColumnOrderChange?: (order: ColumnOrderState) => void,
   onColumnVisibilityChange?: (visibility: VisibilityState) => void,
 ): void {
@@ -26,7 +31,7 @@ function syncPersistedColumnLayout(
   }
   if (persistedState.columnVisibility && onColumnVisibilityChange) {
     if (Object.keys(persistedState.columnVisibility).length > 0) {
-      onColumnVisibilityChange(persistedState.columnVisibility);
+      onColumnVisibilityChange(columnVisibility);
     }
   }
 }
@@ -51,7 +56,10 @@ export interface UseDataTableStateOptions {
   // Columns
   readonly initialColumnOrder: ColumnOrderState;
   readonly initialColumnPinning: ColumnPinningState;
+  /** Default visibility: `initialColumnVisibility` over the columns declared `hidden`. */
   readonly initialColumnVisibility: VisibilityState;
+  /** The ids of the columns the table has. Stored layout for any other id is dropped on load. */
+  readonly columnIds: readonly string[];
   readonly onColumnOrderChange?: (order: ColumnOrderState) => void;
   readonly onColumnVisibilityChange?: (visibility: VisibilityState) => void;
 
@@ -81,6 +89,7 @@ export function useDataTableState(options: UseDataTableStateOptions) {
     initialColumnOrder,
     initialColumnPinning,
     initialColumnVisibility,
+    columnIds,
     onColumnOrderChange,
     onColumnVisibilityChange,
     initialRowSelection,
@@ -102,9 +111,13 @@ export function useDataTableState(options: UseDataTableStateOptions) {
   // Load persisted state once on mount
   const persistedState = useMemo<PersistedTableState | null>(() => {
     if (!isPersistenceEnabled) return null;
-    return loadPersistedState();
+    const loaded = loadPersistedState();
+    return loaded && dropStaleColumns(loaded, columnIds);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isPersistenceEnabled]);
+  // An entry from an earlier build holds the whole layout, defaults included. It is read as
+  // preferences like any other, then written back once in the current shape.
+  const migratesStoredState = persistedState !== null && persistedState.version !== PERSISTED_STATE_VERSION;
 
   // Capture the true initial/default values on first mount so handleResetToDefault
   // always resets to defaults, even if the parent re-passes current state as props.
@@ -136,9 +149,11 @@ export function useDataTableState(options: UseDataTableStateOptions) {
     persistedState?.columnPinning ?? initialColumnPinning,
   );
   const [columnSizing, setColumnSizing] = useState<ColumnSizingState>(persistedState?.columnSizing ?? {});
-  const [columnVisibility, setColumnVisibilityInternal] = useState<VisibilityState>(
-    persistedState?.columnVisibility ?? initialColumnVisibility,
-  );
+  // Stored visibility holds only the user's choices, so it lands on top of the defaults.
+  const [columnVisibility, setColumnVisibilityInternal] = useState<VisibilityState>(() => ({
+    ...initialColumnVisibility,
+    ...persistedState?.columnVisibility,
+  }));
   const [rowSelection, setRowSelectionInternal] = useState<RowSelectionState>(initialRowSelection);
   const [expanded, setExpanded] = useState<ExpandedState>({});
   const [grouping, setGrouping] = useState<string[]>(persistedState?.grouping ?? [...initialGrouping]);
@@ -288,7 +303,7 @@ export function useDataTableState(options: UseDataTableStateOptions) {
     if (hasSyncedPersistedState.current) return;
     hasSyncedPersistedState.current = true;
 
-    syncPersistedColumnLayout(persistedState, onColumnOrderChange, onColumnVisibilityChange);
+    syncPersistedColumnLayout(persistedState, columnVisibility, onColumnOrderChange, onColumnVisibilityChange);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -326,21 +341,30 @@ export function useDataTableState(options: UseDataTableStateOptions) {
   }, [reportsServerState, internalPagination, sorting, columnFilters, globalFilter]);
 
   // --- Persistence effect (P1 fix: separate mount guard) ---
+  // Nothing is written on mount, unless the stored entry is in an earlier shape and is
+  // being migrated. The column layout is written as preferences: only what differs from
+  // the defaults captured on mount.
   useEffect(() => {
     if (!hasMounted.current) {
       hasMounted.current = true;
-      return;
+      if (!migratesStoredState) return;
     }
     if (!isPersistenceEnabled) return;
 
     persistWholeState({
+      version: PERSISTED_STATE_VERSION,
       sorting,
       columnFilters,
       globalFilter,
-      columnOrder,
-      columnPinning,
+      ...toColumnPreferences(
+        {columnOrder, columnPinning, columnVisibility},
+        {
+          columnOrder: defaultColumnOrderRef.current,
+          columnPinning: defaultColumnPinningRef.current,
+          columnVisibility: defaultColumnVisibilityRef.current,
+        },
+      ),
       columnSizing,
-      columnVisibility,
       density,
       pageSize: internalPagination.pageSize,
       pageIndex: internalPagination.pageIndex,
@@ -348,6 +372,7 @@ export function useDataTableState(options: UseDataTableStateOptions) {
     });
   }, [
     isPersistenceEnabled,
+    migratesStoredState,
     persistWholeState,
     sorting,
     columnFilters,

@@ -524,3 +524,169 @@ describe('DataTable Persistence', () => {
     });
   });
 });
+
+// Storage holds what the user chose, never what the column defs declare, so a default
+// changed in a later release reaches everyone who never touched that column.
+describe('DataTable Persistence, preferences only', () => {
+  const tableId = 'test-preferences-table';
+  const storageKey = getTableStateStorageKey(tableId);
+  const withDescriptionHidden = testColumns.map((column) =>
+    column.id === 'description' ? {...column, hidden: true} : column,
+  );
+
+  beforeEach(() => {
+    localStorageMock.clear();
+    vi.clearAllMocks();
+  });
+
+  function stored(): PersistedTableState {
+    return JSON.parse(localStorageMock.getStore()[storageKey] ?? '{}') as PersistedTableState;
+  }
+
+  function headerTexts(): (string | null)[] {
+    return screen.getAllByRole('columnheader').map((header) => header.textContent);
+  }
+
+  async function toggleColumn(name: string) {
+    await userEvent.click(screen.getByRole('button', {name: /columns/i}));
+    const popover = await screen.findByRole('presentation');
+    await userEvent.click(within(popover).getByRole('checkbox', {name}));
+  }
+
+  it('hides a column declared hidden and stores nothing for it', async () => {
+    render(
+      <DataTable
+        tableId={tableId}
+        columns={withDescriptionHidden}
+        data={testData.slice(0, 5)}
+        enableColumnVisibility
+      />,
+    );
+
+    expect(headerTexts()).not.toContain('Description');
+
+    await toggleColumn('Created');
+
+    await waitFor(() => expect(stored().columnVisibility).toEqual({createdAt: false}));
+    expect(stored().version).toBe(2);
+  });
+
+  it('lets a default flipped in a later release reach a user who never touched it', async () => {
+    // The first release: the user hides Created. Description is visible by default.
+    const {unmount} = render(
+      <DataTable tableId={tableId} columns={testColumns} data={testData.slice(0, 5)} enableColumnVisibility />,
+    );
+    await toggleColumn('Created');
+    await waitFor(() => expect(stored().columnVisibility).toEqual({createdAt: false}));
+    unmount();
+
+    // The next release hides Description by default.
+    render(
+      <DataTable
+        tableId={tableId}
+        columns={withDescriptionHidden}
+        data={testData.slice(0, 5)}
+        enableColumnVisibility
+      />,
+    );
+
+    expect(headerTexts()).not.toContain('Description');
+    expect(headerTexts()).not.toContain('Created');
+  });
+
+  it('keeps a user who showed a default-hidden column seeing it', () => {
+    localStorageMock.setItem(storageKey, JSON.stringify({version: 2, columnVisibility: {description: true}}));
+
+    render(
+      <DataTable
+        tableId={tableId}
+        columns={withDescriptionHidden}
+        data={testData.slice(0, 5)}
+        enableColumnVisibility
+      />,
+    );
+
+    expect(headerTexts()).toContain('Description');
+  });
+
+  it('lets initialColumnVisibility win over a column declared hidden', () => {
+    render(
+      <DataTable
+        tableId={tableId}
+        columns={withDescriptionHidden}
+        data={testData.slice(0, 5)}
+        enableColumnVisibility
+        initialColumnVisibility={{description: true}}
+      />,
+    );
+
+    expect(headerTexts()).toContain('Description');
+  });
+
+  it('ignores hidden on a column the user cannot show again', () => {
+    render(
+      <DataTable
+        tableId={tableId}
+        columns={withDescriptionHidden.map((column) =>
+          column.id === 'description' ? {...column, enableHiding: false} : column,
+        )}
+        data={testData.slice(0, 5)}
+        enableColumnVisibility
+      />,
+    );
+
+    expect(headerTexts()).toContain('Description');
+  });
+
+  it('drops a stored column the table no longer has', async () => {
+    localStorageMock.setItem(
+      storageKey,
+      JSON.stringify({version: 2, columnVisibility: {removed: false, createdAt: false}, columnSizing: {removed: 90}}),
+    );
+
+    render(<DataTable tableId={tableId} columns={testColumns} data={testData.slice(0, 5)} enableColumnVisibility />);
+    expect(headerTexts()).not.toContain('Created');
+
+    await toggleColumn('Type');
+
+    await waitFor(() => expect(stored().columnVisibility).toEqual({createdAt: false, roleType: false}));
+    expect(stored().columnSizing).toEqual({});
+  });
+
+  it('migrates an entry in the old shape once, keeping what the user saw', async () => {
+    // An earlier build wrote the whole resolved layout, defaults included.
+    localStorageMock.setItem(
+      storageKey,
+      JSON.stringify({
+        pageSize: 25,
+        columnVisibility: {name: true, roleType: true, description: false, createdAt: true},
+      }),
+    );
+
+    const {unmount} = render(
+      <DataTable tableId={tableId} columns={testColumns} data={testData.slice(0, 5)} enableColumnVisibility />,
+    );
+
+    expect(headerTexts()).not.toContain('Description');
+    await waitFor(() => expect(stored().version).toBe(2));
+    expect(stored()).toMatchObject({pageSize: 25, columnVisibility: {description: false}});
+    expect(stored().columnVisibility).toEqual({description: false});
+    unmount();
+
+    // In the new shape now, so the next mount reads it without writing.
+    localStorageMock.setItem.mockClear();
+    render(<DataTable tableId={tableId} columns={testColumns} data={testData.slice(0, 5)} enableColumnVisibility />);
+
+    expect(headerTexts()).not.toContain('Description');
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    expect(localStorageMock.setItem).not.toHaveBeenCalled();
+  });
+
+  it('never throws on an entry it cannot read', () => {
+    localStorageMock.setItem(storageKey, JSON.stringify(42));
+
+    render(<DataTable tableId={tableId} columns={testColumns} data={testData.slice(0, 5)} enableColumnVisibility />);
+
+    expect(headerTexts()).toContain('Description');
+  });
+});
