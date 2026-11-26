@@ -973,8 +973,9 @@ export interface DataTableProps<TData extends RowData> extends TableEventHandler
    */
   readonly exportRows?: (state: ServerTableState) => Promise<readonly TData[]>;
   /**
-   * The most rows "All matching" may export. Above it the items are disabled and the menu
-   * says why, so a user narrows the filters instead of waiting on a file nobody can open.
+   * The most rows "All matching" exports. When more rows match, the file holds the first
+   * `exportRowLimit` of them, in the table's order, and the menu says so before the click.
+   * `exportRows` may return every match; the table keeps only the first `exportRowLimit`.
    *
    * @defaultValue `10000`
    */

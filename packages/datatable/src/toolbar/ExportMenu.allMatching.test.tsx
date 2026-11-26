@@ -281,20 +281,30 @@ describe('ExportMenu, all matching rows', () => {
     expect(await csvItem(DEFAULT_LABELS.exportAllMatching(3))).not.toHaveAttribute('aria-disabled');
   });
 
-  it('disables all matching above the limit, and says why', async () => {
-    const exportRows = vi.fn();
-    render(<Harness exportRows={exportRows} totalRows={12_480} />);
+  it('says so above the limit, and exports the first rows up to it', async () => {
+    const download = setupDownloadMocks();
+    const exportRows = vi.fn(() => Promise.resolve(matching));
+    const onExportComplete = vi.fn();
+    render(<Harness exportRows={exportRows} totalRows={3} exportRowLimit={2} onExportComplete={onExportComplete} />);
 
     await openMenu();
 
-    const reason = DEFAULT_LABELS.exportRowLimitReached(12_480, 10_000);
-    expect(screen.getByText(reason)).toBeInTheDocument();
-    const item = await csvItem(new RegExp(DEFAULT_LABELS.exportAllMatching(12_480)));
-    expect(item).toHaveAttribute('aria-disabled', 'true');
-    expect(await csvItem(DEFAULT_LABELS.exportCurrentPage(1))).not.toHaveAttribute('aria-disabled');
+    expect(screen.getByText(DEFAULT_LABELS.exportRowLimitReached(3, 2))).toBeInTheDocument();
+    const item = await csvItem(new RegExp(DEFAULT_LABELS.exportAllMatching(3)));
+    expect(item).not.toHaveAttribute('aria-disabled');
 
-    await userEvent.click(item, {pointerEventsCheck: 0});
-    expect(exportRows).not.toHaveBeenCalled();
+    await userEvent.click(item);
+
+    await waitFor(() => expect(onExportComplete).toHaveBeenCalledWith('csv', true));
+    expect(download.lines()).toEqual(['Order,Status', '#10482,PENDING', '#10477,PAID']);
+  });
+
+  it('says how many rows the default limit keeps', async () => {
+    render(<Harness exportRows={vi.fn()} totalRows={12_480} />);
+
+    await openMenu();
+
+    expect(screen.getByText('12,480 rows match. Only the first 10,000 will be exported.')).toBeInTheDocument();
   });
 
   it('takes a different limit from exportRowLimit', async () => {
@@ -302,7 +312,8 @@ describe('ExportMenu, all matching rows', () => {
 
     await openMenu();
 
-    expect(await csvItem(DEFAULT_LABELS.exportAllMatching(12_480))).not.toHaveAttribute('aria-disabled');
+    expect(await csvItem(DEFAULT_LABELS.exportAllMatching(12_480))).toBeInTheDocument();
+    expect(screen.queryByText(DEFAULT_LABELS.exportRowLimitReached(12_480, 20_000))).not.toBeInTheDocument();
   });
 });
 

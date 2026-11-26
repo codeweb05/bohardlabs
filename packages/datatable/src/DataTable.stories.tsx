@@ -809,7 +809,7 @@ const MATCHING_ORDERS = makeOrders(137);
  * `exportRows` gets the table's state at the click (sorting, filters, search) and returns
  * the rows. The table never guesses a page size your API might refuse. While it runs the
  * menu shows progress and a Cancel item. Above `exportRowLimit` (10,000 by default) the
- * "All matching" items are disabled and the menu says why.
+ * "All matching" file holds the first 10,000 rows, and the menu says so before the click.
  *
  * Without `exportRows`, a server-paged menu reads "Current page only", so nobody mistakes
  * the file for the whole list. Here the fetch takes a moment on purpose, then the CSV
@@ -1255,8 +1255,7 @@ const HINDI_LABELS: DataTableLabels = {
   exportCurrentPage: (count) => `वर्तमान पृष्ठ · ${count} पंक्तियाँ`,
   exportAllMatching: (count) => `सभी मेल खाती · ${count} पंक्तियाँ`,
   exportCurrentPageOnly: (count) => `केवल वर्तमान पृष्ठ · ${count} पंक्तियाँ`,
-  exportRowLimitReached: (count, limit) =>
-    `${count} पंक्तियाँ मेल खाती हैं, एक निर्यात की सीमा ${limit} है। पहले फ़िल्टर सीमित करें।`,
+  exportRowLimitReached: (count, limit) => `${count} पंक्तियाँ मेल खाती हैं। केवल पहली ${limit} निर्यात होंगी।`,
   exportPreparing: 'निर्यात तैयार हो रहा है...',
   exportFailed: 'निर्यात विफल रहा। फिर से प्रयास करें।',
 

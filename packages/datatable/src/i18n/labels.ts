@@ -113,7 +113,7 @@ export interface DataTableLabels {
   readonly exportAllMatching: (count: number) => string;
   /** Heads the formats under server paging without `exportRows`, so the file is never silently one page. */
   readonly exportCurrentPageOnly: (count: number) => string;
-  /** Under "All matching" when `count` is over `exportRowLimit`, saying why its items are disabled. */
+  /** Under "All matching" when `count` is over `exportRowLimit`: the file will hold the first `limit` rows. */
   readonly exportRowLimitReached: (count: number, limit: number) => string;
   /** Shown in the menu while `exportRows` is fetching. */
   readonly exportPreparing: string;
@@ -232,7 +232,7 @@ export const DEFAULT_LABELS: DataTableLabels = {
   exportAllMatching: (count) => `All matching · ${rowCount(count)}`,
   exportCurrentPageOnly: (count) => `Current page only · ${rowCount(count)}`,
   exportRowLimitReached: (count, limit) =>
-    `${count.toLocaleString('en')} rows match, more than the ${limit.toLocaleString('en')} an export can hold. Narrow the filters first.`,
+    `${count.toLocaleString('en')} rows match. Only the first ${limit.toLocaleString('en')} will be exported.`,
   exportPreparing: 'Preparing export...',
   exportFailed: 'The export failed. Try again.',
 

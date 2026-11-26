@@ -41,8 +41,8 @@ interface ExportMenuProps<TData extends RowData> {
 interface ExportScope {
   readonly key: 'page' | 'all';
   readonly heading?: string;
-  /** Why the block's items are disabled, shown under the heading. */
-  readonly blocked?: string;
+  /** A note under the heading, such as "only the first 10,000 will be exported". */
+  readonly note?: string;
 }
 
 /** An "All matching" export waiting on `exportRows`. Cancel adds it to `cancelledRef`. */
@@ -122,7 +122,9 @@ export function ExportMenu<TData extends RowData>({
   const matchingRows = async (fetchRows: NonNullable<typeof exportRows>) => {
     // Read at the click, not in render: `table` is one stable object.
     const {pagination, sorting, columnFilters, globalFilter} = table.getState();
-    const records = await fetchRows({pagination, sorting, columnFilters, globalFilter: String(globalFilter ?? '')});
+    const fetched = await fetchRows({pagination, sorting, columnFilters, globalFilter: String(globalFilter ?? '')});
+    // Over the limit the file holds the first `exportRowLimit` rows, as the menu said it would.
+    const records = fetched.slice(0, exportRowLimit);
     const {getRowId} = table.options;
     // Rows the table never held, built the way it builds its own, so their cells draw and
     // export exactly as they would on screen.
@@ -193,7 +195,7 @@ export function ExportMenu<TData extends RowData>({
       {
         key: 'all',
         heading: labels.exportAllMatching(matching),
-        blocked: matching > exportRowLimit ? labels.exportRowLimitReached(matching, exportRowLimit) : undefined,
+        note: matching > exportRowLimit ? labels.exportRowLimitReached(matching, exportRowLimit) : undefined,
       },
     ];
   };
@@ -206,7 +208,7 @@ export function ExportMenu<TData extends RowData>({
     const item = (
       <MenuItem
         key={key}
-        disabled={isEmpty || scope.blocked != null}
+        disabled={isEmpty}
         // Two items read "Export CSV" when there are two scopes; the heading tells them apart.
         aria-describedby={scope.heading == null ? undefined : `${headingId}-${scope.key}`}
         onClick={() => handleExport(format, scope.key === 'all')}
@@ -297,9 +299,9 @@ export function ExportMenu<TData extends RowData>({
                     sx={{lineHeight: 2.5}}
                   >
                     {scope.heading}
-                    {scope.blocked != null && (
+                    {scope.note != null && (
                       <Typography component="span" variant="caption" sx={{display: 'block', pb: 1, lineHeight: 1.4}}>
-                        {scope.blocked}
+                        {scope.note}
                       </Typography>
                     )}
                   </ListSubheader>
