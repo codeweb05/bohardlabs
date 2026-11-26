@@ -30,6 +30,8 @@ export interface ImageEditorLabels {
   rotateRight: string;
   flipHorizontal: string;
   flipVertical: string;
+  /** The menu that holds both flips in the mobile pill when the screen is too narrow for two buttons. */
+  flip: string;
   straighten: string;
   /** The straighten slider's value bubble. */
   straightenValue: (degrees: number) => string;
@@ -96,6 +98,7 @@ export const DEFAULT_IMAGE_EDITOR_LABELS: ImageEditorLabels = {
   rotateRight: 'Rotate right',
   flipHorizontal: 'Flip horizontally',
   flipVertical: 'Flip vertically',
+  flip: 'Flip',
   straighten: 'Straighten',
   straightenValue: (degrees) => `${degrees}°`,
   zoom: 'Zoom',

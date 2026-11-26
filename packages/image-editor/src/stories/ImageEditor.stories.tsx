@@ -504,9 +504,55 @@ export const Mobile: Story = {
     const dialog = await openEditor(canvasElement);
     await expectNoScroll(dialog);
     const toolbar = within(dialog).getByRole('toolbar', {name: 'Image tools'});
+    // At 390 px all seven tools fit, the two flips side by side.
+    await expect(within(toolbar).getAllByRole('button')).toHaveLength(7);
+    await expect(within(toolbar).getByRole('button', {name: 'Flip vertically'})).toBeInTheDocument();
     await userEvent.click(within(toolbar).getByRole('button', {name: 'Rotate right'}));
     await expect(within(toolbar).getByRole('button', {name: 'Undo'})).toBeEnabled();
 
+    const result = await applyEdits(dialog, args.onApply, 'Done');
+    await expect(result).toEqual(expect.objectContaining({width: 800, height: 1200}));
+  },
+};
+
+/** How far the preview is turned, in degrees, read from the transform on the cropper's image. */
+function previewTurn(dialog: HTMLElement): number {
+  const image = within(dialog).getByTestId('image-editor-stage').querySelector('cropper-image');
+  if (!image) throw new Error('The stage has no cropper image');
+  const {a, b} = new DOMMatrix(getComputedStyle(image).transform);
+  return Math.round((Math.atan2(b, a) * 180) / Math.PI);
+}
+
+/**
+ * On a 320 px phone the pill has no room for seven buttons, so the two flips share one Flip
+ * menu. Undo, redo and both turns stay one tap away.
+ */
+export const PhoneToolbar: Story = {
+  parameters: {...showcase('features'), layout: 'fullscreen'},
+  globals: {viewport: {value: 'iphone5', isRotated: false}},
+  decorators: [onPhone],
+  play: async ({args, canvasElement}) => {
+    const dialog = await openEditor(canvasElement);
+    await expectNoScroll(dialog);
+    const toolbar = within(dialog).getByRole('toolbar', {name: 'Image tools'});
+    const tool = (name: string) => within(toolbar).getByRole('button', {name});
+    await expect(within(toolbar).queryByRole('button', {name: 'Flip horizontally'})).not.toBeInTheDocument();
+    await expect(previewTurn(dialog)).toBe(0);
+
+    await userEvent.click(tool('Rotate left'));
+    await waitFor(() => expect(previewTurn(dialog)).toBe(-90));
+    await userEvent.click(tool('Undo'));
+    await waitFor(() => expect(previewTurn(dialog)).toBe(0));
+    await userEvent.click(tool('Redo'));
+    await waitFor(() => expect(previewTurn(dialog)).toBe(-90));
+    await expect(tool('Redo')).toBeDisabled();
+
+    await userEvent.click(tool('Flip'));
+    await userEvent.click(await screen.findByRole('menuitem', {name: 'Flip horizontally'}));
+    await waitFor(() => expect(screen.queryByRole('menu')).not.toBeInTheDocument());
+    await expect(within(dialog).getByRole('status')).toHaveTextContent('Flipped');
+
+    // A quarter turn swaps the sides.
     const result = await applyEdits(dialog, args.onApply, 'Done');
     await expect(result).toEqual(expect.objectContaining({width: 800, height: 1200}));
   },

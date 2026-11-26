@@ -269,6 +269,9 @@ function Workspace({
     dispatch({type: 'redo'});
     announce(labels.redone);
   };
+  // `null` at that end of the history, which disables the button.
+  const undoable = canUndo ? undo : null;
+  const redoable = canRedo ? redo : null;
 
   const apply = async () => {
     if (busy.current) return;
@@ -363,7 +366,8 @@ function Workspace({
             <MobileToolbar
               features={features}
               onAction={onAction}
-              onUndo={canUndo ? undo : null}
+              onUndo={undoable}
+              onRedo={redoable}
               onReset={canReset ? reset : null}
               disabled={applying}
             />
@@ -383,7 +387,7 @@ function Workspace({
       <Header
         titleId={titleId}
         onClose={onClose}
-        actions={features.history && <HistoryButtons onUndo={canUndo ? undo : null} onRedo={canRedo ? redo : null} />}
+        actions={features.history && <HistoryButtons onUndo={undoable} onRedo={redoable} />}
       />
       <DialogContent sx={{...content, px: 3, pb: 0}}>
         {canvas}
