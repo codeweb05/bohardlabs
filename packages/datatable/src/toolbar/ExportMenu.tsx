@@ -2,18 +2,24 @@ import CodeIcon from '@mui/icons-material/Code';
 import DescriptionIcon from '@mui/icons-material/Description';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import TableChartIcon from '@mui/icons-material/TableChart';
-import {ListItemIcon, ListItemText, MenuItem, Tooltip} from '@mui/material';
-import {flexRender} from '@tanstack/react-table';
+import {LinearProgress, ListItemIcon, ListItemText, ListSubheader, MenuItem, Tooltip, Typography} from '@mui/material';
+import {createRow, flexRender} from '@tanstack/react-table';
 import type {Column, Row, Table} from '@tanstack/react-table';
 import dayjs from 'dayjs';
-import {useState} from 'react';
+import {useId, useRef, useState} from 'react';
 
 import {AnchoredMenu} from '../AnchoredMenu';
 import {useDateFormats} from '../config/ConfigContext';
 import {createDataRow, createHeaderRow, writeExcelFile} from '../export/excel';
 import {useLabels} from '../i18n';
 import {ToolbarIconButton} from '../ToolbarIconButton';
-import type {DataTableColumnDef, ExportFormat, RowData} from '../types';
+import type {DataTableColumnDef, ExportFormat, RowData, ServerTableState} from '../types';
+
+/** The most rows "All matching" exports unless `exportRowLimit` says otherwise. */
+const DEFAULT_EXPORT_ROW_LIMIT = 10_000;
+
+/** A ref that moves focus to its element once, when it mounts. Stable, so React never re-runs it. */
+const focusOnMount = (node: HTMLElement | null) => node?.focus();
 
 interface ExportMenuProps<TData extends RowData> {
   readonly table: Table<TData>;
@@ -23,6 +29,26 @@ interface ExportMenuProps<TData extends RowData> {
   readonly onExport?: (format: ExportFormat, data: TData[]) => void | Promise<void>;
   readonly onExportStart?: (format: ExportFormat) => void;
   readonly onExportComplete?: (format: ExportFormat, success: boolean) => void;
+  readonly exportRows?: (state: ServerTableState) => Promise<readonly TData[]>;
+  readonly exportRowLimit?: number;
+  /** The server's count, for the "All matching" heading. */
+  readonly totalRows?: number;
+  /** The rows held are one page, so the menu says so. */
+  readonly manualPagination?: boolean;
+}
+
+/** One block of the menu: a heading, then an item per format. */
+interface ExportScope {
+  readonly key: 'page' | 'all';
+  readonly heading?: string;
+  /** Why the block's items are disabled, shown under the heading. */
+  readonly blocked?: string;
+}
+
+/** An "All matching" export waiting on `exportRows`. Cancel flips `cancelled`. */
+interface PendingExport {
+  readonly format: ExportFormat;
+  cancelled: boolean;
 }
 
 export function ExportMenu<TData extends RowData>({
@@ -33,6 +59,10 @@ export function ExportMenu<TData extends RowData>({
   onExport,
   onExportStart,
   onExportComplete,
+  exportRows,
+  exportRowLimit = DEFAULT_EXPORT_ROW_LIMIT,
+  totalRows,
+  manualPagination = false,
 }: Readonly<ExportMenuProps<TData>>) {
   const labels = useLabels();
   const {display: dateFormat} = useDateFormats();
@@ -41,25 +71,73 @@ export function ExportMenu<TData extends RowData>({
   // Read when the menu opens rather than during render: `table` is one stable object, so a
   // value derived from it in render would be cached past a change of column visibility.
   const [hasColumns, setHasColumns] = useState(true);
+  // Read on open for the same reason: how many rows the table holds.
+  const [heldCount, setHeldCount] = useState(0);
+  // State to draw the progress, a ref so a cancel reaches the run that is already awaiting.
+  const [pending, setPending] = useState<ExportFormat | null>(null);
+  const pendingRef = useRef<PendingExport | null>(null);
+  const [failed, setFailed] = useState(false);
+  const headingId = useId();
 
-  const handleExport = async (format: ExportFormat) => {
-    setAnchorEl(null);
+  const handleExport = async (format: ExportFormat, allMatching: boolean) => {
+    // Only "All matching" keeps the menu open, to show its progress.
+    const run: PendingExport | null = allMatching && exportRows ? {format, cancelled: false} : null;
+    pendingRef.current = run;
+    setPending(run ? format : null);
+    setFailed(false);
+    if (!run) setAnchorEl(null);
     onExportStart?.(format);
     let succeeded = true;
     try {
-      await runExport(format);
+      const rows = run && exportRows ? await matchingRows(exportRows) : heldRows();
+      // A cancel has already closed the progress and reported the export.
+      if (run?.cancelled) return;
+      if (run) {
+        pendingRef.current = null;
+        setPending(null);
+        setAnchorEl(null);
+      }
+      await runExport(format, rows);
     } catch (error) {
+      if (run?.cancelled) return;
       // The click handler does not await this, so a throw from here would be a rejection
       // nobody is listening for. The consumer hears about it through `onExportComplete`.
       console.error(`Failed to export the table as "${format}":`, error);
       succeeded = false;
+      if (run) {
+        pendingRef.current = null;
+        setPending(null);
+        setFailed(true);
+      }
     }
     onExportComplete?.(format, succeeded);
   };
 
-  const runExport = async (format: ExportFormat) => {
-    // The sorted model is the filtered one put in the order on screen, across every page.
-    const rows = leafRows(table.getSortedRowModel().rows);
+  const cancelPending = () => {
+    const run = pendingRef.current;
+    if (!run) return;
+    run.cancelled = true;
+    pendingRef.current = null;
+    setPending(null);
+    onExportComplete?.(run.format, false);
+  };
+
+  // The sorted model is the filtered one put in the order on screen, across every page.
+  const heldRows = () => leafRows(table.getSortedRowModel().rows);
+
+  const matchingRows = async (fetchRows: NonNullable<typeof exportRows>) => {
+    // Read at the click, not in render: `table` is one stable object.
+    const {pagination, sorting, columnFilters, globalFilter} = table.getState();
+    const records = await fetchRows({pagination, sorting, columnFilters, globalFilter: String(globalFilter ?? '')});
+    const {getRowId} = table.options;
+    // Rows the table never held, built the way it builds its own, so their cells draw and
+    // export exactly as they would on screen.
+    return records.map((original, index) =>
+      createRow(table, getRowId ? getRowId(original, index) : String(index), original, index, 0),
+    );
+  };
+
+  const runExport = async (format: ExportFormat, rows: Row<TData>[]) => {
     const records = rows.map((row) => row.original);
 
     if (onExport) {
@@ -109,6 +187,50 @@ export function ExportMenu<TData extends RowData>({
           });
         });
 
+  // Under server paging the rows held are one page, and the menu says so. With
+  // `exportRows` it offers every row the filters match as well, up to the limit.
+  const exportScopes = (): ExportScope[] => {
+    if (!exportRows) {
+      return [{key: 'page', heading: manualPagination ? labels.exportCurrentPageOnly(heldCount) : undefined}];
+    }
+    const matching = totalRows ?? heldCount;
+    return [
+      {key: 'page', heading: labels.exportCurrentPage(heldCount)},
+      {
+        key: 'all',
+        heading: labels.exportAllMatching(matching),
+        blocked: matching > exportRowLimit ? labels.exportRowLimitReached(matching, exportRowLimit) : undefined,
+      },
+    ];
+  };
+
+  const formatItem = (format: ExportFormat, scope: ExportScope) => {
+    // JSON writes the records whole, and `onExport` gets the records too, so only the
+    // built-in CSV and Excel writers need a column to write.
+    const isEmpty = !hasColumns && !onExport && format !== 'json';
+    const key = `${scope.key}-${format}`;
+    const item = (
+      <MenuItem
+        key={key}
+        disabled={isEmpty || scope.blocked != null}
+        // Two items read "Export CSV" when there are two scopes; the heading tells them apart.
+        aria-describedby={scope.heading == null ? undefined : `${headingId}-${scope.key}`}
+        onClick={() => handleExport(format, scope.key === 'all')}
+      >
+        <ListItemIcon>{getFormatIcon(format)}</ListItemIcon>
+        <ListItemText>{getFormatLabel(format)}</ListItemText>
+      </MenuItem>
+    );
+    // A disabled item takes no pointer events, so the tooltip listens on a wrapper.
+    return isEmpty ? (
+      <Tooltip key={key} title={labels.exportNoColumns} describeChild placement="left">
+        <span>{item}</span>
+      </Tooltip>
+    ) : (
+      item
+    );
+  };
+
   const getFormatIcon = (format: ExportFormat) => {
     switch (format) {
       case 'csv':
@@ -144,6 +266,7 @@ export function ExportMenu<TData extends RowData>({
         label={labels.exportLabel}
         onClick={(e) => {
           setHasColumns(exportColumns(table).length > 0);
+          setHeldCount(heldRows().length);
           setAnchorEl(e.currentTarget);
         }}
       >
@@ -151,25 +274,45 @@ export function ExportMenu<TData extends RowData>({
       </ToolbarIconButton>
 
       <AnchoredMenu anchorEl={anchorEl} onClose={() => setAnchorEl(null)}>
-        {formats.map((format) => {
-          // JSON writes the records whole, and `onExport` gets the records too, so only the
-          // built-in CSV and Excel writers need a column to write.
-          const isEmpty = !hasColumns && !onExport && format !== 'json';
-          const item = (
-            <MenuItem key={format} disabled={isEmpty} onClick={() => handleExport(format)}>
-              <ListItemIcon>{getFormatIcon(format)}</ListItemIcon>
-              <ListItemText>{getFormatLabel(format)}</ListItemText>
-            </MenuItem>
-          );
-          // A disabled item takes no pointer events, so the tooltip listens on a wrapper.
-          return isEmpty ? (
-            <Tooltip key={format} title={labels.exportNoColumns} describeChild placement="left">
-              <span>{item}</span>
-            </Tooltip>
-          ) : (
-            item
-          );
-        })}
+        {pending
+          ? [
+              // A status, not a choice. Closing the menu leaves the export running, and
+              // opening it again brings this back with its Cancel.
+              <MenuItem key="preparing" disabled sx={{display: 'block', '&.Mui-disabled': {opacity: 1}}}>
+                <ListItemText>{labels.exportPreparing}</ListItemText>
+                <LinearProgress aria-hidden sx={{mt: 1}} />
+              </MenuItem>,
+              // The item that was clicked is gone, so focus comes here rather than to the page.
+              <MenuItem key="cancel" ref={focusOnMount} onClick={cancelPending}>
+                {labels.cancel}
+              </MenuItem>,
+            ]
+          : [
+              failed && (
+                <ListSubheader key="failed" role="presentation" disableSticky sx={{color: 'error.main'}}>
+                  {labels.exportFailed}
+                </ListSubheader>
+              ),
+              ...exportScopes().flatMap((scope) => [
+                scope.heading != null && (
+                  <ListSubheader
+                    key={`${scope.key}-heading`}
+                    id={`${headingId}-${scope.key}`}
+                    role="presentation"
+                    disableSticky
+                    sx={{lineHeight: 2.5}}
+                  >
+                    {scope.heading}
+                    {scope.blocked != null && (
+                      <Typography component="span" variant="caption" sx={{display: 'block', pb: 1, lineHeight: 1.4}}>
+                        {scope.blocked}
+                      </Typography>
+                    )}
+                  </ListSubheader>
+                ),
+                ...formats.map((format) => formatItem(format, scope)),
+              ]),
+            ]}
       </AnchoredMenu>
 
       {drawing && <DrawnCells {...drawing} />}

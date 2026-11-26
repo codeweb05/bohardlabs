@@ -21,7 +21,7 @@ import type {ReactNode} from 'react';
 
 import {ConfirmSlot} from '../config/ConfigContext';
 import {useLabels} from '../i18n';
-import type {BulkAction, DataTableColumnDef, ExportFormat, RowData, TableDensity} from '../types';
+import type {BulkAction, DataTableColumnDef, ExportFormat, RowData, ServerTableState, TableDensity} from '../types';
 import {ColumnVisibility} from './ColumnVisibility';
 import {DensityToggle} from './DensityToggle';
 import {ExportMenu} from './ExportMenu';
@@ -73,6 +73,10 @@ interface DataTableToolbarProps<TData extends RowData> {
   readonly onExport?: (format: ExportFormat, data: TData[]) => void | Promise<void>;
   readonly onExportStart?: (format: ExportFormat) => void;
   readonly onExportComplete?: (format: ExportFormat, success: boolean) => void;
+  readonly exportRows?: (state: ServerTableState) => Promise<readonly TData[]>;
+  readonly exportRowLimit?: number;
+  readonly totalRows?: number;
+  readonly manualPagination?: boolean;
 
   // Mobile bulk actions
   readonly isMobile?: boolean;
@@ -108,6 +112,10 @@ export function DataTableToolbar<TData extends RowData>({
   onExport,
   onExportStart,
   onExportComplete,
+  exportRows,
+  exportRowLimit,
+  totalRows,
+  manualPagination,
   isMobile = false,
   bulkActions,
   selectedRows,
@@ -352,6 +360,10 @@ export function DataTableToolbar<TData extends RowData>({
               onExport={onExport}
               onExportStart={onExportStart}
               onExportComplete={onExportComplete}
+              exportRows={exportRows}
+              exportRowLimit={exportRowLimit}
+              totalRows={totalRows}
+              manualPagination={manualPagination}
             />
           </>
         )}

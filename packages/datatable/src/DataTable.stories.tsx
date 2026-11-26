@@ -739,6 +739,65 @@ export const ExportColumns: Story = {
   },
 };
 
+// Every order the filters match on the server. The table holds the first page of it.
+const MATCHING_ORDERS = makeOrders(137);
+
+/**
+ * **Exporting every matching row.** Under server paging the table holds one page, so the
+ * built-in export writes one page. Pass `exportRows` and the menu offers each format twice:
+ * for the current page, and for every row the filters match, counted from `totalRows`.
+ *
+ * `exportRows` gets the table's state at the click (sorting, filters, search) and returns
+ * the rows. The table never guesses a page size your API might refuse. While it runs the
+ * menu shows progress and a Cancel item. Above `exportRowLimit` (10,000 by default) the
+ * "All matching" items are disabled and the menu says why.
+ *
+ * Without `exportRows`, a server-paged menu reads "Current page only", so nobody mistakes
+ * the file for the whole list. Here the fetch takes a moment on purpose, then the CSV
+ * holds all 137 orders, not the 10 on screen.
+ */
+export const ExportAllMatching: Story = {
+  parameters: showcase('enableExport', 'exportRows', 'exportRowLimit', 'totalRows', 'manualPagination'),
+  args: {
+    enableExport: true,
+    exportFileName: 'orders',
+    data: MATCHING_ORDERS.slice(0, 10),
+    totalRows: MATCHING_ORDERS.length,
+    manualPagination: true,
+    pageSize: 10,
+    exportRows: fn(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 600));
+      return MATCHING_ORDERS;
+    }),
+  },
+  play: async ({args, canvasElement}) => {
+    const body = within(canvasElement.ownerDocument.body);
+    const downloads = captureDownloads();
+
+    try {
+      await userEvent.click(within(canvasElement).getByRole('button', {name: 'Export'}));
+      // Both items read "Export CSV"; the heading above each is its description.
+      await userEvent.click(
+        await body.findByRole('menuitem', {name: 'Export CSV', description: 'All matching · 137 rows'}),
+      );
+
+      await expect(await body.findByText('Preparing export...')).toBeInTheDocument();
+      await waitFor(() => expect(downloads.files).toHaveLength(1), {timeout: 5000});
+
+      await expect(args.exportRows).toHaveBeenCalledWith(
+        expect.objectContaining({globalFilter: '', pagination: {pageIndex: 0, pageSize: 10}}),
+      );
+      // A heading line, then every matching order.
+      const lines = (await downloads.files[0].blob.text()).split('\n');
+      await expect(lines).toHaveLength(MATCHING_ORDERS.length + 1);
+    } finally {
+      downloads.restore();
+      await userEvent.keyboard('{Escape}');
+      await waitFor(() => expect(body.queryByRole('menu')).not.toBeInTheDocument());
+    }
+  },
+};
+
 // A story-only id. Two tables sharing an id share their saved state, which is exactly why a
 // detail-page sub-list needs its own even when it reuses the same columns.
 const PERSISTED_TABLE_ID = 'storybook-orders';
@@ -1132,6 +1191,13 @@ const HINDI_LABELS: DataTableLabels = {
   exportExcel: 'एक्सेल निर्यात करें',
   exportJson: 'JSON निर्यात करें',
   exportNoColumns: 'निर्यात के लिए कोई कॉलम नहीं',
+  exportCurrentPage: (count) => `वर्तमान पृष्ठ · ${count} पंक्तियाँ`,
+  exportAllMatching: (count) => `सभी मेल खाती · ${count} पंक्तियाँ`,
+  exportCurrentPageOnly: (count) => `केवल वर्तमान पृष्ठ · ${count} पंक्तियाँ`,
+  exportRowLimitReached: (count, limit) =>
+    `${count} पंक्तियाँ मेल खाती हैं, एक निर्यात की सीमा ${limit} है। पहले फ़िल्टर सीमित करें।`,
+  exportPreparing: 'निर्यात तैयार हो रहा है...',
+  exportFailed: 'निर्यात विफल रहा। फिर से प्रयास करें।',
 
   selectAll: 'सभी पंक्तियाँ चुनें',
   selectRow: (id) => `पंक्ति ${id} चुनें`,

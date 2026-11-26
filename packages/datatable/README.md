@@ -231,7 +231,9 @@ export function OrdersPage() {
   `onServerStateChange` reports and pass nothing back.
 - **Anything derived from `data` is derived from one page.** A footer total, "select all",
   and the built-in export all see the current page only. If a total has to mean the whole
-  set, it comes from the server; if an export has to, use `onExport`.
+  set, it comes from the server. For export, pass `exportRows` and the menu also offers every
+  matching row (up to `exportRowLimit`, 10,000 by default); without it the menu says "Current
+  page only".
 - **Page reset is already handled.** The table returns to page 1 in the same commit as a
   filter change, so a consumer never has to reset it (and should not).
 
@@ -337,6 +339,7 @@ rather than a part of its composition.
 | `useInlineEdit`                                     | inline row editing; `onSave` is your own write   |
 | `slots`, `dateFormats`                              | swap in the app's confirm dialog and date format |
 | `toolbarContent`                                    | your own controls in the toolbar, after search   |
+| `exportRows`, `exportRowLimit`                      | export every matching row, not just the page     |
 | `@vt-labs/datatable/server`                         | `useServerSidePagination` (needs React Query)    |
 
 Every prop is documented in `types.ts` with the gotcha attached, and rendered as a prop

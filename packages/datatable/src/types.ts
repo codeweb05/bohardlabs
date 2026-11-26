@@ -893,8 +893,9 @@ export interface DataTableProps<TData extends RowData> extends TableEventHandler
    * Export menu in the toolbar.
    *
    * The built-in export writes the rows the table HOLDS. In server-side mode that is the
-   * current page, which is a footgun on a filtered list of thousands: pass `onExport` and
-   * have the server produce the file.
+   * current page, so under `manualPagination` the menu says "Current page only". Pass
+   * `exportRows` to offer every row the filters match as well, or `onExport` to have the
+   * server produce the file.
    */
   readonly enableExport?: boolean;
   /**
@@ -926,6 +927,30 @@ export interface DataTableProps<TData extends RowData> extends TableEventHandler
    * reports `false` if it rejects.
    */
   readonly onExport?: (format: ExportFormat, data: TData[]) => void | Promise<void>;
+  /**
+   * Fetch every row matching the current filters, for export. With it, the export menu
+   * offers each format twice: for the current page, and for all matching rows, counted from
+   * `totalRows`.
+   *
+   * Called with the table's state at the moment of the click, the same shape
+   * `onServerStateChange` reports. Ignore `pagination` and ask your API for everything the
+   * sorting, filters and search match. The table never guesses a page size your API might
+   * refuse.
+   *
+   * While the promise is pending the menu shows progress and a Cancel item. Cancel drops the
+   * rows when they arrive; it cannot stop the request itself. A rejection is logged, shown in
+   * the menu as `labels.exportFailed`, and reported as `onExportComplete(format, false)`, as
+   * is a cancel. The fetched rows go through the same columns as the page (CSV and Excel) or
+   * whole (JSON and `onExport`).
+   */
+  readonly exportRows?: (state: ServerTableState) => Promise<readonly TData[]>;
+  /**
+   * The most rows "All matching" may export. Above it the items are disabled and the menu
+   * says why, so a user narrows the filters instead of waiting on a file nobody can open.
+   *
+   * @defaultValue `10000`
+   */
+  readonly exportRowLimit?: number;
 
   // Virtualization
   /**

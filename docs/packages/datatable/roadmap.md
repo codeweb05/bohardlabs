@@ -48,7 +48,7 @@ Their test suites are worth mining when porting anything: `DataTable.persistence
 | 13  | Diff highlighting on refetch             | UX        |        | proposed                            |
 | 14  | Virtualization                           | UX        | smart  | wired, unused (port exists)         |
 | 15  | Export respects the current view         | Data out  | SP     | done (2026-11-26)                   |
-| 16  | Server-side export of the full result    | Data out  |        | proposed                            |
+| 16  | Server-side export of the full result    | Data out  |        | done (2026-11-27)                   |
 | 17  | Faceted filters with counts              | Data out  | SP     | proposed (BE-dependent)             |
 | 18  | Inline edit rollout                      | Editing   |        | partly built                        |
 | 19  | Bulk edit with optimistic rollback       | Editing   |        | proposed (BE-dependent)             |

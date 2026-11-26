@@ -103,6 +103,18 @@ export interface DataTableLabels {
   readonly exportJson: string;
   /** Tooltip on CSV and Excel when every visible column is hidden or has `enableExport: false`. */
   readonly exportNoColumns: string;
+  /** Heads the formats that export the rows on screen, when `exportRows` is set. */
+  readonly exportCurrentPage: (count: number) => string;
+  /** Heads the formats that fetch every matching row through `exportRows`. `count` is `totalRows`. */
+  readonly exportAllMatching: (count: number) => string;
+  /** Heads the formats under server paging without `exportRows`, so the file is never silently one page. */
+  readonly exportCurrentPageOnly: (count: number) => string;
+  /** Under "All matching" when `count` is over `exportRowLimit`, saying why its items are disabled. */
+  readonly exportRowLimitReached: (count: number, limit: number) => string;
+  /** Shown in the menu while `exportRows` is fetching. */
+  readonly exportPreparing: string;
+  /** Shown in the menu after `exportRows` rejected. */
+  readonly exportFailed: string;
 
   // Selection
   readonly selectAll: string;
@@ -130,6 +142,11 @@ export interface DataTableLabels {
   readonly saveChanges: string;
   readonly discardChanges: string;
   readonly saveFailed: string;
+}
+
+/** `1 row`, `1,284 rows`. */
+function rowCount(count: number): string {
+  return `${count.toLocaleString('en')} ${count === 1 ? 'row' : 'rows'}`;
 }
 
 export const DEFAULT_LABELS: DataTableLabels = {
@@ -193,6 +210,13 @@ export const DEFAULT_LABELS: DataTableLabels = {
   exportExcel: 'Export Excel',
   exportJson: 'Export JSON',
   exportNoColumns: 'No columns to export',
+  exportCurrentPage: (count) => `Current page · ${rowCount(count)}`,
+  exportAllMatching: (count) => `All matching · ${rowCount(count)}`,
+  exportCurrentPageOnly: (count) => `Current page only · ${rowCount(count)}`,
+  exportRowLimitReached: (count, limit) =>
+    `${count.toLocaleString('en')} rows match, more than the ${limit.toLocaleString('en')} an export can hold. Narrow the filters first.`,
+  exportPreparing: 'Preparing export...',
+  exportFailed: 'The export failed. Try again.',
 
   selectAll: 'Select all rows',
   selectRow: (id) => `Select row ${id}`,

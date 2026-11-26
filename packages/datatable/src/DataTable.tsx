@@ -148,6 +148,8 @@ export function DataTable<TData extends RowData>(props: Readonly<DataTableProps<
     onExport,
     onExportStart,
     onExportComplete,
+    exportRows,
+    exportRowLimit,
 
     // UI
     density: initialDensity = 'comfortable',
@@ -378,6 +380,10 @@ export function DataTable<TData extends RowData>(props: Readonly<DataTableProps<
                 onExport={onExport}
                 onExportStart={onExportStart}
                 onExportComplete={onExportComplete}
+                exportRows={exportRows}
+                exportRowLimit={exportRowLimit}
+                totalRows={totalRows}
+                manualPagination={manualPagination}
                 isMobile={isMobile}
                 bulkActions={bulkActions}
                 selectedRows={selectedRows}
