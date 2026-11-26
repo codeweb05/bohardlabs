@@ -28,14 +28,14 @@ Status words, used the same way in every table below:
 
 ## Where things stand
 
-| Workstream                                       | Status                                       | Next step                                        |
-| ------------------------------------------------ | -------------------------------------------- | ------------------------------------------------ |
-| [1. Publishing](#1-publishing)                   | all three at 0.1.0 on npm; next versions cut | `pnpm release` for datatable 1.0.0, others 0.1.1 |
-| [2. `@vt-labs/datatable`](#2-vt-labsdatatable)   | ported, hardened, on MUI 9; 3 features done  | `noUncheckedIndexedAccess`, then feature item 1  |
-| [3. New packages](#3-new-packages)               | 5 plans written, image-editor and form done  | start plan 2, admin-ui-kit                       |
-| [4. Deferred candidates](#4-deferred-candidates) | 4 deferred                                   | nothing until a trigger fires                    |
-| [5. Repo and tooling](#5-repo-and-tooling)       | hooks, jscpd; 3 upgrades deferred            | the monthly `pnpm outdated -r`                   |
-| [6. Decisions](#6-decisions)                     | 9 made, 2 open                               | answer B before plan 4 starts                    |
+| Workstream                                       | Status                                      | Next step                                       |
+| ------------------------------------------------ | ------------------------------------------- | ----------------------------------------------- |
+| [1. Publishing](#1-publishing)                   | four packages on npm; datatable at 1.0.0    | nothing queued                                  |
+| [2. `@vt-labs/datatable`](#2-vt-labsdatatable)   | ported, hardened, on MUI 9; 3 features done | `noUncheckedIndexedAccess`, then feature item 1 |
+| [3. New packages](#3-new-packages)               | 5 plans written, image-editor and form done | start plan 2, admin-ui-kit                      |
+| [4. Deferred candidates](#4-deferred-candidates) | 4 deferred                                  | nothing until a trigger fires                   |
+| [5. Repo and tooling](#5-repo-and-tooling)       | hooks, jscpd; 3 upgrades deferred           | the monthly `pnpm outdated -r`                  |
+| [6. Decisions](#6-decisions)                     | 9 made, 2 open                              | answer B before plan 4 starts                   |
 
 ## 1. Publishing
 
@@ -43,16 +43,17 @@ Status words, used the same way in every table below:
 private until they are genuinely ready; flipping that flag is the decision to support the
 thing forever.
 
-| Step                                                                 | Status            | Detail                                                                                                 |
-| -------------------------------------------------------------------- | ----------------- | ------------------------------------------------------------------------------------------------------ |
-| Pick the npm scope                                                   | done (2026-08-28) | [decision 0001](decisions/0001-npm-scope.md)                                                           |
-| Pick the license                                                     | done (2026-09-28) | [decision 0007](decisions/0007-mit-license.md)                                                         |
-| Remove `"private": true` from `@vt-labs/datatable`                   | done (2026-08-29) |                                                                                                        |
-| Create the `vt-labs` org on npm, add the publishing account          | done (2026-09-29) | decision 0001                                                                                          |
-| First `pnpm release`: `@vt-labs/datatable@0.1.0`                     | done (2026-09-29) | on `latest`                                                                                            |
-| First release of `@vt-labs/form`: `0.1.0` on `latest`                | done (2026-09-30) | skipped the prerelease; published with `pnpm publish`, like image-editor                               |
-| First release of `@vt-labs/image-editor`: `0.1.0` on `latest`        | done (2026-09-30) | skipped the prerelease; published with `pnpm publish` since pre mode would tag it `next`               |
-| Publish datatable `1.0.0`, form and image-editor `0.1.1` on `latest` | open              | versioned 2026-10-01, out of pre mode; `pnpm release` waits on an npm login for the publishing account |
+| Step                                                                 | Status            | Detail                                                                                   |
+| -------------------------------------------------------------------- | ----------------- | ---------------------------------------------------------------------------------------- |
+| Pick the npm scope                                                   | done (2026-08-28) | [decision 0001](decisions/0001-npm-scope.md)                                             |
+| Pick the license                                                     | done (2026-09-28) | [decision 0007](decisions/0007-mit-license.md)                                           |
+| Remove `"private": true` from `@vt-labs/datatable`                   | done (2026-08-29) |                                                                                          |
+| Create the `vt-labs` org on npm, add the publishing account          | done (2026-09-29) | decision 0001                                                                            |
+| First `pnpm release`: `@vt-labs/datatable@0.1.0`                     | done (2026-09-29) | on `latest`                                                                              |
+| First release of `@vt-labs/form`: `0.1.0` on `latest`                | done (2026-09-30) | skipped the prerelease; published with `pnpm publish`, like image-editor                 |
+| First release of `@vt-labs/image-editor`: `0.1.0` on `latest`        | done (2026-09-30) | skipped the prerelease; published with `pnpm publish` since pre mode would tag it `next` |
+| Publish datatable `1.0.0`, form and image-editor `0.1.1` on `latest` | done (2026-11-26) | versioned 2026-10-01, out of pre mode                                                    |
+| First release of `@vt-labs/notification-preview`: `0.1.0`            | done (2026-11-26) | on `latest`                                                                              |
 
 Each new package from section 3 joins this queue once its plan closes: the last task of
 every plan writes the README and the changeset, and the package stays private until it is
@@ -99,20 +100,27 @@ they are designed for promptiva and later projects rather than ported for the sk
 apps, so each plan is rewritten as a design when it is picked up; form is the first, and
 no longer depends on admin-ui.
 
-| Order | Plan                                                                      | Package                         | Size      | Tasks | Status                       | Blocked on                                                                                                                              |
-| :---: | ------------------------------------------------------------------------- | ------------------------------- | --------- | :---: | ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-|   1   | [image-editor](superpowers/plans/done/2026-09-30-image-editor-package.md) | `@vt-labs/image-editor`         | redesign  | 12/12 | done (2026-09-30)            | nothing ([spec](superpowers/specs/2026-09-30-image-editor-package-design.md))                                                           |
-|   2   | [admin-ui-kit](superpowers/plans/open/2026-08-28-admin-ui-kit-package.md) | `@vt-labs/admin-ui`             | ~1000 loc |  0/9  | ready                        | nothing                                                                                                                                 |
-|   3   | [form](superpowers/plans/done/2026-09-29-form-package.md)                 | `@vt-labs/form`                 | redesign  | 14/14 | done (2026-09-30)            | nothing ([spec](superpowers/specs/2026-09-29-form-package-design.md))                                                                   |
-|   4   | [api-client](superpowers/plans/open/2026-08-28-api-client-package.md)     | `@vt-labs/api-client`           | 1200 loc  |  0/9  | blocked                      | [open question B](decisions/open-questions.md#b-do-skipwash-api-and-smarthip-backend-share-the-response-envelope), a check, not a build |
-|   5   | [admin-shell](superpowers/plans/open/2026-08-28-admin-shell-package.md)   | `@vt-labs/admin-shell`          | 1120 loc  |  0/8  | blocked                      | plan 2                                                                                                                                  |
-|   6   | [notification-preview](../packages/notification-preview/README.md)        | `@vt-labs/notification-preview` | new       |   -   | 0.1.0 versioned (2026-11-26) | an npm login to publish                                                                                                                 |
+| Order | Plan                                                                      | Package                         | Size      | Tasks | Status                    | Blocked on                                                                                                                              |
+| :---: | ------------------------------------------------------------------------- | ------------------------------- | --------- | :---: | ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+|   1   | [image-editor](superpowers/plans/done/2026-09-30-image-editor-package.md) | `@vt-labs/image-editor`         | redesign  | 12/12 | done (2026-09-30)         | nothing ([spec](superpowers/specs/2026-09-30-image-editor-package-design.md))                                                           |
+|   2   | [admin-ui-kit](superpowers/plans/open/2026-08-28-admin-ui-kit-package.md) | `@vt-labs/admin-ui`             | ~1000 loc |  0/9  | ready                     | nothing                                                                                                                                 |
+|   3   | [form](superpowers/plans/done/2026-09-29-form-package.md)                 | `@vt-labs/form`                 | redesign  | 14/14 | done (2026-09-30)         | nothing ([spec](superpowers/specs/2026-09-29-form-package-design.md))                                                                   |
+|   4   | [api-client](superpowers/plans/open/2026-08-28-api-client-package.md)     | `@vt-labs/api-client`           | 1200 loc  |  0/9  | blocked                   | [open question B](decisions/open-questions.md#b-do-skipwash-api-and-smarthip-backend-share-the-response-envelope), a check, not a build |
+|   5   | [admin-shell](superpowers/plans/open/2026-08-28-admin-shell-package.md)   | `@vt-labs/admin-shell`          | 1120 loc  |  0/8  | blocked                   | plan 2                                                                                                                                  |
+|   6   | [notification-preview](../packages/notification-preview/README.md)        | `@vt-labs/notification-preview` | new       |   -   | 0.1.0 on npm (2026-11-26) | nothing                                                                                                                                 |
 
 Each package that has shipped keeps its feature backlog beside the datatable's:
 [`packages/form/roadmap.md`](packages/form/roadmap.md) (4 proposed) and
 [`packages/image-editor/roadmap.md`](packages/image-editor/roadmap.md) (2 proposed), both
 from a consuming admin app's requests on 2026-10-26. Each backlog's status table is the
 source of truth for its items.
+
+High-level designs for the next round, written 2026-11-26 for discussion before any code:
+[datatable](superpowers/specs/2026-11-26-datatable-next-features.md),
+[form](superpowers/specs/2026-11-26-form-next-features.md) and
+[image-editor](superpowers/specs/2026-11-26-image-editor-next-features.md). Each names its
+order, its API, its semver bump and the questions to settle first. Task plans follow once
+those are answered.
 
 When a plan starts, its status becomes `in progress (owner, task N)`. When its last task
 is checked off, the file moves to `superpowers/plans/done/`, the link here follows it, and
