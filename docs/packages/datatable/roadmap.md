@@ -51,7 +51,7 @@ Their test suites are worth mining when porting anything: `DataTable.persistence
 | 16  | Server-side export of the full result    | Data out  |        | done (2026-11-27)                   |
 | 17  | Faceted filters with counts              | Data out  | SP     | proposed (BE-dependent)             |
 | 18  | Inline edit rollout                      | Editing   |        | partly built                        |
-| 19  | Bulk edit with optimistic rollback       | Editing   |        | proposed (BE-dependent)             |
+| 19  | Bulk edit with optimistic rollback       | Editing   |        | done (2026-11-27)                   |
 | 20  | Aggregation footer                       | Analytics | SP     | proposed                            |
 | 21  | Pivot engine                             | Analytics | SP     | proposed                            |
 | 22  | Pivot configurator panel                 | Analytics | SP     | proposed                            |

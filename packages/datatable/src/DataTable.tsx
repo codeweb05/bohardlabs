@@ -126,6 +126,7 @@ export function DataTable<TData extends RowData>(props: Readonly<DataTableProps<
     // Row actions
     rowActions,
     bulkActions,
+    onBulkActionResult,
 
     // Inline editing
     onRowEdit,
@@ -387,12 +388,20 @@ export function DataTable<TData extends RowData>(props: Readonly<DataTableProps<
                 isMobile={isMobile}
                 bulkActions={bulkActions}
                 selectedRows={selectedRows}
+                onBulkActionResult={onBulkActionResult}
                 toolbarContent={toolbarContent}
               />
             )}
 
             {/* Bulk Actions Bar (desktop only) */}
-            {showBulkActions && !isMobile && <BulkActions table={table} actions={bulkActions} />}
+            {showBulkActions && !isMobile && (
+              <BulkActions
+                table={table}
+                actions={bulkActions}
+                rowSelection={state.rowSelection}
+                onResult={onBulkActionResult}
+              />
+            )}
 
             {/* Main Content */}
             <Box sx={{position: 'relative'}} data-testid="data-table-content">

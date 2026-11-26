@@ -107,6 +107,7 @@ export {
 
 export type {
   BulkAction,
+  BulkActionResult,
   CellEventHandlers,
   ColumnEditConfig,
   ColumnFilterConfig,

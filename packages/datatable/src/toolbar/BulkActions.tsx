@@ -1,22 +1,42 @@
 import CloseIcon from '@mui/icons-material/Close';
-import {Box, Button, Chip, CircularProgress, Divider, IconButton, alpha} from '@mui/material';
-import type {Table} from '@tanstack/react-table';
+import {Alert, Box, Button, Chip, CircularProgress, Divider, IconButton, alpha} from '@mui/material';
+import type {RowSelectionState, Table} from '@tanstack/react-table';
 import {useState} from 'react';
 
 import {ConfirmSlot} from '../config/ConfigContext';
 import {useLabels} from '../i18n';
-import type {BulkAction, RowData} from '../types';
+import type {BulkAction, BulkActionResult, RowData} from '../types';
+import {performBulkAction, selectionKey} from './performBulkAction';
 
 interface BulkActionsProps<TData extends RowData> {
   readonly table: Table<TData>;
   readonly actions: readonly BulkAction<TData>[];
+  /** Passed in so a change of selection re-renders the bar; `table` itself never changes. */
+  readonly rowSelection?: RowSelectionState;
+  readonly onResult?: (action: BulkAction<TData>, result: BulkActionResult) => void;
 }
 
-export function BulkActions<TData extends RowData>({table, actions}: Readonly<BulkActionsProps<TData>>) {
+/** The counts an action reported, and the selection they describe. */
+interface Notice {
+  readonly succeeded: number;
+  readonly failed: number;
+  readonly selection: string;
+}
+
+export function BulkActions<TData extends RowData>({
+  table,
+  actions,
+  rowSelection = table.getState().rowSelection,
+  onResult,
+}: Readonly<BulkActionsProps<TData>>) {
   const labels = useLabels();
   const [confirmAction, setConfirmAction] = useState<BulkAction<TData> | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingActionId, setLoadingActionId] = useState<string | null>(null);
+  const [notice, setNotice] = useState<Notice | null>(null);
+
+  // The message is about the rows left selected. Once the user picks others, it is not.
+  if (notice && notice.selection !== selectionKey(rowSelection)) setNotice(null);
 
   const selectedRows = table.getFilteredSelectedRowModel().rows.map((row) => row.original);
   const selectedCount = selectedRows.length;
@@ -38,8 +58,16 @@ export function BulkActions<TData extends RowData>({table, actions}: Readonly<Bu
     setIsLoading(true);
     setLoadingActionId(action.id);
     try {
-      await action.onClick(selectedRows);
-      table.resetRowSelection();
+      const outcome = await performBulkAction(table, action, selectedRows);
+      if (outcome) {
+        const {result, selection} = outcome;
+        setNotice({
+          succeeded: result.succeeded.length,
+          failed: result.failed.length,
+          selection: selectionKey(selection),
+        });
+        onResult?.(action, result);
+      }
     } catch (error) {
       // Nothing awaits the click, so a throw from here would be a rejection nobody is
       // listening for. The selection is left alone so the same rows can be tried again.
@@ -144,6 +172,17 @@ export function BulkActions<TData extends RowData>({table, actions}: Readonly<Bu
           })}
         </Box>
       </Box>
+
+      {notice && (
+        <Alert
+          severity={notice.failed > 0 ? 'error' : 'success'}
+          closeText={labels.close}
+          onClose={() => setNotice(null)}
+          sx={{borderRadius: 0, borderBottom: (theme) => `1px solid ${theme.palette.divider}`}}
+        >
+          {labels.bulkResult(notice.succeeded, notice.failed)}
+        </Alert>
+      )}
 
       {/* Confirmation dialog */}
       <ConfirmSlot

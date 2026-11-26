@@ -392,6 +392,23 @@ export interface RowAction<TData> {
 }
 
 /**
+ * What a bulk action reports when some rows went through and some did not. Both lists hold
+ * row ids as `getRowId` returns them.
+ *
+ * @example
+ * ```ts
+ * onClick: async (rows) => {
+ *   const {ok, errors} = await markPaid(rows.map((r) => r.id));
+ *   return {succeeded: ok, failed: errors.map((e) => e.id)};
+ * }
+ * ```
+ */
+export interface BulkActionResult {
+  readonly succeeded: readonly string[];
+  readonly failed: readonly string[];
+}
+
+/**
  * One button in the bar that replaces the toolbar while rows are selected.
  *
  * Receives the selected rows. In server-side mode "select all" means the current page, so
@@ -423,8 +440,13 @@ export interface BulkAction<TData> {
    * Runs over every selected row at once. Return the promise and the bulk buttons stay
    * disabled until it settles. One that rejects is logged and the selection is kept, so
    * the same rows can be tried again; telling the user is the action's own job.
+   *
+   * Return nothing and the selection clears, as for a run that worked. Return a
+   * {@link BulkActionResult} when some rows can fail on their own: the ones that failed
+   * stay selected for a retry, the bar says how many of each, and `onBulkActionResult`
+   * hears it.
    */
-  readonly onClick: (selectedRows: TData[]) => void | Promise<void>;
+  readonly onClick: (selectedRows: TData[]) => void | BulkActionResult | Promise<void | BulkActionResult>;
   /** Disable based on the selection, e.g. a limit on how many rows the endpoint takes. */
   readonly disabled?: boolean | ((selectedRows: TData[]) => boolean);
   /**
@@ -834,6 +856,12 @@ export interface DataTableProps<TData extends RowData> extends TableEventHandler
    * @see {@link BulkAction}, whose `confirmMessage` gates destructive ones.
    */
   readonly bulkActions?: readonly BulkAction<TData>[];
+  /**
+   * A bulk action returned a {@link BulkActionResult}. Called after the selection has
+   * narrowed to the failed rows and the bar has shown its message, for logging or a toast.
+   * Not called for an action that returns nothing.
+   */
+  readonly onBulkActionResult?: (action: BulkAction<TData>, result: BulkActionResult) => void;
 
   // Inline editing
   /**

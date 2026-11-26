@@ -470,6 +470,64 @@ export const Selection: Story = {
   },
 };
 
+/** Two orders the payment provider turns down, whichever rows are sent. */
+const DECLINED = new Set(['order-2', 'order-4']);
+
+/**
+ * A bulk action that works for some rows and not others. It returns which ids went
+ * through, the bar says how many of each, and the rows that failed stay selected so the
+ * same button can try them again.
+ */
+export const SelectionPartialFailure: Story = {
+  name: 'Bulk actions, partial failure',
+  parameters: {
+    ...KNOWN_CONTRAST_EXCEPTION,
+    ...showcase('bulkActions', 'onBulkActionResult', 'getRowId'),
+  },
+  args: {
+    enableRowSelection: true,
+    getRowId: (row) => row.id,
+    onBulkActionResult: fn(),
+    bulkActions: [
+      {
+        id: 'paid',
+        label: 'Mark as paid',
+        onClick: (rows) => {
+          const ids = rows.map((row) => row.id);
+          return Promise.resolve({
+            succeeded: ids.filter((id) => !DECLINED.has(id)),
+            failed: ids.filter((id) => DECLINED.has(id)),
+          });
+        },
+      },
+    ],
+  },
+  play: async ({args, canvasElement}) => {
+    const canvas = within(canvasElement);
+    for (const n of [1, 2, 3, 4, 5]) {
+      await userEvent.click(canvas.getByRole('checkbox', {name: `Select row order-${n}`}));
+    }
+    await userEvent.click(canvas.getByRole('button', {name: 'Mark as paid'}));
+
+    const alert = await canvas.findByRole('alert');
+    await expect(alert).toHaveTextContent('3 updated, 2 failed. The 2 failed rows are still selected.');
+    await expect(args.onBulkActionResult).toHaveBeenCalledWith(expect.objectContaining({id: 'paid'}), {
+      succeeded: ['order-1', 'order-3', 'order-5'],
+      failed: ['order-2', 'order-4'],
+    });
+    for (const n of [2, 4]) {
+      await expect(canvas.getByRole('checkbox', {name: `Select row order-${n}`})).toBeChecked();
+    }
+    for (const n of [1, 3, 5]) {
+      await expect(canvas.getByRole('checkbox', {name: `Select row order-${n}`})).not.toBeChecked();
+    }
+
+    // Picking other rows makes the message stale, so it goes.
+    await userEvent.click(canvas.getByRole('checkbox', {name: 'Select row order-6'}));
+    await waitFor(() => expect(canvas.queryByRole('alert')).not.toBeInTheDocument());
+  },
+};
+
 const rowActions: RowAction<Order>[] = [
   {id: 'view', label: 'View order', onClick: fn()},
   {id: 'reschedule', label: 'Reschedule', onClick: fn()},
@@ -1202,6 +1260,10 @@ const HINDI_LABELS: DataTableLabels = {
   selectAll: 'सभी पंक्तियाँ चुनें',
   selectRow: (id) => `पंक्ति ${id} चुनें`,
   selected: 'चयनित',
+  bulkResult: (succeeded, failed) =>
+    failed === 0
+      ? `${succeeded} अपडेट हुईं।`
+      : `${succeeded} अपडेट हुईं, ${failed} विफल रहीं। विफल ${failed} पंक्तियाँ अब भी चयनित हैं।`,
 
   rowsPerPage: 'प्रति पृष्ठ पंक्तियाँ',
   pageOf: (current, total) => `${total} में से पृष्ठ ${current}`,

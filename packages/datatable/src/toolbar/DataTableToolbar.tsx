@@ -21,12 +21,21 @@ import type {ReactNode} from 'react';
 
 import {ConfirmSlot} from '../config/ConfigContext';
 import {useLabels} from '../i18n';
-import type {BulkAction, DataTableColumnDef, ExportFormat, RowData, ServerTableState, TableDensity} from '../types';
+import type {
+  BulkAction,
+  BulkActionResult,
+  DataTableColumnDef,
+  ExportFormat,
+  RowData,
+  ServerTableState,
+  TableDensity,
+} from '../types';
 import {ColumnVisibility} from './ColumnVisibility';
 import {DensityToggle} from './DensityToggle';
 import {ExportMenu} from './ExportMenu';
 import {FilterPanel} from './FilterPanel';
 import {GlobalSearch} from './GlobalSearch';
+import {performBulkAction} from './performBulkAction';
 
 interface DataTableToolbarProps<TData extends RowData> {
   readonly table: Table<TData>;
@@ -82,6 +91,7 @@ interface DataTableToolbarProps<TData extends RowData> {
   readonly isMobile?: boolean;
   readonly bulkActions?: readonly BulkAction<TData>[];
   readonly selectedRows?: readonly TData[];
+  readonly onBulkActionResult?: (action: BulkAction<TData>, result: BulkActionResult) => void;
 
   // The consumer's own controls, rendered right after the search box
   readonly toolbarContent?: ReactNode;
@@ -119,6 +129,7 @@ export function DataTableToolbar<TData extends RowData>({
   isMobile = false,
   bulkActions,
   selectedRows,
+  onBulkActionResult,
   toolbarContent,
 }: Readonly<DataTableToolbarProps<TData>>) {
   const labels = useLabels();
@@ -129,11 +140,12 @@ export function DataTableToolbar<TData extends RowData>({
   const runBulkAction = async (action: BulkAction<TData>) => {
     setIsBulkActionLoading(true);
     try {
-      await action.onClick(selectedRows as TData[]);
       // Same as the desktop bar: on success the rows are gone, so the
       // count chip and the next action must not still point at them.
-      // Left alone on failure so the user can retry the same selection.
-      table.resetRowSelection();
+      // Left alone on failure so the user can retry the same selection,
+      // and narrowed to the failed rows when the action says which.
+      const outcome = await performBulkAction(table, action, selectedRows as TData[]);
+      if (outcome) onBulkActionResult?.(action, outcome.result);
     } catch (error) {
       console.error(`Bulk action "${action.id}" failed:`, error);
     } finally {

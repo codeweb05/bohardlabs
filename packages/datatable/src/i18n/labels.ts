@@ -121,6 +121,11 @@ export interface DataTableLabels {
   /** The accessible name of one row's checkbox. `id` is the row's id. */
   readonly selectRow: (id: string) => string;
   readonly selected: string;
+  /**
+   * Shown above the rows after a bulk action that returned a `BulkActionResult`. The rows
+   * that failed stay selected, so the text can say so.
+   */
+  readonly bulkResult: (succeeded: number, failed: number) => string;
 
   // Pagination
   readonly rowsPerPage: string;
@@ -147,6 +152,13 @@ export interface DataTableLabels {
 /** `1 row`, `1,284 rows`. */
 function rowCount(count: number): string {
   return `${count.toLocaleString('en')} ${count === 1 ? 'row' : 'rows'}`;
+}
+
+function bulkResult(succeeded: number, failed: number): string {
+  if (failed === 0) return `${succeeded} updated.`;
+  const stillSelected =
+    failed === 1 ? 'The failed row is still selected.' : `The ${failed} failed rows are still selected.`;
+  return `${succeeded} updated, ${failed} failed. ${stillSelected}`;
 }
 
 export const DEFAULT_LABELS: DataTableLabels = {
@@ -221,6 +233,7 @@ export const DEFAULT_LABELS: DataTableLabels = {
   selectAll: 'Select all rows',
   selectRow: (id) => `Select row ${id}`,
   selected: 'selected',
+  bulkResult,
 
   rowsPerPage: 'Rows per page',
   pageOf: (current, total) => `Page ${current} of ${total}`,

@@ -340,6 +340,7 @@ rather than a part of its composition.
 | `slots`, `dateFormats`                              | swap in the app's confirm dialog and date format |
 | `toolbarContent`                                    | your own controls in the toolbar, after search   |
 | `exportRows`, `exportRowLimit`                      | export every matching row, not just the page     |
+| `BulkActionResult`, `onBulkActionResult`            | a bulk action that fails for some rows only      |
 | `@vt-labs/datatable/server`                         | `useServerSidePagination` (needs React Query)    |
 
 Every prop is documented in `types.ts` with the gotcha attached, and rendered as a prop
