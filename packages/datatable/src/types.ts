@@ -415,6 +415,25 @@ export interface BulkActionResult {
 }
 
 /**
+ * What a bulk action is told besides the rows.
+ *
+ * @example
+ * ```ts
+ * onClick: (rows, {allMatching, state}) =>
+ *   allMatching ? archiveWhere(state.columnFilters, state.globalFilter) : archive(rows.map((r) => r.id)),
+ * ```
+ */
+export interface BulkActionContext {
+  /**
+   * The user took the sticky bar's "Select all N matching". The rows passed are still only
+   * the page, so act on `state`'s filters, not on the ids.
+   */
+  readonly allMatching: boolean;
+  /** The table's state when the action ran: the same object `onServerStateChange` reports. */
+  readonly state: ServerTableState;
+}
+
+/**
  * One button in the bar that replaces the toolbar while rows are selected.
  *
  * Receives the selected rows. In server-side mode "select all" means the current page, so
@@ -451,8 +470,14 @@ export interface BulkAction<TData> {
    * {@link BulkActionResult} when some rows can fail on their own: the ones that failed
    * stay selected for a retry, the bar says how many of each, and `onBulkActionResult`
    * hears it.
+   *
+   * The second argument says whether the user chose every matching row rather than the
+   * page; see {@link BulkActionContext}.
    */
-  readonly onClick: (selectedRows: TData[]) => void | BulkActionResult | Promise<void | BulkActionResult>;
+  readonly onClick: (
+    selectedRows: TData[],
+    context: BulkActionContext,
+  ) => void | BulkActionResult | Promise<void | BulkActionResult>;
   /** Disable based on the selection, e.g. a limit on how many rows the endpoint takes. */
   readonly disabled?: boolean | ((selectedRows: TData[]) => boolean);
   /**
@@ -888,6 +913,14 @@ export interface DataTableProps<TData extends RowData> extends TableEventHandler
    * @see {@link BulkAction}, whose `confirmMessage` gates destructive ones.
    */
   readonly bulkActions?: readonly BulkAction<TData>[];
+  /**
+   * Where the bulk bar sits. `'inline'` (the default) replaces the toolbar's row above the
+   * table. `'sticky'` floats at the bottom of the viewport so it stays in view while the
+   * user scrolls, and, when `manualPagination` is on, the whole page is selected and
+   * `totalRows` is larger, offers "Select all N matching"; actions then get
+   * `allMatching: true`. Desktop only: on mobile the actions stay in the toolbar menu.
+   */
+  readonly bulkActionsPosition?: 'inline' | 'sticky';
   /**
    * A bulk action returned a {@link BulkActionResult}. Called after the selection has
    * narrowed to the failed rows and the bar has shown its message, for logging or a toast.

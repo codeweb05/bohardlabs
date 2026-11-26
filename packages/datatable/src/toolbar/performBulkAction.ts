@@ -17,13 +17,21 @@ function isBulkActionResult(value: unknown): value is BulkActionResult {
  * menu alike. An action that returns nothing clears the selection. One that returns a
  * result keeps only the rows it says failed, so the user can try them again. A rejection
  * is left to the caller, with the selection untouched.
+ *
+ * `allMatching` is the sticky bar's "Select all N matching"; the action reads it, with the
+ * table's state, from its second argument.
  */
 export async function performBulkAction<TData extends RowData>(
   table: Table<TData>,
   action: BulkAction<TData>,
   rows: TData[],
+  allMatching = false,
 ): Promise<BulkActionOutcome | null> {
-  const result = await action.onClick(rows);
+  const {pagination, sorting, columnFilters, globalFilter} = table.getState();
+  const result = await action.onClick(rows, {
+    allMatching,
+    state: {pagination, sorting, columnFilters, globalFilter},
+  });
   if (!isBulkActionResult(result)) {
     table.resetRowSelection();
     return null;

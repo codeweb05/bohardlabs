@@ -1,5 +1,5 @@
 import CloseIcon from '@mui/icons-material/Close';
-import {Alert, Box, Button, Chip, CircularProgress, Divider, IconButton, alpha} from '@mui/material';
+import {Alert, Box, Button, Chip, CircularProgress, Divider, IconButton, Paper, alpha} from '@mui/material';
 import type {RowSelectionState, Table} from '@tanstack/react-table';
 import {useState} from 'react';
 
@@ -14,6 +14,13 @@ interface BulkActionsProps<TData extends RowData> {
   /** Passed in so a change of selection re-renders the bar; `table` itself never changes. */
   readonly rowSelection?: RowSelectionState;
   readonly onResult?: (action: BulkAction<TData>, result: BulkActionResult) => void;
+  /** `'sticky'` floats the bar at the bottom of the viewport. */
+  readonly position?: 'inline' | 'sticky';
+  /**
+   * How many rows the filters match on the server: `totalRows`, under `manualPagination`.
+   * The sticky bar offers to select them all once the whole page is selected.
+   */
+  readonly matchingCount?: number;
 }
 
 /** The counts an action reported, and the selection they describe. */
@@ -28,15 +35,24 @@ export function BulkActions<TData extends RowData>({
   actions,
   rowSelection = table.getState().rowSelection,
   onResult,
+  position = 'inline',
+  matchingCount,
 }: Readonly<BulkActionsProps<TData>>) {
   const labels = useLabels();
   const [confirmAction, setConfirmAction] = useState<BulkAction<TData> | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingActionId, setLoadingActionId] = useState<string | null>(null);
   const [notice, setNotice] = useState<Notice | null>(null);
+  // The selection and filters "Select all N matching" was chosen for. Picking a row or
+  // changing a filter drops it for good, even if the user puts them back.
+  const [allMatchingFor, setAllMatchingFor] = useState<{readonly key: string; readonly count: number} | null>(null);
 
   // The message is about the rows left selected. Once the user picks others, it is not.
   if (notice && notice.selection !== selectionKey(rowSelection)) setNotice(null);
+
+  const {columnFilters, globalFilter} = table.getState();
+  const matchKey = JSON.stringify([selectionKey(rowSelection), columnFilters, globalFilter]);
+  if (allMatchingFor && allMatchingFor.key !== matchKey) setAllMatchingFor(null);
 
   const selectedRows = table.getFilteredSelectedRowModel().rows.map((row) => row.original);
   const selectedCount = selectedRows.length;
@@ -44,6 +60,20 @@ export function BulkActions<TData extends RowData>({
   if (selectedCount === 0) {
     return null;
   }
+
+  const isSticky = position === 'sticky';
+  const allMatchingCount = allMatchingFor?.key === matchKey ? allMatchingFor.count : null;
+  const allMatching = allMatchingCount !== null;
+  const offerCount =
+    isSticky &&
+    !allMatching &&
+    matchingCount !== undefined &&
+    matchingCount > selectedCount &&
+    table.getIsAllPageRowsSelected()
+      ? matchingCount
+      : null;
+  // What the action will act on, for the count and the confirmation.
+  const actionCount = allMatchingCount ?? selectedCount;
 
   const handleAction = async (action: BulkAction<TData>) => {
     // Check if action needs confirmation
@@ -58,7 +88,7 @@ export function BulkActions<TData extends RowData>({
     setIsLoading(true);
     setLoadingActionId(action.id);
     try {
-      const outcome = await performBulkAction(table, action, selectedRows);
+      const outcome = await performBulkAction(table, action, selectedRows, allMatching);
       if (outcome) {
         const {result, selection} = outcome;
         setNotice({
@@ -82,7 +112,7 @@ export function BulkActions<TData extends RowData>({
   const getConfirmMessage = (): string => {
     if (!confirmAction?.confirmMessage) return '';
     if (typeof confirmAction.confirmMessage === 'function') {
-      return confirmAction.confirmMessage(selectedCount);
+      return confirmAction.confirmMessage(actionCount);
     }
     return confirmAction.confirmMessage;
   };
@@ -99,90 +129,127 @@ export function BulkActions<TData extends RowData>({
     table.resetRowSelection();
   };
 
-  return (
-    <>
+  const bar = (
+    <Box
+      sx={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: {xs: 1, sm: 2},
+        py: {xs: 1, sm: 1.25},
+        px: {xs: 1.5, sm: 2},
+        bgcolor: (theme) => alpha(theme.palette.primary.main, theme.palette.mode === 'dark' ? 0.08 : 0.06),
+        borderBottom: isSticky ? undefined : (theme) => `1px solid ${theme.palette.divider}`,
+      }}
+    >
+      {/* Selection count */}
+      <Chip
+        label={allMatching ? labels.allMatchingSelected(actionCount) : `${selectedCount} ${labels.selected}`}
+        size="small"
+        color="primary"
+        variant="filled"
+        sx={{
+          fontWeight: 600,
+          fontSize: {xs: '0.75rem', sm: '0.8125rem'},
+        }}
+      />
+
+      {/* Clear selection button */}
+      <IconButton
+        size="small"
+        onClick={handleClearSelection}
+        aria-label={labels.clearSelection}
+        sx={{
+          p: 0.5,
+        }}
+      >
+        <CloseIcon sx={{fontSize: '1rem'}} />
+      </IconButton>
+
+      {offerCount !== null && (
+        <Button
+          size="small"
+          onClick={() => setAllMatchingFor({key: matchKey, count: offerCount})}
+          sx={{whiteSpace: 'nowrap'}}
+        >
+          {labels.selectAllMatching(offerCount)}
+        </Button>
+      )}
+
+      <Divider orientation="vertical" flexItem />
+
+      {/* Action buttons */}
       <Box
         sx={{
           display: 'flex',
           alignItems: 'center',
-          gap: {xs: 1, sm: 2},
-          py: {xs: 1, sm: 1.25},
-          px: {xs: 1.5, sm: 2},
-          bgcolor: (theme) => alpha(theme.palette.primary.main, theme.palette.mode === 'dark' ? 0.08 : 0.06),
-          borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
+          gap: 1,
+          flexWrap: 'wrap',
+          flex: 1,
         }}
       >
-        {/* Selection count */}
-        <Chip
-          label={`${selectedCount} ${labels.selected}`}
-          size="small"
-          color="primary"
-          variant="filled"
-          sx={{
-            fontWeight: 600,
-            fontSize: {xs: '0.75rem', sm: '0.8125rem'},
-          }}
-        />
-
-        {/* Clear selection button */}
-        <IconButton
-          size="small"
-          onClick={handleClearSelection}
-          aria-label={labels.clearSelection}
-          sx={{
-            p: 0.5,
-          }}
-        >
-          <CloseIcon sx={{fontSize: '1rem'}} />
-        </IconButton>
-
-        <Divider orientation="vertical" flexItem />
-
-        {/* Action buttons */}
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 1,
-            flexWrap: 'wrap',
-            flex: 1,
-          }}
-        >
-          {actions.map((action) => {
-            const isActionLoading = loadingActionId === action.id;
-            return (
-              <Button
-                key={action.id}
-                size="small"
-                color={action.color ?? 'primary'}
-                variant="outlined"
-                startIcon={isActionLoading ? <CircularProgress size={16} color="inherit" /> : action.icon}
-                onClick={() => handleAction(action)}
-                disabled={isActionDisabled(action)}
-                sx={{
-                  fontSize: {xs: '0.75rem', sm: '0.8125rem'},
-                  py: {xs: 0.5, sm: 0.75},
-                  px: {xs: 1, sm: 1.5},
-                  minWidth: 'auto',
-                }}
-              >
-                {action.label}
-              </Button>
-            );
-          })}
-        </Box>
+        {actions.map((action) => {
+          const isActionLoading = loadingActionId === action.id;
+          return (
+            <Button
+              key={action.id}
+              size="small"
+              color={action.color ?? 'primary'}
+              variant="outlined"
+              startIcon={isActionLoading ? <CircularProgress size={16} color="inherit" /> : action.icon}
+              onClick={() => handleAction(action)}
+              disabled={isActionDisabled(action)}
+              sx={{
+                fontSize: {xs: '0.75rem', sm: '0.8125rem'},
+                py: {xs: 0.5, sm: 0.75},
+                px: {xs: 1, sm: 1.5},
+                minWidth: 'auto',
+              }}
+            >
+              {action.label}
+            </Button>
+          );
+        })}
       </Box>
+    </Box>
+  );
 
-      {/* Always an error: after a clean run no row is left selected, and the bar is gone. */}
-      {notice && (
-        <Alert
-          severity="error"
-          closeText={labels.close}
-          onClose={() => setNotice(null)}
-          sx={{borderRadius: 0, borderBottom: (theme) => `1px solid ${theme.palette.divider}`}}
+  // Always an error: after a clean run no row is left selected, and the bar is gone.
+  const alert = notice && (
+    <Alert
+      severity="error"
+      closeText={labels.close}
+      onClose={() => setNotice(null)}
+      sx={{borderRadius: 0, borderBottom: (theme) => `1px solid ${theme.palette.divider}`}}
+    >
+      {labels.bulkResult(notice.succeeded, notice.failed)}
+    </Alert>
+  );
+
+  return (
+    <>
+      {isSticky ? (
+        // Above the content, below dialogs and menus; clear of a phone's home indicator.
+        <Paper
+          elevation={8}
+          sx={{
+            position: 'fixed',
+            left: '50%',
+            bottom: 'calc(16px + env(safe-area-inset-bottom))',
+            transform: 'translateX(-50%)',
+            zIndex: (theme) => theme.zIndex.appBar,
+            width: 'max-content',
+            maxWidth: 'calc(100% - 32px)',
+            overflow: 'hidden',
+          }}
         >
-          {labels.bulkResult(notice.succeeded, notice.failed)}
-        </Alert>
+          {alert}
+          {bar}
+        </Paper>
+      ) : (
+        <>
+          {bar}
+          {alert}
+        </>
       )}
 
       {/* Confirmation dialog */}

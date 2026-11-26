@@ -123,7 +123,10 @@ describe('bulk actions', () => {
     );
     await user.click(screen.getByRole('button', {name: 'Archive'}));
 
-    expect(onClick).toHaveBeenCalledWith([expect.objectContaining({id: 'order-1', status: 'SHIPPED'})]);
+    expect(onClick).toHaveBeenCalledWith(
+      [expect.objectContaining({id: 'order-1', status: 'SHIPPED'})],
+      expect.objectContaining({allMatching: false}),
+    );
   });
 
   it('asks before a destructive action on a phone too', async () => {
@@ -147,7 +150,10 @@ describe('bulk actions', () => {
     expect(within(dialog).getByText('Cancel 1 orders?')).toBeInTheDocument();
 
     await user.click(within(dialog).getByRole('button', {name: L.confirm}));
-    expect(onClick).toHaveBeenCalledWith([expect.objectContaining({id: 'order-1'})]);
+    expect(onClick).toHaveBeenCalledWith(
+      [expect.objectContaining({id: 'order-1'})],
+      expect.objectContaining({allMatching: false}),
+    );
   });
 
   it('runs nothing when the question is answered with cancel', async () => {
@@ -201,5 +207,38 @@ describe('bulk actions', () => {
 
     expect(onClick).not.toHaveBeenCalled();
     expect(screen.getByRole('checkbox', {name: L.selectRow('order-1')})).toBeChecked();
+  });
+});
+
+describe('the sticky bulk bar on a server-driven table', () => {
+  it('offers every row the server matches and hands the action the filter', async () => {
+    const user = userEvent.setup();
+    const onClick = vi.fn();
+    const actions: BulkAction<Order>[] = [{id: 'archive', label: 'Archive', onClick}];
+    render(
+      <DataTable
+        columns={columns}
+        data={orders(1, 10)}
+        totalRows={30}
+        pageSize={10}
+        manualPagination
+        enableRowSelection
+        bulkActions={actions}
+        bulkActionsPosition="sticky"
+      />,
+    );
+
+    await user.click(screen.getByRole('checkbox', {name: L.selectAll}));
+    await user.click(screen.getByRole('button', {name: L.selectAllMatching(30)}));
+    expect(screen.getByText(L.allMatchingSelected(30))).toBeInTheDocument();
+    await user.click(screen.getByRole('button', {name: 'Archive'}));
+
+    expect(onClick).toHaveBeenCalledExactlyOnceWith(
+      expect.arrayContaining([expect.objectContaining({id: 'order-1'})]),
+      {
+        allMatching: true,
+        state: {pagination: {pageIndex: 0, pageSize: 10}, sorting: [], columnFilters: [], globalFilter: ''},
+      },
+    );
   });
 });

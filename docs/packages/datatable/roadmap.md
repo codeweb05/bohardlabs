@@ -40,7 +40,7 @@ Their test suites are worth mining when porting anything: `DataTable.persistence
 | 5   | Active filter chips                      | UX        | SP     | done (2026-11-27)                   |
 | 6   | Columns popover: search, groups, reset   | UX        | SP     | done (2026-11-27)                   |
 | 7   | Keyboard-first navigation                | UX        | SP     | proposed                            |
-| 8   | Sticky selection summary bar             | UX        | SP     | proposed                            |
+| 8   | Sticky selection summary bar             | UX        | SP     | done (2026-11-27)                   |
 | 9   | Row detail panel with prev/next          | UX        | SP     | proposed                            |
 | 10  | Display controls (wrap, fullscreen, fit) | UX        | SP     | proposed                            |
 | 11  | Row grouping UI                          | UX        |        | proposed                            |

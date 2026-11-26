@@ -304,7 +304,7 @@ describe('DataTableToolbar — mobile bulk actions', () => {
     await userEvent.click(await screen.findByRole('menuitem', {name: 'Delete'}));
 
     await waitFor(() => {
-      expect(bulkClick).toHaveBeenCalledExactlyOnceWith([data[1]]);
+      expect(bulkClick).toHaveBeenCalledExactlyOnceWith([data[1]], expect.objectContaining({allMatching: false}));
     });
   });
 

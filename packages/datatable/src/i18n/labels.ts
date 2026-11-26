@@ -160,6 +160,13 @@ export interface DataTableLabels {
    * that failed stay selected, so the text can say so.
    */
   readonly bulkResult: (succeeded: number, failed: number) => string;
+  /**
+   * The sticky bulk bar's offer to widen a full page to every row the filters match. `count`
+   * is `totalRows`.
+   */
+  readonly selectAllMatching: (count: number) => string;
+  /** The sticky bulk bar's count once the user took that offer. */
+  readonly allMatchingSelected: (count: number) => string;
 
   // Pagination
   readonly rowsPerPage: string;
@@ -298,6 +305,8 @@ export const DEFAULT_LABELS: DataTableLabels = {
   selectRow: (id) => `Select row ${id}`,
   selected: 'selected',
   bulkResult,
+  selectAllMatching: (count) => `Select all ${count} matching`,
+  allMatchingSelected: (count) => `All ${count} matching selected`,
 
   rowsPerPage: 'Rows per page',
   pageOf: (current, total) => `Page ${current} of ${total}`,

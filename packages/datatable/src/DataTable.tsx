@@ -128,6 +128,7 @@ export function DataTable<TData extends RowData>(props: Readonly<DataTableProps<
     // Row actions
     rowActions,
     bulkActions,
+    bulkActionsPosition,
     onBulkActionResult,
 
     // Inline editing
@@ -418,13 +419,15 @@ export function DataTable<TData extends RowData>(props: Readonly<DataTableProps<
               />
             )}
 
-            {/* Bulk Actions Bar (desktop only) */}
+            {/* Bulk Actions Bar (desktop only; the sticky one floats over the page) */}
             {showBulkActions && !isMobile && (
               <BulkActions
                 table={table}
                 actions={bulkActions}
                 rowSelection={state.rowSelection}
                 onResult={onBulkActionResult}
+                position={bulkActionsPosition}
+                matchingCount={manualPagination ? totalRows : undefined}
               />
             )}
 

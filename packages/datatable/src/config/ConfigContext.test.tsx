@@ -120,7 +120,7 @@ describe('slots.confirmDialog', () => {
     await userEvent.click(screen.getByRole('button', {name: 'Delete'}));
     await userEvent.click(screen.getByRole('button', {name: 'Yes, do it'}));
 
-    expect(onClick).toHaveBeenCalledWith([data[0]]);
+    expect(onClick).toHaveBeenCalledWith([data[0]], expect.objectContaining({allMatching: false}));
   });
 
   it('cancels through the replacement without running the action', async () => {

@@ -98,7 +98,7 @@ describe('BulkActions', () => {
 
     await userEvent.click(screen.getByRole('button', {name: 'Delete'}));
 
-    expect(onClick).toHaveBeenCalledExactlyOnceWith([data[0], data[2]]);
+    expect(onClick).toHaveBeenCalledExactlyOnceWith([data[0], data[2]], expect.objectContaining({allMatching: false}));
     await waitFor(() => {
       expect(screen.queryByRole('button', {name: 'Delete'})).not.toBeInTheDocument();
     });
@@ -179,7 +179,7 @@ describe('BulkActions — confirmation', () => {
     await userEvent.click(await screen.findByRole('button', {name: DEFAULT_LABELS.confirm}));
 
     await waitFor(() => {
-      expect(onClick).toHaveBeenCalledExactlyOnceWith([data[0]]);
+      expect(onClick).toHaveBeenCalledExactlyOnceWith([data[0]], expect.objectContaining({allMatching: false}));
     });
   });
 
@@ -339,7 +339,7 @@ describe('BulkActions, a consumer dialog that confirms with nothing pending', ()
     await userEvent.click(screen.getByRole('button', {name: 'Confirm Delete'}));
 
     await waitFor(() => {
-      expect(onClick).toHaveBeenCalledWith([data[0]]);
+      expect(onClick).toHaveBeenCalledWith([data[0]], expect.objectContaining({allMatching: false}));
     });
   });
 });

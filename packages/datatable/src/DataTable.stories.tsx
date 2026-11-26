@@ -612,6 +612,63 @@ export const SelectionPartialFailure: Story = {
   },
 };
 
+/** A server page of 25 out of 137 matches, tall enough to scroll the bar's table away. */
+const STICKY_ORDERS = makeOrders(137);
+const archiveOrders = fn();
+
+/**
+ * `bulkActionsPosition: 'sticky'` floats the bar at the bottom of the viewport, so the count
+ * and the actions stay in reach while the user scrolls a long page. With the whole page
+ * selected it offers every row the server matches; the action then gets `allMatching: true`
+ * and the table's state, and should act on the filter rather than the ids.
+ */
+export const StickyBulkBar: Story = {
+  name: 'Sticky bulk bar',
+  parameters: {
+    ...KNOWN_CONTRAST_EXCEPTION,
+    ...showcase('bulkActions', 'bulkActionsPosition', 'totalRows', 'manualPagination'),
+  },
+  args: {
+    enableRowSelection: true,
+    getRowId: (row) => row.id,
+    bulkActionsPosition: 'sticky',
+    data: STICKY_ORDERS.slice(0, 25),
+    totalRows: STICKY_ORDERS.length,
+    manualPagination: true,
+    pageSize: 25,
+    bulkActions: [{id: 'archive', label: 'Archive', onClick: archiveOrders}],
+  },
+  play: async ({canvasElement}) => {
+    const canvas = within(canvasElement);
+    const view = canvasElement.ownerDocument.defaultView;
+    if (!view) throw new Error('Expected the story to render in a window');
+    archiveOrders.mockClear();
+
+    await userEvent.click(canvas.getByRole('checkbox', {name: 'Select all rows'}));
+    view.scrollTo(0, canvasElement.ownerDocument.body.scrollHeight);
+
+    const archive = await canvas.findByRole('button', {name: 'Archive'});
+    await waitFor(() => {
+      const box = archive.getBoundingClientRect();
+      expect(box.top).toBeGreaterThanOrEqual(0);
+      expect(box.bottom).toBeLessThanOrEqual(view.innerHeight);
+    });
+
+    await userEvent.click(canvas.getByRole('button', {name: 'Select all 137 matching'}));
+    await expect(canvas.getByText('All 137 matching selected')).toBeInTheDocument();
+    await userEvent.click(archive);
+
+    await expect(archiveOrders).toHaveBeenCalledTimes(1);
+    await expect(archiveOrders).toHaveBeenCalledWith(
+      STICKY_ORDERS.slice(0, 25),
+      expect.objectContaining({allMatching: true, state: expect.objectContaining({globalFilter: ''})}),
+    );
+    // The action returned nothing, so the selection clears and the bar goes.
+    await waitFor(() => expect(canvas.queryByRole('button', {name: 'Archive'})).not.toBeInTheDocument());
+    view.scrollTo(0, 0);
+  },
+};
+
 const rowActions: RowAction<Order>[] = [
   {id: 'view', label: 'View order', onClick: fn()},
   {id: 'reschedule', label: 'Reschedule', onClick: fn()},
@@ -1484,6 +1541,8 @@ const HINDI_LABELS: DataTableLabels = {
     failed === 0
       ? `${succeeded} अपडेट हुईं।`
       : `${succeeded} अपडेट हुईं, ${failed} विफल रहीं। विफल ${failed} पंक्तियाँ अब भी चयनित हैं।`,
+  selectAllMatching: (count) => `सभी ${count} मिलती पंक्तियाँ चुनें`,
+  allMatchingSelected: (count) => `सभी ${count} मिलती पंक्तियाँ चयनित`,
 
   rowsPerPage: 'प्रति पृष्ठ पंक्तियाँ',
   pageOf: (current, total) => `${total} में से पृष्ठ ${current}`,
