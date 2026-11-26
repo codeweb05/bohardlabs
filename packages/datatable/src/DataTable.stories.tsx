@@ -225,6 +225,16 @@ function countOrders(status: StatusFilter): number {
   return status === 'all' ? ORDERS.length : ORDERS.filter((order) => order.status === status).length;
 }
 
+/**
+ * The trigger's accessible name. It carries the badge's number, because a name has to
+ * contain the text a sighted user sees on the control (WCAG 2.5.3, Label in Name).
+ */
+function statusFilterName(status: StatusFilter): string {
+  if (status === 'all') return 'Filter by status';
+  const count = countOrders(status);
+  return `Filter by status: ${statusFilterLabel(status)}, ${count} ${count === 1 ? 'order' : 'orders'}`;
+}
+
 interface StatusFilterMenuProps {
   readonly value: StatusFilter;
   readonly onChange: (status: StatusFilter) => void;
@@ -244,7 +254,7 @@ function StatusFilterMenu({value, onChange}: Readonly<StatusFilterMenuProps>) {
     <>
       <IconButton
         size="small"
-        aria-label={value === 'all' ? 'Filter by status' : `Filter by status: ${statusFilterLabel(value)}`}
+        aria-label={statusFilterName(value)}
         aria-haspopup="menu"
         aria-expanded={isOpen}
         aria-controls={isOpen ? menuId : undefined}
@@ -316,7 +326,7 @@ export const ToolbarContent: Story = {
     await expect(canvas.getByText('SW-1002')).toBeInTheDocument();
 
     // The trigger re-renders from the consumer's new state, and the menu hands focus back.
-    await expect(trigger).toHaveAccessibleName('Filter by status: Delivered');
+    await expect(trigger).toHaveAccessibleName(statusFilterName('delivered'));
     await waitFor(() => expect(trigger).toHaveFocus());
 
     // Search and the control still share one row: the trigger's middle sits within the
