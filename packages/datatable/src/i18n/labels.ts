@@ -105,6 +105,12 @@ export interface DataTableLabels {
   readonly unpinColumn: string;
   readonly unpinColumnLabel: (column: string) => string;
   readonly reorderColumn: (column: string, position: number, total: number) => string;
+  /** The search box at the top of the Columns menu: its placeholder and its accessible name. */
+  readonly searchColumns: string;
+  /** The count at the foot of the Columns menu of the columns the user can show again. */
+  readonly hiddenCount: (count: number) => string;
+  /** Puts the column order, visibility, widths and freezing back to the table's defaults. */
+  readonly resetColumns: string;
   readonly resizeColumn: string;
   readonly sortAsc: string;
   readonly sortDesc: string;
@@ -260,6 +266,9 @@ export const DEFAULT_LABELS: DataTableLabels = {
   unpinColumn: 'Unfreeze',
   unpinColumnLabel: (column) => `Unfreeze ${column}`,
   reorderColumn: (column, position, total) => `Reorder ${column}, position ${position} of ${total}`,
+  searchColumns: 'Search columns',
+  hiddenCount: (count) => `Hidden (${count})`,
+  resetColumns: 'Reset columns',
   resizeColumn: 'Resize column',
   sortAsc: 'Sort ascending',
   sortDesc: 'Sort descending',

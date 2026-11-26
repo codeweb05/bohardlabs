@@ -703,6 +703,66 @@ export const ColumnManagement: Story = {
   },
 };
 
+const COLUMN_GROUPS: Partial<Record<string, string>> = {
+  customer: 'Customer',
+  status: 'Order',
+  items: 'Order',
+  total: 'Order',
+  placedAt: 'Dates',
+};
+
+/**
+ * A long column list made usable. `meta.group` puts a column under a heading, and a drag
+ * or an arrow key moves it only inside its group; the search box matches what a row shows
+ * and the column id. The foot of the menu counts the hidden columns and puts order,
+ * visibility, widths and freezing back to the defaults in one click.
+ */
+export const GroupedColumns: Story = {
+  parameters: showcase('columns', 'enableColumnVisibility', 'enableColumnOrdering', 'enableColumnPinning'),
+  args: {
+    enableColumnVisibility: true,
+    enableColumnOrdering: true,
+    enableColumnPinning: true,
+    columns: columns.map((column) => {
+      const group = COLUMN_GROUPS[column.id];
+      return group ? {...column, meta: {group}} : column;
+    }),
+  },
+  play: async ({canvasElement}) => {
+    const canvas = within(canvasElement);
+    const body = within(canvasElement.ownerDocument.body);
+    const checkboxesIn = (list: string) =>
+      within(body.getByRole('list', {name: list}))
+        .getAllByRole('checkbox')
+        .map((box) => box.getAttribute('aria-label'));
+
+    await userEvent.click(canvas.getByRole('button', {name: 'Columns'}));
+    await expect(checkboxesIn('Order')).toEqual(['Status', 'Items', 'Total']);
+
+    // The id finds a column whose header says something else.
+    const search = await body.findByRole('textbox', {name: 'Search columns'});
+    await userEvent.type(search, 'placedat');
+    await expect(body.getAllByRole('list')).toHaveLength(1);
+    await expect(checkboxesIn('Dates')).toEqual(['Placed']);
+    await userEvent.clear(search);
+
+    await userEvent.click(body.getByRole('checkbox', {name: 'Items'}));
+    body.getByRole('button', {name: /^Reorder Status/}).focus();
+    await userEvent.keyboard('{ArrowDown}');
+    await expect(checkboxesIn('Order')).toEqual(['Items', 'Status', 'Total']);
+    await expect(body.getByText('Hidden (1)')).toBeVisible();
+    // The open menu is modal, so the table behind it is only reachable with `hidden`.
+    await expect(canvas.queryByRole('columnheader', {name: /items/i, hidden: true})).not.toBeInTheDocument();
+
+    await userEvent.click(body.getByRole('button', {name: 'Reset columns'}));
+
+    await expect(checkboxesIn('Order')).toEqual(['Status', 'Items', 'Total']);
+    await expect(body.getByText('Hidden (0)')).toBeVisible();
+    await expect(canvas.getByRole('columnheader', {name: /items/i, hidden: true})).toBeVisible();
+    await userEvent.keyboard('{Escape}');
+  },
+};
+
 /**
  * Captures what an export writes instead of letting the browser download it.
  *
@@ -1390,6 +1450,9 @@ const HINDI_LABELS: DataTableLabels = {
   // not templates with `{position}` / `{total}` placeholders: the order is the translator's
   // to choose, not the library's.
   reorderColumn: (column, position, total) => `${column} का क्रम बदलें, कुल ${total} में से ${position}`,
+  searchColumns: 'स्तंभ खोजें',
+  hiddenCount: (count) => `छिपे हुए (${count})`,
+  resetColumns: 'स्तंभ रीसेट करें',
   resizeColumn: 'स्तंभ की चौड़ाई बदलें',
   sortAsc: 'आरोही क्रम में लगाएँ',
   sortDesc: 'अवरोही क्रम में लगाएँ',

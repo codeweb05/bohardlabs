@@ -457,6 +457,17 @@ export function useDataTableState(options: UseDataTableStateOptions) {
     clearPersistedState();
   }, [onColumnOrderChange, onColumnVisibilityChange, onRowSelectionChange, clearPersistedState]);
 
+  // --- Reset the column layout only ---
+  // The Columns menu's "Reset columns". Order, visibility, widths and freezing go back to the
+  // defaults captured on mount, so the persistence effect stores no column preferences.
+  // Sorting, filters, density and the page stay as the user left them.
+  const handleResetColumns = useCallback(() => {
+    handleColumnOrderChange(defaultColumnOrderRef.current);
+    handleColumnVisibilityChange(defaultColumnVisibilityRef.current);
+    setColumnSizing({});
+    setColumnPinning(defaultColumnPinningRef.current);
+  }, [handleColumnOrderChange, handleColumnVisibilityChange]);
+
   return {
     // State values
     density,
@@ -490,6 +501,7 @@ export function useDataTableState(options: UseDataTableStateOptions) {
 
     // Actions
     handleResetToDefault,
+    handleResetColumns,
 
     // Persistence
     isPersistenceEnabled,

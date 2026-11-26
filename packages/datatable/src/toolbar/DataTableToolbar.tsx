@@ -73,6 +73,8 @@ interface DataTableToolbarProps<TData extends RowData> {
 
   // Reset to default
   readonly onResetToDefault?: () => void;
+  /** The Columns menu's "Reset columns": the column layout only */
+  readonly onResetColumns?: () => void;
 
   // Export
   readonly enableExport?: boolean;
@@ -115,6 +117,7 @@ export function DataTableToolbar<TData extends RowData>({
   columnFilters = [],
   onFiltersReset,
   onResetToDefault,
+  onResetColumns,
   enableExport = false,
   exportFormats = ['csv'],
   exportFileName = 'export',
@@ -346,6 +349,7 @@ export function DataTableToolbar<TData extends RowData>({
               enableReordering={enableColumnOrdering}
               enablePinning={enableColumnPinning}
               isMobile={isMobile}
+              onReset={onResetColumns}
             />
           </>
         )}

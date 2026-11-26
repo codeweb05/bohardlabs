@@ -827,7 +827,15 @@ export interface DataTableProps<TData extends RowData> extends TableEventHandler
   readonly enableColumnResizing?: boolean;
   /** Pin columns left or right; pinned cells stay put while the rest scrolls horizontally. */
   readonly enableColumnPinning?: boolean;
-  /** The show/hide columns menu in the toolbar. Persisted per `tableId`. */
+  /**
+   * The Columns menu in the toolbar: show and hide, plus reordering and freezing when those
+   * are on. Persisted per `tableId`. A search box matches a column's header text and its id,
+   * and "Reset columns" puts order, visibility, widths and freezing back to the defaults.
+   *
+   * Give a column `meta: {group: 'Billing'}` to list it under a "Billing" heading. Groups
+   * appear in the order their first column does, after the ungrouped columns, and a drag or
+   * an arrow key moves a column only inside its own group.
+   */
   readonly enableColumnVisibility?: boolean;
   /** Column order for the first render, overridden by a persisted order. */
   readonly initialColumnOrder?: ColumnOrderState;

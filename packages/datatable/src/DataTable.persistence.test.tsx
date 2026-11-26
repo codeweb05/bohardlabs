@@ -682,6 +682,51 @@ describe('DataTable Persistence, preferences only', () => {
     expect(localStorageMock.setItem).not.toHaveBeenCalled();
   });
 
+  it('clears all four column preferences from the Columns menu and keeps the rest', async () => {
+    localStorageMock.setItem(
+      storageKey,
+      JSON.stringify({
+        version: 2,
+        sorting: [{id: 'name', desc: true}],
+        columnOrder: ['createdAt', 'name', 'roleType', 'description'],
+        columnPinning: {left: ['roleType']},
+        columnVisibility: {description: false},
+        columnSizing: {name: 240},
+      }),
+    );
+    const onColumnOrderChange = vi.fn<(order: string[]) => void>();
+    const onColumnVisibilityChange = vi.fn<(visibility: Record<string, boolean>) => void>();
+
+    render(
+      <DataTable
+        tableId={tableId}
+        columns={testColumns}
+        data={testData.slice(0, 5)}
+        enableColumnVisibility
+        enableColumnOrdering
+        enableColumnPinning
+        onColumnOrderChange={onColumnOrderChange}
+        onColumnVisibilityChange={onColumnVisibilityChange}
+      />,
+    );
+    expect(headerTexts()).not.toContain('Description');
+
+    await userEvent.click(screen.getByRole('button', {name: /columns/i}));
+    const popover = await screen.findByRole('presentation');
+    await userEvent.click(within(popover).getByRole('button', {name: 'Reset columns'}));
+
+    await waitFor(() => expect(stored().columnSizing).toEqual({}));
+    expect(stored().columnOrder).toBeUndefined();
+    expect(stored().columnPinning).toBeUndefined();
+    expect(stored().columnVisibility).toEqual({});
+    expect(stored().sorting).toEqual([{id: 'name', desc: true}]);
+    // The open menu is modal and hides the table from the accessibility tree.
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(headerTexts()).toContain('Description'));
+    expect(onColumnOrderChange).toHaveBeenLastCalledWith([]);
+    expect(onColumnVisibilityChange).toHaveBeenLastCalledWith({});
+  });
+
   it('never throws on an entry it cannot read', () => {
     localStorageMock.setItem(storageKey, JSON.stringify(42));
 

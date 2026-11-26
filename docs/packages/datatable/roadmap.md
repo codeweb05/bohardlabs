@@ -38,7 +38,7 @@ Their test suites are worth mining when porting anything: `DataTable.persistence
 | 3   | Shareable state in the URL               | Found.    |        | proposed                            |
 | 4   | Column pinning from the popover          | UX        |        | done (2026-08-28)                   |
 | 5   | Active filter chips                      | UX        | SP     | done (2026-11-27)                   |
-| 6   | Columns popover: search, groups, reset   | UX        | SP     | proposed                            |
+| 6   | Columns popover: search, groups, reset   | UX        | SP     | done (2026-11-27)                   |
 | 7   | Keyboard-first navigation                | UX        | SP     | proposed                            |
 | 8   | Sticky selection summary bar             | UX        | SP     | proposed                            |
 | 9   | Row detail panel with prev/next          | UX        | SP     | proposed                            |

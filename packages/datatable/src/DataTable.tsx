@@ -385,6 +385,7 @@ export function DataTable<TData extends RowData>(props: Readonly<DataTableProps<
                 columnFilters={state.columnFilters}
                 onFiltersReset={handleFiltersReset}
                 onResetToDefault={state.handleResetToDefault}
+                onResetColumns={state.handleResetColumns}
                 enableColumnVisibility={enableColumnVisibility}
                 enableExport={enableExport}
                 exportFormats={exportFormats}
