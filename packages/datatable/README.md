@@ -263,7 +263,7 @@ const FRENCH: Partial<DataTableLabels> = {
 
 ## Fitting the app's own components
 
-Two pieces of the table would otherwise look imported. Both are props.
+Three pieces of the table would otherwise look imported. All three are props.
 
 ```tsx
 <DataTable
@@ -300,6 +300,17 @@ disables both buttons while `onConfirm` runs, but closing is the caller's to do.
 are `DataTableConfirmProps`, the same type `slots.confirmDialog` takes, so a wrapper that
 fixes `confirmColor` for the app can be passed straight back in as the slot.
 
+The toolbar takes controls of the app's own. `toolbarContent` renders whatever it is given
+right after the search box, ahead of the table's own buttons:
+
+```tsx
+<DataTable toolbarContent={<StatusFilterMenu value={status} onChange={setStatus} />} columns={columns} data={rows} />
+```
+
+The table holds none of that control's state, and its active-filter chip and **Reset
+filters** do not count it. Give an icon button an `aria-label`: the table adds no label
+around it. `showToolbar={false}` hides it with the rest of the toolbar.
+
 ## Theming
 
 No colour, font or radius is hardcoded. The table reads `primary.main`, `divider`,
@@ -325,6 +336,7 @@ rather than a part of its composition.
 | `DEFAULT_PAGE_SIZE`, `DENSITY_CONFIG`, …            | the defaults, so an app can match them           |
 | `useInlineEdit`                                     | inline row editing; `onSave` is your own write   |
 | `slots`, `dateFormats`                              | swap in the app's confirm dialog and date format |
+| `toolbarContent`                                    | your own controls in the toolbar, after search   |
 | `@vt-labs/datatable/server`                         | `useServerSidePagination` (needs React Query)    |
 
 Every prop is documented in `types.ts` with the gotcha attached, and rendered as a prop

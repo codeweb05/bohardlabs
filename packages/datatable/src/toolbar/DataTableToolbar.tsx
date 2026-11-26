@@ -17,6 +17,7 @@ import {
 } from '@mui/material';
 import type {ColumnFiltersState, Table} from '@tanstack/react-table';
 import {useState} from 'react';
+import type {ReactNode} from 'react';
 
 import {ConfirmSlot} from '../config/ConfigContext';
 import {useLabels} from '../i18n';
@@ -77,6 +78,9 @@ interface DataTableToolbarProps<TData extends RowData> {
   readonly isMobile?: boolean;
   readonly bulkActions?: readonly BulkAction<TData>[];
   readonly selectedRows?: readonly TData[];
+
+  // The consumer's own controls, rendered right after the search box
+  readonly toolbarContent?: ReactNode;
 }
 
 export function DataTableToolbar<TData extends RowData>({
@@ -107,6 +111,7 @@ export function DataTableToolbar<TData extends RowData>({
   isMobile = false,
   bulkActions,
   selectedRows,
+  toolbarContent,
 }: Readonly<DataTableToolbarProps<TData>>) {
   const labels = useLabels();
   const [bulkMenuAnchor, setBulkMenuAnchor] = useState<HTMLElement | null>(null);
@@ -162,14 +167,37 @@ export function DataTableToolbar<TData extends RowData>({
           flexWrap: 'wrap',
         }}
       >
-        {/* Global Search */}
-        {enableGlobalFilter && (
-          <GlobalSearch
-            value={globalFilter}
-            onChange={onGlobalFilterChange ?? (() => {})}
-            placeholder={globalFilterPlaceholder}
-            helperText={globalFilterHelperText}
-          />
+        {/* Global Search. With toolbarContent it shares this row instead of taking the full width:
+            GlobalSearch flexes and the content sits at its end. Without toolbarContent nothing here
+            changes from today. */}
+        {enableGlobalFilter &&
+          (toolbarContent != null ? (
+            <Box sx={{display: 'flex', alignItems: 'center', flexWrap: 'nowrap', gap: 0.5, minWidth: 0}}>
+              <GlobalSearch
+                flexible
+                value={globalFilter}
+                onChange={onGlobalFilterChange ?? (() => {})}
+                placeholder={globalFilterPlaceholder}
+                helperText={globalFilterHelperText}
+              />
+              {/* Ahead of the chip and Reset filters, which come and go with the table's own
+                  filters, so the consumer's control does not jump when one is set. */}
+              <Box sx={{display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 0.5, flexShrink: 0}}>
+                {toolbarContent}
+              </Box>
+            </Box>
+          ) : (
+            <GlobalSearch
+              value={globalFilter}
+              onChange={onGlobalFilterChange ?? (() => {})}
+              placeholder={globalFilterPlaceholder}
+              helperText={globalFilterHelperText}
+            />
+          ))}
+
+        {/* Consumer controls with no search box to share a row with. */}
+        {!enableGlobalFilter && toolbarContent != null && (
+          <Box sx={{display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 0.5}}>{toolbarContent}</Box>
         )}
 
         {/* Active filters indicator */}

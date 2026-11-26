@@ -3,7 +3,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import {screen, waitFor, within} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import {beforeEach, describe, expect, it, vi} from 'vitest';
+import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 
 import {DataTable} from './DataTable';
 import type {TestRole} from './test/test-utils';
@@ -1236,6 +1236,59 @@ describe('DataTable', () => {
 
       // Pagination controls should not be visible
       expect(screen.queryByRole('button', {name: /next page/i})).not.toBeInTheDocument();
+    });
+  });
+
+  describe('Toolbar Content', () => {
+    const statusButton = <button type="button">Filter by status</button>;
+
+    // The phone test replaces `matchMedia` on the global; without this the stub leaks into
+    // later tests and they render CardView instead of the table.
+    afterEach(() => {
+      vi.unstubAllGlobals();
+    });
+
+    it('renders the consumer control in the toolbar', () => {
+      render(<DataTable columns={testColumns} data={testData.slice(0, 5)} toolbarContent={statusButton} />);
+
+      expect(screen.getByRole('button', {name: 'Filter by status'})).toBeInTheDocument();
+    });
+
+    it('hides it with the rest of the toolbar', () => {
+      // Passes before the change too; it pins `showToolbar` as the one switch for the whole
+      // toolbar, consumer controls included.
+      render(
+        <DataTable
+          columns={testColumns}
+          data={testData.slice(0, 5)}
+          toolbarContent={statusButton}
+          showToolbar={false}
+        />,
+      );
+
+      expect(screen.queryByRole('button', {name: 'Filter by status'})).not.toBeInTheDocument();
+    });
+
+    it('keeps it above the cards on a phone', () => {
+      vi.stubGlobal(
+        'matchMedia',
+        vi.fn().mockImplementation((query: string) => ({
+          matches: query.includes('max-width'),
+          media: query,
+          onchange: null,
+          addListener: vi.fn(),
+          removeListener: vi.fn(),
+          addEventListener: vi.fn(),
+          removeEventListener: vi.fn(),
+          dispatchEvent: vi.fn(),
+        })),
+      );
+      render(
+        <DataTable columns={testColumns} data={testData.slice(0, 5)} toolbarContent={statusButton} ariaLabel="Roles" />,
+      );
+
+      expect(screen.getByRole('list', {name: 'Roles'})).toBeInTheDocument();
+      expect(screen.getByRole('button', {name: 'Filter by status'})).toBeInTheDocument();
     });
   });
 

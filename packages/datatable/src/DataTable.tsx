@@ -156,6 +156,7 @@ export function DataTable<TData extends RowData>(props: Readonly<DataTableProps<
     maxHeight,
     emptyMessage,
     showToolbar = true,
+    toolbarContent,
     showPagination = true,
     containerSx,
     labels,
@@ -380,6 +381,7 @@ export function DataTable<TData extends RowData>(props: Readonly<DataTableProps<
                 isMobile={isMobile}
                 bulkActions={bulkActions}
                 selectedRows={selectedRows}
+                toolbarContent={toolbarContent}
               />
             )}
 

@@ -11,6 +11,11 @@ interface GlobalSearchProps {
   readonly placeholder?: string;
   readonly helperText?: string;
   readonly debounceMs?: number;
+  // Set by the toolbar when a consumer's `toolbarContent` shares this row: the box gives up
+  // its own min/max width and instead flexes to fill whatever space `toolbarContent` does not
+  // take, so the two sit on one line down to the narrowest screen instead of the search box
+  // claiming the full row and pushing the content onto the next line.
+  readonly flexible?: boolean;
 }
 
 export function GlobalSearch({
@@ -19,6 +24,7 @@ export function GlobalSearch({
   placeholder,
   helperText,
   debounceMs = 300,
+  flexible = false,
 }: Readonly<GlobalSearchProps>) {
   const labels = useLabels();
   const [localValue, setLocalValue] = useState(value);
@@ -60,11 +66,11 @@ export function GlobalSearch({
 
   return (
     <Box
-      sx={{
-        position: 'relative',
-        minWidth: {xs: '100%', sm: 220},
-        maxWidth: {xs: '100%', sm: 280},
-      }}
+      sx={
+        flexible
+          ? {position: 'relative', flex: 1, minWidth: 0}
+          : {position: 'relative', minWidth: {xs: '100%', sm: 220}, maxWidth: {xs: '100%', sm: 280}}
+      }
     >
       <TextField
         size="small"

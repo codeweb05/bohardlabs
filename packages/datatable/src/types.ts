@@ -959,6 +959,27 @@ export interface DataTableProps<TData extends RowData> extends TableEventHandler
    * Turning it off does not disable the features, it only hides their controls.
    */
   readonly showToolbar?: boolean;
+  /**
+   * Controls of the consumer's own, placed in the toolbar right after the search box: a
+   * status menu that feeds a query param, a date range, a "New" button. The table renders
+   * them as given and holds none of their state.
+   *
+   * - The table's active-filter chip and **Reset filters** cover only its own filters. A
+   *   control here that filters is the consumer's to count and to reset.
+   * - It is part of the toolbar, so `showToolbar={false}` hides it too.
+   * - Below the `sm` breakpoint the toolbar stacks, and the search box shares its row with
+   *   these controls instead of wrapping them onto the line under it. Several controls stay
+   *   together and wrap among themselves if they do not fit.
+   * - Tab order is the DOM order: search, these controls, then the table's own. The table
+   *   adds no label or role around them, so give each control its own accessible name (an
+   *   icon button needs `aria-label`).
+   *
+   * @example
+   * ```tsx
+   * <DataTable toolbarContent={<StatusFilterMenu value={status} onChange={setStatus} />} … />
+   * ```
+   */
+  readonly toolbarContent?: ReactNode;
   /** Render the pager. Default `true`. `enablePagination={false}` is what stops the paging itself. */
   readonly showPagination?: boolean;
   /** `sx` for the outer container. For layout only (height, margins); style the look through the theme. */

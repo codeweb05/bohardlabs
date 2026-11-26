@@ -1,12 +1,18 @@
+import FilterListIcon from '@mui/icons-material/FilterList';
+import Badge from '@mui/material/Badge';
 import Box from '@mui/material/Box';
 import Chip from '@mui/material/Chip';
+import IconButton from '@mui/material/IconButton';
+import ListItemText from '@mui/material/ListItemText';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
 import ToggleButton from '@mui/material/ToggleButton';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import Typography from '@mui/material/Typography';
 import {LocalizationProvider} from '@mui/x-date-pickers';
 import {AdapterDayjs} from '@mui/x-date-pickers/AdapterDayjs';
 import type {Meta, StoryObj} from '@storybook/react-vite';
-import {useEffect, useState, type ReactNode} from 'react';
+import {useEffect, useId, useState, type ReactNode} from 'react';
 import {expect, fn, screen, spyOn, userEvent, waitFor, within} from 'storybook/test';
 
 import {DataTable} from './DataTable';
@@ -203,6 +209,122 @@ export const Filtering: Story = {
     await userEvent.type(canvas.getByPlaceholderText(/search all columns/i), 'SW-1002');
     await waitFor(() => expect(canvas.queryByText('SW-1000')).not.toBeInTheDocument());
     await expect(canvas.getByText('SW-1002')).toBeInTheDocument();
+  },
+};
+
+type StatusFilter = Order['status'] | 'all';
+
+const STATUS_FILTERS: readonly StatusFilter[] = ['all', 'pending', 'in_progress', 'delivered', 'cancelled'];
+
+function statusFilterLabel(status: StatusFilter): string {
+  return status === 'all' ? 'All statuses' : STATUS_LABEL[status];
+}
+
+function countOrders(status: StatusFilter): number {
+  return status === 'all' ? ORDERS.length : ORDERS.filter((order) => order.status === status).length;
+}
+
+interface StatusFilterMenuProps {
+  readonly value: StatusFilter;
+  readonly onChange: (status: StatusFilter) => void;
+}
+
+/**
+ * The consumer's own control: an icon button that opens a status menu, with a badge
+ * counting the rows the chosen status matches. Its accessible name says which status is
+ * on, because the badge alone is a number with no meaning to a screen reader.
+ */
+function StatusFilterMenu({value, onChange}: Readonly<StatusFilterMenuProps>) {
+  const menuId = useId();
+  const [anchor, setAnchor] = useState<HTMLElement | null>(null);
+  const isOpen = anchor !== null;
+
+  return (
+    <>
+      <IconButton
+        size="small"
+        aria-label={value === 'all' ? 'Filter by status' : `Filter by status: ${statusFilterLabel(value)}`}
+        aria-haspopup="menu"
+        aria-expanded={isOpen}
+        aria-controls={isOpen ? menuId : undefined}
+        onClick={(event) => setAnchor(event.currentTarget)}
+      >
+        <Badge color="primary" badgeContent={countOrders(value)} invisible={value === 'all'}>
+          <FilterListIcon fontSize="small" />
+        </Badge>
+      </IconButton>
+      <Menu id={menuId} anchorEl={anchor} open={isOpen} onClose={() => setAnchor(null)}>
+        {STATUS_FILTERS.map((status) => (
+          <MenuItem
+            key={status}
+            selected={status === value}
+            onClick={() => {
+              onChange(status);
+              setAnchor(null);
+            }}
+          >
+            <ListItemText>{statusFilterLabel(status)}</ListItemText>
+            <Typography variant="body2" color="text.secondary" sx={{ml: 2}}>
+              {countOrders(status)}
+            </Typography>
+          </MenuItem>
+        ))}
+      </Menu>
+    </>
+  );
+}
+
+function StatusFilteredOrders() {
+  const [status, setStatus] = useState<StatusFilter>('all');
+  // Stands in for a query param: a real page puts `status` in its request and the server
+  // filters. The table only ever sees the rows that come back.
+  const rows = status === 'all' ? ORDERS : ORDERS.filter((order) => order.status === status);
+
+  return (
+    <DataTable
+      columns={columns}
+      data={rows}
+      enableFiltering
+      toolbarContent={<StatusFilterMenu value={status} onChange={setStatus} />}
+      ariaLabel="Orders"
+    />
+  );
+}
+
+/**
+ * **A control of your own, beside the search box.** `toolbarContent` takes any node and
+ * places it right after search, ahead of the table's own controls.
+ *
+ * The status menu here holds its own state and filters the rows before they reach the
+ * table, the way a query param would on a server-driven page. The table's active-filter
+ * chip and **Reset filters** do not count it: they cover the table's own filters only.
+ * Give an icon button an `aria-label`; the table adds none around it.
+ */
+export const ToolbarContent: Story = {
+  parameters: showcase('toolbarContent', 'showToolbar'),
+  render: () => <StatusFilteredOrders />,
+  play: async ({canvasElement}) => {
+    const canvas = within(canvasElement);
+    const trigger = canvas.getByRole('button', {name: 'Filter by status'});
+
+    await userEvent.click(trigger);
+    // The menu is portalled to document.body, outside the canvas.
+    await userEvent.click(await screen.findByRole('menuitem', {name: /^Delivered/}));
+
+    await waitFor(() => expect(canvas.queryByText('SW-1000')).not.toBeInTheDocument());
+    await expect(canvas.getByText('SW-1002')).toBeInTheDocument();
+
+    // The trigger re-renders from the consumer's new state, and the menu hands focus back.
+    await expect(trigger).toHaveAccessibleName('Filter by status: Delivered');
+    await waitFor(() => expect(trigger).toHaveFocus());
+
+    // Search and the control still share one row: the trigger's middle sits within the
+    // search box's height rather than on a line of its own.
+    const search = canvas.getByPlaceholderText(/search all columns/i).getBoundingClientRect();
+    const box = trigger.getBoundingClientRect();
+    const middle = box.top + box.height / 2;
+    await expect(middle).toBeGreaterThan(search.top);
+    await expect(middle).toBeLessThan(search.bottom);
   },
 };
 

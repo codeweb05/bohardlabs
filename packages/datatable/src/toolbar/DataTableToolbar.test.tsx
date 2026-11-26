@@ -190,6 +190,86 @@ describe('DataTableToolbar — optional controls', () => {
   });
 });
 
+describe('DataTableToolbar consumer controls', () => {
+  const statusButton = <button type="button">Filter by status</button>;
+
+  /** The search box's own root `Box`: input, then the input base, then the `TextField`, then it. */
+  function searchBoxRoot(): HTMLElement {
+    const root = parentOf(parentOf(parentOf(screen.getByPlaceholderText(DEFAULT_LABELS.globalSearch))));
+    expect(root).toHaveClass('MuiBox-root');
+    return root;
+  }
+
+  it('takes focus between the search box and the table controls', async () => {
+    // A column filter is active, so the chip and Reset filters are on screen. The consumer
+    // control has to sit before them: they come and go with the table's own filters, and
+    // anything after them would jump sideways every time one is set.
+    renderToolbar({
+      toolbarContent: statusButton,
+      columnFilters: [{id: 'name', value: 'a'}],
+      onFiltersReset,
+      enableColumnVisibility: true,
+    });
+
+    await userEvent.click(screen.getByPlaceholderText(DEFAULT_LABELS.globalSearch));
+    await userEvent.tab();
+    expect(screen.getByRole('button', {name: 'Filter by status'})).toHaveFocus();
+
+    await userEvent.tab();
+    expect(screen.getByRole('button', {name: DEFAULT_LABELS.resetFilters})).toHaveFocus();
+
+    await userEvent.tab();
+    expect(screen.getByRole('button', {name: DEFAULT_LABELS.columns})).toHaveFocus();
+  });
+
+  it('keeps the control when the search box is off', () => {
+    renderToolbar({toolbarContent: statusButton, enableGlobalFilter: false});
+
+    expect(screen.getByRole('button', {name: 'Filter by status'})).toBeInTheDocument();
+  });
+
+  it('keeps the control ahead of the mobile bulk menu', async () => {
+    renderToolbar({toolbarContent: statusButton, isMobile: true, bulkActions}, {'row-1': true});
+
+    await userEvent.click(screen.getByPlaceholderText(DEFAULT_LABELS.globalSearch));
+    await userEvent.tab();
+    expect(screen.getByRole('button', {name: 'Filter by status'})).toHaveFocus();
+
+    await userEvent.tab();
+    expect(screen.getByRole('button', {name: DEFAULT_LABELS.actions})).toHaveFocus();
+  });
+
+  it('shares its row with the search box instead of wrapping under it', () => {
+    // MUI's breakpoint-gated sx values (the `{xs, sm}` objects elsewhere in this file) do not
+    // resolve through getComputedStyle in this project's jsdom setup: a value that differs
+    // only by breakpoint always reads back as the browser default, regardless of
+    // window.innerWidth. The assertions below use only the unconditional values the fix adds,
+    // which jsdom does resolve; the visual result at a real narrow viewport is a manual check
+    // in the story.
+    renderToolbar({toolbarContent: statusButton});
+
+    const searchBox = searchBoxRoot();
+    const row = parentOf(searchBox);
+
+    expect(globalThis.getComputedStyle(row).flexWrap).toBe('nowrap');
+    expect(globalThis.getComputedStyle(searchBox).flexGrow).toBe('1');
+    // Parsed rather than string-matched: emotion serialises a zero as `0` or `0px` depending
+    // on its version, and the bug this guards is the search box refusing to shrink at all
+    // (`minWidth: auto`), not the exact unit.
+    expect(Number.parseFloat(globalThis.getComputedStyle(searchBox).minWidth)).toBe(0);
+  });
+
+  it('leaves the search box at its own width when there is no consumer control', () => {
+    renderToolbar({});
+
+    const searchBox = searchBoxRoot();
+
+    // The default sx carries no `flex`, so this is the initial value, not a breakpoint result:
+    // today's search box neither grows nor shrinks, and this stays true with the fix.
+    expect(globalThis.getComputedStyle(searchBox).flexGrow).toBe('0');
+  });
+});
+
 describe('DataTableToolbar — mobile bulk actions', () => {
   const mobileProps: ToolbarProps = {isMobile: true, bulkActions};
 
