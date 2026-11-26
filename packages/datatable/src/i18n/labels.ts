@@ -89,6 +89,10 @@ export interface DataTableLabels {
    * already translated: `sortAsc`, `sortDesc` or `clearSort`.
    */
   readonly sortBy: (column: string, action: string) => string;
+  /** The sort button above the cards on a phone, and the name of its menu, while nothing is sorted. */
+  readonly sortMenu: string;
+  /** The accessible name of that sort button once a column is sorted. `column` is the column's card label. */
+  readonly sortedBy: (column: string, desc: boolean) => string;
 
   // Expansion
   readonly expandAll: string;
@@ -211,6 +215,8 @@ export const DEFAULT_LABELS: DataTableLabels = {
   sortAsc: 'Sort ascending',
   sortDesc: 'Sort descending',
   sortBy: (column, action) => `${column}, ${action}`,
+  sortMenu: 'Sort',
+  sortedBy: (column, desc) => `Sorted by ${column}, ${desc ? 'descending' : 'ascending'}`,
 
   expandAll: 'Expand All',
   expandAllTooltip: 'Expand all rows',

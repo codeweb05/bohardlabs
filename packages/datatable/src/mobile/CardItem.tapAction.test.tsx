@@ -63,7 +63,16 @@ describe("cardTapAction: 'select' (the default)", () => {
 
   it('makes the card a tab stop named by its title', async () => {
     const user = userEvent.setup();
-    render(<DataTable columns={testColumns} data={testData} onRowClick={vi.fn()} />);
+    // No toolbar and no card bar, so the first card is the first tab stop on the page.
+    render(
+      <DataTable
+        columns={testColumns}
+        data={testData}
+        onRowClick={vi.fn()}
+        showToolbar={false}
+        enableSorting={false}
+      />,
+    );
 
     await user.tab();
 
@@ -223,6 +232,19 @@ describe("cardTapAction: 'open'", () => {
 });
 
 describe('card keyboard handling', () => {
+  it('leaves a card with no title unnamed rather than pointing at nothing', () => {
+    render(
+      <DataTable
+        columns={testColumns.map((column) => ({...column, showInMobileCard: false}))}
+        data={testData}
+        onRowClick={vi.fn()}
+      />,
+    );
+
+    const [card] = screen.getAllByRole('group');
+    expect(card).not.toHaveAttribute('aria-labelledby');
+  });
+
   it('ignores a key pressed on a control inside the card', async () => {
     const user = userEvent.setup();
     const onRowClick = vi.fn();

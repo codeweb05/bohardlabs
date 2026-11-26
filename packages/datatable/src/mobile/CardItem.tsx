@@ -107,11 +107,6 @@ export function CardItem<TData extends RowData>({
     onRowClick?.(row.original);
   };
 
-  const handleCheckboxClick = (event: React.MouseEvent) => {
-    event.stopPropagation();
-    row.toggleSelected();
-  };
-
   const handleCardKeyDown = (event: React.KeyboardEvent<HTMLElement>) =>
     handleCardKey(event, row, onRowClick, canSelectThisRow);
 
@@ -172,7 +167,10 @@ export function CardItem<TData extends RowData>({
                     size="small"
                     checked={isSelected}
                     disabled={!canSelectThisRow}
-                    onClick={handleCheckboxClick}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      row.toggleSelected();
+                    }}
                     sx={{p: 0.25}}
                     slotProps={{
                       input: {

@@ -344,6 +344,41 @@ describe('CardItem — selection', () => {
     expect(checkboxes[0]).toBeDisabled();
     expect(checkboxes[1]).toBeEnabled();
   });
+
+  // The two below re-render a selectable card with the same row, which is the only way to
+  // reach the compiler's cached checkbox. A stale cache would show up as a lost tick or an
+  // old name.
+  it('keeps a ticked card ticked while its actions menu opens', async () => {
+    render(
+      <DataTable
+        columns={testColumns}
+        data={testData}
+        enableRowSelection
+        rowActions={[{id: 'edit', label: 'Edit', onClick: vi.fn()}]}
+      />,
+    );
+    await userEvent.click(screen.getByRole('checkbox', {name: 'Select row role-1'}));
+
+    await userEvent.click(screen.getAllByRole('button', {name: 'Actions'})[0]);
+
+    expect(await screen.findByRole('menuitem', {name: 'Edit'})).toBeInTheDocument();
+    expect(screen.getByRole('checkbox', {name: 'Select row role-1', hidden: true})).toBeChecked();
+  });
+
+  it("renames a card's checkbox when only the labels change", () => {
+    const {rerender} = render(<DataTable columns={testColumns} data={testData} enableRowSelection />);
+
+    rerender(
+      <DataTable
+        columns={testColumns}
+        data={testData}
+        enableRowSelection
+        labels={{selectRow: (id) => `Zeile ${id} auswählen`}}
+      />,
+    );
+
+    expect(screen.getByRole('checkbox', {name: 'Zeile role-1 auswählen'})).toBeInTheDocument();
+  });
 });
 
 describe('CardItem — expansion', () => {
@@ -478,9 +513,9 @@ describe('CardView — dark theme', () => {
       </ThemeProvider>,
     );
 
-    await userEvent.click(screen.getAllByRole('checkbox')[0]);
+    await userEvent.click(screen.getAllByRole('checkbox', {name: /Select row/})[0]);
 
-    expect(screen.getAllByRole('checkbox')[0]).toBeChecked();
+    expect(screen.getAllByRole('checkbox', {name: /Select row/})[0]).toBeChecked();
   });
 
   it('renders the animated expanded panel in dark mode', async () => {
@@ -734,7 +769,7 @@ describe('CardView and CardItem, with only the required props', () => {
     );
   }
 
-  function SingleCard() {
+  function SingleCard({index = 0}: Readonly<{index?: number}>) {
     'use no memo';
     const table = useReactTable({
       data: testData,
@@ -743,7 +778,7 @@ describe('CardView and CardItem, with only the required props', () => {
       getCoreRowModel: getCoreRowModel(),
     });
 
-    return <CardItem row={table.getRowModel().rows[0]} table={table} />;
+    return <CardItem row={table.getRowModel().rows[index]} table={table} />;
   }
 
   it('lists one plain card per row, with nothing to expand', () => {
@@ -777,6 +812,14 @@ describe('CardView and CardItem, with only the required props', () => {
     expect(screen.getByText('SUPER_ADMIN')).toBeInTheDocument();
     expect(screen.getByRole('checkbox', {name: 'Select row role-1'})).not.toBeChecked();
     expect(screen.queryByRole('button')).not.toBeInTheDocument();
+  });
+
+  it('renames the checkbox when the same card is handed another row', () => {
+    const {rerender} = render(<SingleCard />);
+
+    rerender(<SingleCard index={1} />);
+
+    expect(screen.getByRole('checkbox', {name: 'Select row role-2'})).toBeInTheDocument();
   });
 
   it("names a card's checkbox through the labels", () => {

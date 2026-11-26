@@ -1239,6 +1239,8 @@ const HINDI_LABELS: DataTableLabels = {
   sortAsc: 'आरोही क्रम में लगाएँ',
   sortDesc: 'अवरोही क्रम में लगाएँ',
   sortBy: (column, action) => `${column}: ${action}`,
+  sortMenu: 'क्रम',
+  sortedBy: (column, desc) => `${column} के अनुसार ${desc ? 'अवरोही' : 'आरोही'} क्रम`,
 
   expandAll: 'सभी विस्तृत करें',
   expandAllTooltip: 'सभी पंक्तियाँ विस्तृत करें',
@@ -1723,5 +1725,45 @@ export const CardTapOpens: Story = {
     await userEvent.keyboard(' ');
     await expect(checkbox).toBeChecked();
     await expect(args.onRowClick).toHaveBeenCalledTimes(2);
+  },
+};
+
+/**
+ * The card layout has no header row, so a bar above the cards stands in for it: select-all
+ * for the page (indeterminate on a partial selection), Clear, and a sort menu that writes the
+ * same sort the headers do. Every string comes from `labels`.
+ */
+export const CardControls: Story = {
+  name: 'Card view controls',
+  parameters: {...showcase('enableRowSelection', 'enableSorting', 'labels'), layout: 'fullscreen'},
+  globals: {viewport: {value: 'iphone14', isRotated: false}},
+  decorators: [onPhone],
+  args: {
+    columns: cardColumns,
+    data: ORDERS.slice(0, 4),
+    enableRowSelection: true,
+  },
+  play: async ({canvasElement}) => {
+    const canvas = within(canvasElement);
+    const firstCard = () => within(canvas.getAllByRole('listitem')[0] ?? canvasElement).getByRole('heading');
+
+    const selectAll = await canvas.findByRole('checkbox', {name: 'Select all rows'});
+    await userEvent.click(selectAll);
+    await expect(canvas.getAllByRole('checkbox', {name: /^Select row/, checked: true})).toHaveLength(4);
+    await expect(canvas.getByText('4 selected')).toBeInTheDocument();
+
+    await userEvent.click(canvas.getByRole('button', {name: 'Clear selection'}));
+    await expect(canvas.queryAllByRole('checkbox', {name: /^Select row/, checked: true})).toHaveLength(0);
+
+    await userEvent.click(canvas.getByRole('checkbox', {name: 'Select row order-2'}));
+    await expect(selectAll).toHaveAttribute('data-indeterminate', 'true');
+
+    await userEvent.click(canvas.getByRole('button', {name: 'Sort'}));
+    await userEvent.click(await screen.findByRole('menuitemradio', {name: 'Placed'}));
+    await expect(firstCard()).toHaveTextContent('SW-1000');
+
+    await userEvent.click(canvas.getByRole('button', {name: 'Sorted by Placed, ascending'}));
+    await userEvent.click(await screen.findByRole('menuitemradio', {name: 'Sort descending'}));
+    await waitFor(() => expect(firstCard()).toHaveTextContent('SW-1003'));
   },
 };

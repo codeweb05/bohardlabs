@@ -134,7 +134,8 @@ describe('bulk actions', () => {
       {id: 'cancel', label: 'Cancel orders', onClick, confirmMessage: (count) => `Cancel ${count} orders?`},
     ];
     render(<DataTable columns={columns} data={orders(1, 3)} enableRowSelection bulkActions={actions} />);
-    const [first] = screen.getAllByRole('checkbox');
+    // The first checkbox on a phone is the card bar's select-all; these want a card's own.
+    const [first] = screen.getAllByRole('checkbox', {name: /^Select row/});
     if (!first) throw new Error('Expected a checkbox per card');
     await user.click(first);
 
@@ -157,7 +158,8 @@ describe('bulk actions', () => {
       {id: 'delete', label: 'Delete orders', color: 'error', onClick, confirmMessage: 'Delete these orders?'},
     ];
     render(<DataTable columns={columns} data={orders(1, 3)} enableRowSelection bulkActions={actions} />);
-    const [first] = screen.getAllByRole('checkbox');
+    // The first checkbox on a phone is the card bar's select-all; these want a card's own.
+    const [first] = screen.getAllByRole('checkbox', {name: /^Select row/});
     if (!first) throw new Error('Expected a checkbox per card');
     await user.click(first);
 
@@ -169,7 +171,7 @@ describe('bulk actions', () => {
 
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
     expect(onClick).not.toHaveBeenCalled();
-    expect(screen.getByText(`1 ${L.selected}`)).toBeInTheDocument();
+    expect(screen.getByRole('checkbox', {name: L.selectRow('order-1')})).toBeChecked();
   });
 
   it('runs nothing when a consumer dialog confirms with no action pending', async () => {
@@ -190,13 +192,14 @@ describe('bulk actions', () => {
       {id: 'cancel', label: 'Cancel orders', onClick, confirmMessage: 'Cancel these orders?'},
     ];
     render(<DataTable columns={columns} data={orders(1, 3)} enableRowSelection bulkActions={actions} slots={slots} />);
-    const [first] = screen.getAllByRole('checkbox');
+    // The first checkbox on a phone is the card bar's select-all; these want a card's own.
+    const [first] = screen.getAllByRole('checkbox', {name: /^Select row/});
     if (!first) throw new Error('Expected a checkbox per card');
     await user.click(first);
 
     await user.click(screen.getByRole('button', {name: 'Nothing to confirm'}));
 
     expect(onClick).not.toHaveBeenCalled();
-    expect(screen.getByText(`1 ${L.selected}`)).toBeInTheDocument();
+    expect(screen.getByRole('checkbox', {name: L.selectRow('order-1')})).toBeChecked();
   });
 });

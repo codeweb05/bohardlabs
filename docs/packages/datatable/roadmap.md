@@ -74,7 +74,7 @@ Their test suites are worth mining when porting anything: `DataTable.persistence
 | 39  | Measurement harness and perf budget      | Perf      |        | proposed                            |
 | 40  | Keep a column out of the export          | Data out  | app    | done (2026-11-26)                   |
 | 41  | Card tap and keyboard behaviour          | UX        | app    | done (2026-11-27)                   |
-| 42  | Card view selection and sort controls    | UX        | app    | proposed                            |
+| 42  | Card view selection and sort controls    | UX        | app    | done (2026-11-27)                   |
 | 43  | Consumer controls in the toolbar         | UX        | app    | done (2026-11-26)                   |
 
 ## Hardening pass (2026-08-28)

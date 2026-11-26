@@ -5,6 +5,7 @@ import type {ReactNode} from 'react';
 import {useTableUI} from '../DataTableContext.hooks';
 import {isRowExpanded} from '../expansion';
 import type {RowAction, RowData} from '../types';
+import {CardBar} from './CardBar';
 import {CardItem} from './CardItem';
 
 interface CardViewProps<TData extends RowData> {
@@ -13,6 +14,8 @@ interface CardViewProps<TData extends RowData> {
   readonly renderCard?: (row: TData, actions?: readonly RowAction<TData>[]) => ReactNode;
   readonly onRowClick?: (row: TData) => void;
   readonly cardTapAction?: 'open' | 'select';
+  /** Whether the card bar offers a sort. `DataTableProps.enableSorting`. */
+  readonly enableSorting?: boolean;
   // Expansion props
   readonly enableExpanding?: boolean;
   readonly renderExpandedRow?: (row: Row<TData>) => ReactNode;
@@ -27,11 +30,15 @@ export function CardView<TData extends RowData>({
   renderCard,
   onRowClick,
   cardTapAction,
+  enableSorting = false,
   enableExpanding = false,
   renderExpandedRow,
   animateExpansion = true,
   ariaLabel,
 }: Readonly<CardViewProps<TData>>) {
+  // `rows` comes off the stable `table`; cached against it, a sort from the card bar would
+  // not reorder the cards.
+  'use no memo';
   const rows = table.getRowModel().rows;
   const {expanded, rowSelection} = useTableUI();
 
@@ -40,46 +47,49 @@ export function CardView<TData extends RowData>({
   }
 
   return (
-    <Stack
-      component="ul"
-      role="list"
-      aria-label={ariaLabel}
-      spacing={1.5}
-      sx={{
-        p: {xs: 1, sm: 1.5},
-        listStyle: 'none',
-        m: 0,
-      }}
-    >
-      {rows.map((row) => {
-        const rowIsExpanded = isRowExpanded(row, enableExpanding, expanded);
+    <>
+      <CardBar table={table} rows={rows} enableSorting={enableSorting} />
+      <Stack
+        component="ul"
+        role="list"
+        aria-label={ariaLabel}
+        spacing={1.5}
+        sx={{
+          p: {xs: 1, sm: 1.5},
+          listStyle: 'none',
+          m: 0,
+        }}
+      >
+        {rows.map((row) => {
+          const rowIsExpanded = isRowExpanded(row, enableExpanding, expanded);
 
-        return (
-          <Box component="li" key={row.id}>
-            {renderCard ? (
-              renderCard(row.original, rowActions)
-            ) : (
-              <CardItem
-                row={row}
-                table={table}
-                rowActions={rowActions}
-                onRowClick={onRowClick}
-                cardTapAction={cardTapAction}
-                enableExpanding={enableExpanding}
-                isExpanded={rowIsExpanded}
-                isSelected={!!rowSelection?.[row.id]}
-              />
-            )}
-            {/* Expanded content for mobile cards */}
-            {enableExpanding && renderExpandedRow && (animateExpansion || rowIsExpanded) && (
-              <ExpandedCardPanel in={rowIsExpanded} animate={animateExpansion}>
-                {renderExpandedRow(row)}
-              </ExpandedCardPanel>
-            )}
-          </Box>
-        );
-      })}
-    </Stack>
+          return (
+            <Box component="li" key={row.id}>
+              {renderCard ? (
+                renderCard(row.original, rowActions)
+              ) : (
+                <CardItem
+                  row={row}
+                  table={table}
+                  rowActions={rowActions}
+                  onRowClick={onRowClick}
+                  cardTapAction={cardTapAction}
+                  enableExpanding={enableExpanding}
+                  isExpanded={rowIsExpanded}
+                  isSelected={!!rowSelection?.[row.id]}
+                />
+              )}
+              {/* Expanded content for mobile cards */}
+              {enableExpanding && renderExpandedRow && (animateExpansion || rowIsExpanded) && (
+                <ExpandedCardPanel in={rowIsExpanded} animate={animateExpansion}>
+                  {renderExpandedRow(row)}
+                </ExpandedCardPanel>
+              )}
+            </Box>
+          );
+        })}
+      </Stack>
+    </>
   );
 }
 

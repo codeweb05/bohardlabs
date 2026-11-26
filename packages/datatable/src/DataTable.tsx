@@ -445,6 +445,7 @@ export function DataTable<TData extends RowData>(props: Readonly<DataTableProps<
                       renderCard={renderMobileCard}
                       onRowClick={onRowClick}
                       cardTapAction={cardTapAction}
+                      enableSorting={enableSorting}
                       enableExpanding={enableExpanding}
                       renderExpandedRow={renderExpandedRow}
                       animateExpansion={animateExpansion}
