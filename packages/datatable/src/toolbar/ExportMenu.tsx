@@ -2,7 +2,7 @@ import CodeIcon from '@mui/icons-material/Code';
 import DescriptionIcon from '@mui/icons-material/Description';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import TableChartIcon from '@mui/icons-material/TableChart';
-import {ListItemIcon, ListItemText, MenuItem} from '@mui/material';
+import {ListItemIcon, ListItemText, MenuItem, Tooltip} from '@mui/material';
 import {flexRender} from '@tanstack/react-table';
 import type {Column, Row, Table} from '@tanstack/react-table';
 import dayjs from 'dayjs';
@@ -38,6 +38,9 @@ export function ExportMenu<TData extends RowData>({
   const {display: dateFormat} = useDateFormats();
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const [drawing, setDrawing] = useState<Drawing<TData> | null>(null);
+  // Read when the menu opens rather than during render: `table` is one stable object, so a
+  // value derived from it in render would be cached past a change of column visibility.
+  const [hasColumns, setHasColumns] = useState(true);
 
   const handleExport = async (format: ExportFormat) => {
     setAnchorEl(null);
@@ -65,9 +68,12 @@ export function ExportMenu<TData extends RowData>({
     }
 
     // Default export implementations
-    const columns = table
-      .getAllLeafColumns()
-      .filter((col) => col.id !== 'select' && col.id !== 'actions' && col.getIsVisible());
+    if (format === 'json') {
+      exportToJson(records, fileName);
+      return;
+    }
+
+    const columns = exportColumns(table);
     // TanStack gives every column a `cell`, so the columns as they were passed in are what
     // says which ones draw themselves.
     const ownCell = new Set(table.options.columns.filter((def) => typeof def.cell === 'function').map((def) => def.id));
@@ -82,17 +88,8 @@ export function ExportMenu<TData extends RowData>({
       ),
     };
 
-    switch (format) {
-      case 'csv':
-        exportToCsv(sheet, fileName, enableCsvFormulaGuard);
-        break;
-      case 'xlsx':
-        await exportToXlsx(sheet, fileName);
-        break;
-      case 'json':
-        exportToJson(records, fileName);
-        break;
-    }
+    if (format === 'csv') exportToCsv(sheet, fileName, enableCsvFormulaGuard);
+    else await exportToXlsx(sheet, fileName);
   };
 
   // What a cell shows is only known once it is mounted: a chip's label, a component's
@@ -143,22 +140,56 @@ export function ExportMenu<TData extends RowData>({
 
   return (
     <>
-      <ToolbarIconButton label={labels.exportLabel} onClick={(e) => setAnchorEl(e.currentTarget)}>
+      <ToolbarIconButton
+        label={labels.exportLabel}
+        onClick={(e) => {
+          setHasColumns(exportColumns(table).length > 0);
+          setAnchorEl(e.currentTarget);
+        }}
+      >
         <FileDownloadIcon sx={{fontSize: {xs: '1.25rem', sm: '1.5rem'}}} />
       </ToolbarIconButton>
 
       <AnchoredMenu anchorEl={anchorEl} onClose={() => setAnchorEl(null)}>
-        {formats.map((format) => (
-          <MenuItem key={format} onClick={() => handleExport(format)}>
-            <ListItemIcon>{getFormatIcon(format)}</ListItemIcon>
-            <ListItemText>{getFormatLabel(format)}</ListItemText>
-          </MenuItem>
-        ))}
+        {formats.map((format) => {
+          // JSON writes the records whole, and `onExport` gets the records too, so only the
+          // built-in CSV and Excel writers need a column to write.
+          const isEmpty = !hasColumns && !onExport && format !== 'json';
+          const item = (
+            <MenuItem key={format} disabled={isEmpty} onClick={() => handleExport(format)}>
+              <ListItemIcon>{getFormatIcon(format)}</ListItemIcon>
+              <ListItemText>{getFormatLabel(format)}</ListItemText>
+            </MenuItem>
+          );
+          // A disabled item takes no pointer events, so the tooltip listens on a wrapper.
+          return isEmpty ? (
+            <Tooltip key={format} title={labels.exportNoColumns} describeChild placement="left">
+              <span>{item}</span>
+            </Tooltip>
+          ) : (
+            item
+          );
+        })}
       </AnchoredMenu>
 
       {drawing && <DrawnCells {...drawing} />}
     </>
   );
+}
+
+/**
+ * The columns a CSV or Excel file holds: the visible ones in the order on screen, minus the
+ * selection and actions chrome and any column that opted out with `enableExport: false`.
+ */
+function exportColumns<TData extends RowData>(table: Table<TData>): Column<TData>[] {
+  return table
+    .getVisibleLeafColumns()
+    .filter(
+      (column) =>
+        column.id !== 'select' &&
+        column.id !== 'actions' &&
+        (column.columnDef as DataTableColumnDef<TData>).enableExport !== false,
+    );
 }
 
 /** A group row is a heading over the rows it holds, so a grouped table exports what is inside. */
@@ -226,9 +257,26 @@ function valueText<TData extends RowData>(row: Row<TData>, column: Column<TData>
   return '';
 }
 
+/** What heads the column in the file: `meta.label`, then a string header, then the id made readable. */
 function columnHeader<TData extends RowData>(column: Column<TData>): string {
+  // `meta` is TanStack's, typed by whatever the consumer declared for it, so it is read
+  // as unknown rather than trusted to hold a label.
+  const meta: unknown = column.columnDef.meta;
+  if (typeof meta === 'object' && meta !== null && 'label' in meta && typeof meta.label === 'string') {
+    return meta.label;
+  }
   const header = (column.columnDef as DataTableColumnDef<TData>).header;
-  return typeof header === 'string' ? header : column.id;
+  return typeof header === 'string' ? header : humanizeId(column.id);
+}
+
+/** `payout_status`, `payout-status` and `payoutStatus` all become "Payout status". */
+function humanizeId(id: string): string {
+  const words = id
+    .replaceAll(/([a-z\d])([A-Z])/g, '$1 $2')
+    .replaceAll(/[_\-.]+/g, ' ')
+    .trim()
+    .toLowerCase();
+  return words.charAt(0).toUpperCase() + words.slice(1);
 }
 
 /**

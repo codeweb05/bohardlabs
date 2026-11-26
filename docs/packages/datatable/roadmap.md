@@ -47,7 +47,7 @@ Their test suites are worth mining when porting anything: `DataTable.persistence
 | 12  | "Why is this row here?"                  | UX        |        | proposed                            |
 | 13  | Diff highlighting on refetch             | UX        |        | proposed                            |
 | 14  | Virtualization                           | UX        | smart  | wired, unused (port exists)         |
-| 15  | Export respects the current view         | Data out  | SP     | proposed                            |
+| 15  | Export respects the current view         | Data out  | SP     | done (2026-11-26)                   |
 | 16  | Server-side export of the full result    | Data out  |        | proposed                            |
 | 17  | Faceted filters with counts              | Data out  | SP     | proposed (BE-dependent)             |
 | 18  | Inline edit rollout                      | Editing   |        | partly built                        |
@@ -72,7 +72,7 @@ Their test suites are worth mining when porting anything: `DataTable.persistence
 | 37  | Effect churn in state management         | Perf      |        | proposed                            |
 | 38  | Explicit column memoization              | Perf      |        | proposed                            |
 | 39  | Measurement harness and perf budget      | Perf      |        | proposed                            |
-| 40  | Keep a column out of the export          | Data out  | app    | proposed                            |
+| 40  | Keep a column out of the export          | Data out  | app    | done (2026-11-26)                   |
 | 41  | Card tap and keyboard behaviour          | UX        | app    | proposed                            |
 | 42  | Card view selection and sort controls    | UX        | app    | proposed                            |
 | 43  | Consumer controls in the toolbar         | UX        | app    | done (2026-11-26)                   |

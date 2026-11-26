@@ -696,6 +696,49 @@ export const ExportHandler: Story = {
   },
 };
 
+/**
+ * **Exporting what is on screen.** CSV and Excel write the visible columns in the order the
+ * user arranged them. A hidden column stays out of the file, and so does one marked
+ * `enableExport: false`, for a column that means nothing outside the table (a thumbnail, a
+ * count the reader can't act on).
+ *
+ * Each heading is `meta.label` when the column has one, then a string `header`, then the
+ * column id made readable. A component header has no text to write, so give it a
+ * `meta.label`.
+ *
+ * Here Total has been moved before Customer, Placed is hidden and Items opts out, so the
+ * file holds Reference, Total, Customer and Status. Hide every one of those and CSV and
+ * Excel are disabled, with a tooltip saying why. JSON still writes the records whole.
+ */
+export const ExportColumns: Story = {
+  parameters: showcase('enableExport', 'initialColumnOrder', 'initialColumnVisibility'),
+  args: {
+    enableExport: true,
+    exportFormats: ['csv', 'xlsx', 'json'],
+    exportFileName: 'orders',
+    columns: columns.map((column) => (column.id === 'items' ? {...column, enableExport: false} : column)),
+    initialColumnOrder: ['reference', 'total', 'customer', 'status', 'items', 'placedAt'],
+    initialColumnVisibility: {placedAt: false},
+  },
+  play: async ({canvasElement}) => {
+    const body = within(canvasElement.ownerDocument.body);
+    const downloads = captureDownloads();
+
+    try {
+      await clickExport(canvasElement, 'Export CSV');
+      await waitFor(() => expect(downloads.files).toHaveLength(1), {timeout: 5000});
+
+      const [header, firstRow] = (await downloads.files[0].blob.text()).split('\n');
+      await expect(header).toBe('Reference,Total,Customer,Status');
+      await expect(firstRow).toBe(`SW-1000,$9.50,Amara Okafor,${STATUS_LABEL.pending}`);
+    } finally {
+      downloads.restore();
+      await userEvent.keyboard('{Escape}');
+      await waitFor(() => expect(body.queryByRole('menu')).not.toBeInTheDocument());
+    }
+  },
+};
+
 // A story-only id. Two tables sharing an id share their saved state, which is exactly why a
 // detail-page sub-list needs its own even when it reuses the same columns.
 const PERSISTED_TABLE_ID = 'storybook-orders';
@@ -1088,6 +1131,7 @@ const HINDI_LABELS: DataTableLabels = {
   exportCsv: 'CSV निर्यात करें',
   exportExcel: 'एक्सेल निर्यात करें',
   exportJson: 'JSON निर्यात करें',
+  exportNoColumns: 'निर्यात के लिए कोई कॉलम नहीं',
 
   selectAll: 'सभी पंक्तियाँ चुनें',
   selectRow: (id) => `पंक्ति ${id} चुनें`,

@@ -101,6 +101,8 @@ export interface DataTableLabels {
   readonly exportCsv: string;
   readonly exportExcel: string;
   readonly exportJson: string;
+  /** Tooltip on CSV and Excel when every visible column is hidden or has `enableExport: false`. */
+  readonly exportNoColumns: string;
 
   // Selection
   readonly selectAll: string;
@@ -190,6 +192,7 @@ export const DEFAULT_LABELS: DataTableLabels = {
   exportCsv: 'Export CSV',
   exportExcel: 'Export Excel',
   exportJson: 'Export JSON',
+  exportNoColumns: 'No columns to export',
 
   selectAll: 'Select all rows',
   selectRow: (id) => `Select row ${id}`,

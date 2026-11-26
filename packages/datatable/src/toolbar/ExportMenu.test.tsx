@@ -60,7 +60,7 @@ function createMockTable(
       rows: data.map((d) => ({original: d, getIsGrouped: () => false})),
     }),
     options: {columns: []},
-    getAllLeafColumns: () =>
+    getVisibleLeafColumns: () =>
       columns.map((col) => ({
         id: col.id,
         getIsVisible: () => true,
@@ -325,7 +325,7 @@ describe('ExportMenu', () => {
       const table = {
         getSortedRowModel: () => ({rows: [{original: {id: '1', name: 'Test'}, getIsGrouped: () => false}]}),
         options: {columns: []},
-        getAllLeafColumns: () => [
+        getVisibleLeafColumns: () => [
           {id: 'select', getIsVisible: () => true, columnDef: {accessorKey: 'id', header: 'Select'}},
           {id: 'name', getIsVisible: () => true, columnDef: {accessorKey: 'name', header: 'Name'}},
           {id: 'actions', getIsVisible: () => true, columnDef: {header: 'Actions'}},
@@ -353,10 +353,12 @@ describe('ExportMenu', () => {
           rows: [{original: {id: '1', name: 'Test', email: 'test@test.com'}, getIsGrouped: () => false}],
         }),
         options: {columns: []},
-        getAllLeafColumns: () => [
-          {id: 'name', getIsVisible: () => true, columnDef: {accessorKey: 'name', header: 'Name'}},
-          {id: 'email', getIsVisible: () => false, columnDef: {accessorKey: 'email', header: 'Email'}},
-        ],
+        // TanStack's own visible-leaf list, mimicked: the hidden column never reaches the exporter.
+        getVisibleLeafColumns: () =>
+          [
+            {id: 'name', getIsVisible: () => true, columnDef: {accessorKey: 'name', header: 'Name'}},
+            {id: 'email', getIsVisible: () => false, columnDef: {accessorKey: 'email', header: 'Email'}},
+          ].filter((column) => column.getIsVisible()),
       };
 
       render(<ExportMenu table={table as any} formats={['csv']} />);

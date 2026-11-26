@@ -238,6 +238,11 @@ export interface DataTableColumnDef<TData extends RowData, TValue = unknown> ext
    *
    * A string is title-cased by the table's `headerCase`; pass `headerCase="none"` on the
    * table when a header is an acronym or a product name that must survive verbatim.
+   *
+   * CSV and Excel export head the column with `meta.label` when it is a string, then with
+   * this header when it is a string, then with the id made readable (`payout_status`
+   * becomes "Payout status"). Give a render-function header a `meta: {label}` to control
+   * what the file says.
    */
   readonly header: string | ((props: HeaderContext<TData, TValue>) => ReactNode);
 
@@ -254,6 +259,12 @@ export interface DataTableColumnDef<TData extends RowData, TValue = unknown> ext
   readonly truncate?: boolean;
   /** Max width for truncation */
   readonly maxWidth?: number;
+  /**
+   * `false` keeps a visible column out of every CSV and Excel export, for a column that
+   * makes no sense in a file: a thumbnail, a cell of buttons. Defaults to `true`. A hidden
+   * column is never exported either way, and JSON export writes the records whole.
+   */
+  readonly enableExport?: boolean;
   /** Cell overflow behavior (ellipsis, wrap, or truncate) */
   readonly overflow?: CellOverflowMode;
 

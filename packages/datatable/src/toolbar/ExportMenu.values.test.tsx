@@ -274,7 +274,7 @@ describe('ExportMenu, a parent that re-renders', () => {
 });
 
 describe('ExportMenu, a header that is not plain text', () => {
-  it('heads the column with its id', async () => {
+  it('heads the column with its id, made readable', async () => {
     // A header rendered from a function has no text to put in a file.
     const download = setupDownloadMocks();
     const tableColumns: DataTableColumnDef<Order>[] = [
@@ -288,7 +288,7 @@ describe('ExportMenu, a header that is not plain text', () => {
     await waitFor(() => {
       expect(download.getContent()).not.toBe('');
     });
-    expect(download.getContent().split('\n')).toEqual(['\uFEFFTotal,paid', '42.5,true']);
+    expect(download.getContent().split('\n')).toEqual(['\uFEFFTotal,Paid', '42.5,true']);
   });
 });
 
