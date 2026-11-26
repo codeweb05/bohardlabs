@@ -21,6 +21,7 @@ ask. The day one is answered, it leaves that file and becomes the next numbered 
 | 0007 | [Packages are MIT licensed](0007-mit-license.md)                                             | decided     | 2026-09-28 |
 | 0008 | [The packages are for new projects, not the skipwash apps](0008-target-consumers.md)         | decided     | 2026-09-29 |
 | 0009 | [An optional heavy peer gets its own subpath entry](0009-optional-peers-get-a-subpath.md)    | decided     | 2026-09-29 |
+| 0010 | [A new `DataTableLabels` key is a minor](0010-new-label-key-is-a-minor.md)                   | decided     | 2026-11-27 |
 
 **Status** means: `decided` is settled and the reasoning is in the file; `provisional` is
 settled until a named trigger fires, and the file says what the trigger is; `superseded`

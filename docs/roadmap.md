@@ -35,7 +35,7 @@ Status words, used the same way in every table below:
 | [3. New packages](#3-new-packages)               | 5 plans written, image-editor and form done | start plan 2, admin-ui-kit                      |
 | [4. Deferred candidates](#4-deferred-candidates) | 4 deferred                                  | nothing until a trigger fires                   |
 | [5. Repo and tooling](#5-repo-and-tooling)       | hooks, jscpd; 3 upgrades deferred           | the monthly `pnpm outdated -r`                  |
-| [6. Decisions](#6-decisions)                     | 9 made, 2 open                              | answer B before plan 4 starts                   |
+| [6. Decisions](#6-decisions)                     | 10 made, 2 open                             | answer B before plan 4 starts                   |
 
 ## 1. Publishing
 
@@ -163,7 +163,7 @@ Nothing else is open on the tooling side. [`repo/tooling.md`](repo/tooling.md) a
 
 ## 6. Decisions
 
-Nine made, two open. The log is [`decisions/README.md`](decisions/README.md); the open ones
+Ten made, two open. The log is [`decisions/README.md`](decisions/README.md); the open ones
 are in [`decisions/open-questions.md`](decisions/open-questions.md).
 
 | Question                                            | Status | Blocks                                             |
