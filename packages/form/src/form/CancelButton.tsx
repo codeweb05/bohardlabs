@@ -19,7 +19,7 @@ export interface CancelButtonProps {
 
 export function CancelButton({onCancel, confirm, children, variant = 'text'}: Readonly<CancelButtonProps>) {
   const form = useFormContext();
-  const {labels} = useFormConfig();
+  const {labels, size} = useFormConfig();
   const isDirty = useStore(form.store, (state) => state.isDirty);
 
   // True while `confirm` is open, so a second click does not ask (and cancel) twice.
@@ -41,7 +41,7 @@ export function CancelButton({onCancel, confirm, children, variant = 'text'}: Re
   };
 
   return (
-    <Button type="button" variant={variant} onClick={() => void handleClick()}>
+    <Button type="button" variant={variant} size={size} onClick={() => void handleClick()}>
       {children ?? labels.cancel}
     </Button>
   );

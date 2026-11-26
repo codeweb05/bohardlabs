@@ -3,7 +3,7 @@ import {MuiTelInput} from 'mui-tel-input';
 import type {MuiTelInputCountry, MuiTelInputProps} from 'mui-tel-input';
 import {useState} from 'react';
 
-import {useFormConfig} from '../config/FormConfigContext.js';
+import {useFormConfig, useFieldSize} from '../config/FormConfigContext.js';
 import {useFieldContext} from '../context.js';
 import {FieldShell} from '../core/FieldShell.js';
 import type {CommonFieldProps} from '../core/types.js';
@@ -35,6 +35,7 @@ export function PhoneField({
   tooltip,
   disabled,
   autoFocus,
+  size,
   defaultCountry,
   preferredCountries,
   placeholder,
@@ -42,6 +43,7 @@ export function PhoneField({
   getFlagElement,
 }: Readonly<PhoneFieldProps>) {
   const binding = useFieldBinding<string | null>({required, expect: NULLABLE_E164});
+  const fieldSize = useFieldSize(size);
   const {labels} = useFormConfig();
   const value = typeof binding.value === 'string' ? binding.value : null;
 
@@ -89,6 +91,7 @@ export function PhoneField({
         error={binding.error !== null}
         disabled={disabled}
         autoFocus={autoFocus}
+        size={fieldSize}
         fullWidth
         FlagIconButtonProps={{'aria-label': labels.selectCountry}}
         slotProps={{htmlInput: binding.inputProps}}

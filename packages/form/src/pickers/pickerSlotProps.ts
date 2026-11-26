@@ -15,13 +15,14 @@ export type PickerBinding = Pick<FieldBinding<unknown>, 'error' | 'onBlur' | 'in
  * a defined `error` replaces the picker's own validation (minDate, maxDate, a half-typed
  * date on blur), which would then never show.
  */
-export function pickerSlotProps(binding: PickerBinding, labelledBy: string) {
+export function pickerSlotProps(binding: PickerBinding, labelledBy: string, size: 'small' | 'medium' | undefined) {
   const {inputProps} = binding;
   return {
     textField: {
       onBlur: binding.onBlur,
       error: binding.error !== null || undefined,
       fullWidth: true,
+      size,
       slotProps: {
         input: {
           'aria-labelledby': labelledBy,

@@ -135,6 +135,21 @@ which stays the one place a value fails.
 
 With a bound or a `step` the input's role is `spinbutton`; without one it stays a `textbox`.
 
+## Dense forms
+
+Every field takes `size: 'small' | 'medium'`. For a side panel or a dialog, set it once on
+`FormConfigProvider` and every field below follows, along with `SubmitButton` and
+`CancelButton`:
+
+```tsx
+<FormConfigProvider size="small">
+  <BookingPanel />
+</FormConfigProvider>
+```
+
+A field's own `size` wins over the provider's. With neither, MUI's default applies, so a
+theme that sets `defaultProps.size` still works.
+
 ## Heavy fields
 
 `createAppForm` needs a component for every field up front. `lazyField` hands it a small stub,

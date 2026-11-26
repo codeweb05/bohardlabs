@@ -3,6 +3,7 @@ import ListItemText from '@mui/material/ListItemText';
 import MenuItem from '@mui/material/MenuItem';
 import Select from '@mui/material/Select';
 
+import {useFieldSize} from '../config/FormConfigContext.js';
 import {LabelledByShell} from '../core/LabelledByShell.js';
 import type {CommonFieldProps, Option} from '../core/types.js';
 import {useFieldBinding} from '../core/useFieldBinding.js';
@@ -34,11 +35,13 @@ export function SelectField<V extends string | number>({
   tooltip,
   disabled,
   autoFocus,
+  size,
   options,
   placeholder,
   emptyLabel,
 }: Readonly<SelectFieldProps<V>>) {
   const binding = useFieldBinding<V | null>({required, expect: NULLABLE_SCALAR});
+  const fieldSize = useFieldSize(size);
   const selected = findOption(options, binding.value);
 
   return (
@@ -62,6 +65,7 @@ export function SelectField<V extends string | number>({
         error={binding.error !== null}
         disabled={disabled}
         autoFocus={autoFocus}
+        size={fieldSize}
         fullWidth
         displayEmpty
         renderValue={() =>

@@ -1,7 +1,7 @@
 import MenuItem from '@mui/material/MenuItem';
 import Select from '@mui/material/Select';
 
-import {useFormConfig} from '../config/FormConfigContext.js';
+import {useFieldSize, useFormConfig} from '../config/FormConfigContext.js';
 import {FieldPart, FieldParts} from '../core/FieldParts.js';
 import type {CommonFieldProps} from '../core/types.js';
 import {useFieldBinding} from '../core/useFieldBinding.js';
@@ -45,12 +45,14 @@ export function DurationField({
   tooltip,
   disabled,
   autoFocus,
+  size,
   maxHours = 24,
   minuteStep = 15,
   emptyLabel,
 }: Readonly<DurationFieldProps>) {
   const binding = useFieldBinding<number | null>({required, expect: NULLABLE_NUMBER});
   const {labels} = useFormConfig();
+  const fieldSize = useFieldSize(size);
   // NaN and Infinity count as empty, as in NumberField, so neither part shows "NaN".
   const total = Number.isFinite(binding.value) ? binding.value : null;
   const hours = total === null ? '' : String(Math.floor(total / 60));
@@ -100,6 +102,7 @@ export function DurationField({
               error={binding.error !== null}
               disabled={disabled}
               autoFocus={autoFocus && index === 0}
+              size={fieldSize}
               fullWidth
               SelectDisplayProps={{id: `${binding.inputId}-${part}`, ...binding.inputProps}}
             >

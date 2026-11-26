@@ -9,6 +9,11 @@ export interface CommonFieldProps {
   readonly tooltip?: string;
   readonly disabled?: boolean;
   readonly autoFocus?: boolean;
+  /**
+   * `small` for dense forms in side panels and dialogs. Wins over the `size` on
+   * `FormConfigProvider`; with neither, MUI's default (and your theme's) applies.
+   */
+  readonly size?: 'small' | 'medium';
 }
 
 /** One choice in a select, radio group or autocomplete. */

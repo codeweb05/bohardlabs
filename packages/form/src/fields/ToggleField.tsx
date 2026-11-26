@@ -2,6 +2,7 @@ import Checkbox from '@mui/material/Checkbox';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Switch from '@mui/material/Switch';
 
+import {useFieldSize} from '../config/FormConfigContext.js';
 import {FieldShell} from '../core/FieldShell.js';
 import type {CommonFieldProps} from '../core/types.js';
 import {useFieldBinding} from '../core/useFieldBinding.js';
@@ -22,8 +23,10 @@ export function ToggleField({
   tooltip,
   disabled,
   autoFocus,
+  size,
 }: ToggleFieldInternalProps) {
   const binding = useFieldBinding<boolean>({required, expect: BOOLEAN});
+  const fieldSize = useFieldSize(size);
   const Control = control === 'checkbox' ? Checkbox : Switch;
 
   return (
@@ -46,6 +49,7 @@ export function ToggleField({
             onChange={(event) => binding.setValue(event.target.checked)}
             onBlur={binding.onBlur}
             autoFocus={autoFocus}
+            size={fieldSize}
             slotProps={{
               input: {
                 id: binding.inputId,

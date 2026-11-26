@@ -5,7 +5,7 @@ import InputAdornment from '@mui/material/InputAdornment';
 import MuiTextField from '@mui/material/TextField';
 import {useState} from 'react';
 
-import {useFormConfig} from '../config/FormConfigContext.js';
+import {useFormConfig, useFieldSize} from '../config/FormConfigContext.js';
 import {FieldShell} from '../core/FieldShell.js';
 import type {CommonFieldProps} from '../core/types.js';
 import {useFieldBinding} from '../core/useFieldBinding.js';
@@ -24,10 +24,12 @@ export function PasswordField({
   tooltip,
   disabled,
   autoFocus,
+  size,
   autoComplete = 'current-password',
   placeholder,
 }: Readonly<PasswordFieldProps>) {
   const binding = useFieldBinding<string>({required, expect: STRING});
+  const fieldSize = useFieldSize(size);
   const {labels} = useFormConfig();
   const [visible, setVisible] = useState(false);
 
@@ -51,6 +53,7 @@ export function PasswordField({
         type={visible ? 'text' : 'password'}
         autoComplete={autoComplete}
         placeholder={placeholder}
+        size={fieldSize}
         fullWidth
         slotProps={{
           htmlInput: binding.inputProps,

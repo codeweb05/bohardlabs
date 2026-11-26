@@ -53,6 +53,7 @@ export function AddressField({
   tooltip,
   disabled,
   autoFocus,
+  size,
   provider,
   searchPlaceholder,
   minQueryLength = 3,
@@ -96,6 +97,7 @@ export function AddressField({
             placeholder={searchPlaceholder}
             autoFocus={autoFocus}
             disabled={disabled}
+            size={size}
           />
         </Box>
         {PARTS.map((part) => (
@@ -107,6 +109,7 @@ export function AddressField({
               required={required === true && part.required}
               autoComplete={part.autoComplete}
               disabled={disabled}
+              size={size}
             />
           </Box>
         ))}
@@ -122,10 +125,11 @@ interface AddressPartProps {
   readonly required: boolean;
   readonly autoComplete: string;
   readonly disabled?: boolean;
+  readonly size?: CommonFieldProps['size'];
 }
 
 /** Mounts `<parent>.<name>` as a real field and renders `TextField` inside it. */
-function AddressPart({parent, name, label, required, autoComplete, disabled}: Readonly<AddressPartProps>) {
+function AddressPart({parent, name, label, required, autoComplete, disabled, size}: Readonly<AddressPartProps>) {
   const field = useField({
     form: parent.form,
     name: `${parent.name}.${name}`,
@@ -134,7 +138,7 @@ function AddressPart({parent, name, label, required, autoComplete, disabled}: Re
   });
   return (
     <fieldContext.Provider value={field}>
-      <TextField label={label} required={required} autoComplete={autoComplete} disabled={disabled} />
+      <TextField label={label} required={required} autoComplete={autoComplete} disabled={disabled} size={size} />
     </fieldContext.Provider>
   );
 }

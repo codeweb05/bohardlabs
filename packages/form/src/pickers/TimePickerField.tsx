@@ -1,5 +1,6 @@
 import {TimePicker} from '@mui/x-date-pickers/TimePicker';
 
+import {useFieldSize} from '../config/FormConfigContext.js';
 import {LabelledByShell} from '../core/LabelledByShell.js';
 import type {CommonFieldProps} from '../core/types.js';
 import {useFieldBinding} from '../core/useFieldBinding.js';
@@ -27,10 +28,12 @@ export function TimePickerField({
   tooltip,
   disabled,
   autoFocus,
+  size,
   ampm,
   minutesStep,
 }: Readonly<TimePickerFieldProps>) {
   const binding = useFieldBinding<string | null>({required, expect: NULLABLE_TIME_STRING});
+  const fieldSize = useFieldSize(size);
   const {draft, change, settle} = usePickerDraft(binding.value ?? null, timeFromString, timeToString, binding.setValue);
 
   return (
@@ -51,7 +54,7 @@ export function TimePickerField({
         autoFocus={autoFocus}
         ampm={ampm}
         minutesStep={minutesStep}
-        slotProps={pickerSlotProps(binding, binding.labelId)}
+        slotProps={pickerSlotProps(binding, binding.labelId, fieldSize)}
       />
     </LabelledByShell>
   );

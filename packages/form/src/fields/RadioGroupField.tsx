@@ -4,6 +4,7 @@ import Radio from '@mui/material/Radio';
 import RadioGroup from '@mui/material/RadioGroup';
 import Typography from '@mui/material/Typography';
 
+import {useFieldSize} from '../config/FormConfigContext.js';
 import {FieldShell} from '../core/FieldShell.js';
 import type {CommonFieldProps, Option} from '../core/types.js';
 import {useFieldBinding} from '../core/useFieldBinding.js';
@@ -22,10 +23,12 @@ export function RadioGroupField<V extends string | number>({
   tooltip,
   disabled,
   autoFocus,
+  size,
   options,
   row,
 }: Readonly<RadioGroupFieldProps<V>>) {
   const binding = useFieldBinding<V | null>({required, expect: NULLABLE_SCALAR});
+  const fieldSize = useFieldSize(size);
   const selected = findOption(options, binding.value);
 
   return (
@@ -51,7 +54,7 @@ export function RadioGroupField<V extends string | number>({
             key={String(option.value)}
             value={String(option.value)}
             disabled={disabled || option.disabled}
-            control={<Radio autoFocus={autoFocus && index === 0} />}
+            control={<Radio autoFocus={autoFocus && index === 0} size={fieldSize} />}
             label={
               option.description ? (
                 <Box>

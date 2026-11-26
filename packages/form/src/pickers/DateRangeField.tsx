@@ -56,6 +56,7 @@ export function DateRangeField({
   tooltip,
   disabled,
   autoFocus,
+  size,
   minDate,
   maxDate,
 }: Readonly<DateRangeFieldProps>) {
@@ -84,6 +85,7 @@ export function DateRangeField({
         maxDate={range.end ?? maxDate}
         disabled={disabled}
         autoFocus={autoFocus}
+        size={size}
       />
       <RangeEnd
         binding={binding}
@@ -94,6 +96,7 @@ export function DateRangeField({
         minDate={range.start ?? minDate}
         maxDate={maxDate}
         disabled={disabled}
+        size={size}
       />
     </FieldParts>
   );

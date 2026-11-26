@@ -5,7 +5,7 @@ import MenuItem from '@mui/material/MenuItem';
 import Select from '@mui/material/Select';
 import {useState} from 'react';
 
-import {useFormConfig} from '../config/FormConfigContext.js';
+import {useFieldSize, useFormConfig} from '../config/FormConfigContext.js';
 import {autocompleteText} from '../core/autocompleteText.js';
 import {FieldShell} from '../core/FieldShell.js';
 import {LabelledByShell} from '../core/LabelledByShell.js';
@@ -87,9 +87,11 @@ function PlainMulti<V extends string | number>({
   placeholder,
   disabled,
   autoFocus,
+  size,
   binding,
   selected,
 }: VariantProps<V>) {
+  const fieldSize = useFieldSize(size);
   // An off-list value keeps its menu item after it is unpicked, so a mistaken click can be
   // undone. The kept items reset when the value changes from outside the field.
   const offList = selected.filter((option) => !options.includes(option));
@@ -122,6 +124,7 @@ function PlainMulti<V extends string | number>({
       error={binding.error !== null}
       disabled={disabled}
       autoFocus={autoFocus}
+      size={fieldSize}
       fullWidth
       displayEmpty
       renderValue={() =>
@@ -153,10 +156,12 @@ function SearchableMulti<V extends string | number>({
   placeholder,
   disabled,
   autoFocus,
+  size,
   binding,
   selected,
 }: VariantProps<V>) {
   const {labels} = useFormConfig();
+  const fieldSize = useFieldSize(size);
   const held = useHeldOptions(selected);
   return (
     <Autocomplete<Option<V>, true>
@@ -171,6 +176,7 @@ function SearchableMulti<V extends string | number>({
       isOptionEqualToValue={(option, value) => option.value === value.value}
       filterSelectedOptions
       disabled={disabled}
+      size={fieldSize}
       fullWidth
       {...autocompleteText(labels)}
       renderInput={(params) =>

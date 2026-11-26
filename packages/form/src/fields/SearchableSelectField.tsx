@@ -1,6 +1,6 @@
 import Autocomplete from '@mui/material/Autocomplete';
 
-import {useFormConfig} from '../config/FormConfigContext.js';
+import {useFormConfig, useFieldSize} from '../config/FormConfigContext.js';
 import {autocompleteText} from '../core/autocompleteText.js';
 import {FieldShell} from '../core/FieldShell.js';
 import {renderAutocompleteInput} from '../core/renderAutocompleteInput.js';
@@ -23,10 +23,12 @@ export function SearchableSelectField<V extends string | number>({
   tooltip,
   disabled,
   autoFocus,
+  size,
   options,
   placeholder,
 }: Readonly<SearchableSelectFieldProps<V>>) {
   const binding = useFieldBinding<V | null>({required, expect: NULLABLE_SCALAR});
+  const fieldSize = useFieldSize(size);
   const {labels} = useFormConfig();
   const found = findOption(options, binding.value);
   const [held = null] = useHeldOptions(found ? [found] : []);
@@ -50,6 +52,7 @@ export function SearchableSelectField<V extends string | number>({
         getOptionDisabled={(option) => option.disabled === true}
         isOptionEqualToValue={(option, value) => option.value === value.value}
         disabled={disabled}
+        size={fieldSize}
         fullWidth
         {...autocompleteText(labels)}
         renderInput={(params) => renderAutocompleteInput(params, binding, {autoFocus, placeholder})}

@@ -1,5 +1,6 @@
 import MuiTextField from '@mui/material/TextField';
 
+import {useFieldSize} from '../config/FormConfigContext.js';
 import {FieldShell} from '../core/FieldShell.js';
 import type {CommonFieldProps} from '../core/types.js';
 import {useFieldBinding} from '../core/useFieldBinding.js';
@@ -22,6 +23,7 @@ export function TextField({
   tooltip,
   disabled,
   autoFocus,
+  size,
   type = 'text',
   placeholder,
   autoComplete,
@@ -31,6 +33,7 @@ export function TextField({
   maxRows,
 }: Readonly<TextFieldProps>) {
   const binding = useFieldBinding<string>({required, expect: STRING});
+  const fieldSize = useFieldSize(size);
 
   return (
     <FieldShell
@@ -55,6 +58,7 @@ export function TextField({
         multiline={multiline}
         minRows={minRows}
         maxRows={maxRows}
+        size={fieldSize}
         fullWidth
         // MUI 9's InputBase merges its own `rows: undefined` (from the top-level `rows`
         // prop, which this field never sets) into inputProps ahead of slotProps.htmlInput,

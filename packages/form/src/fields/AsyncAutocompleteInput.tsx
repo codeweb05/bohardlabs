@@ -1,7 +1,7 @@
 import Autocomplete from '@mui/material/Autocomplete';
 import {useMemo, useState} from 'react';
 
-import {useFormConfig} from '../config/FormConfigContext.js';
+import {useFieldSize, useFormConfig} from '../config/FormConfigContext.js';
 import {autocompleteText} from '../core/autocompleteText.js';
 import {renderAutocompleteInput} from '../core/renderAutocompleteInput.js';
 import type {FieldBinding} from '../core/useFieldBinding.js';
@@ -27,6 +27,7 @@ export interface AsyncAutocompleteInputProps<T> extends AsyncOptionsProps<T> {
   readonly onChange: (value: T | T[] | null) => void;
   readonly autoFocus?: boolean;
   readonly disabled?: boolean;
+  readonly size?: 'small' | 'medium';
   /** An accessible name for an input with no `<label>` of its own (AddressField's search box). */
   readonly inputLabel?: string;
   /** Called with the text as the user types or clears it (not when a pick fills it). */
@@ -51,10 +52,12 @@ export function AsyncAutocompleteInput<T>({
   placeholder,
   autoFocus,
   disabled,
+  size,
   inputLabel,
   onInputChange,
 }: AsyncAutocompleteInputProps<T>) {
   const {labels} = useFormConfig();
+  const fieldSize = useFieldSize(size);
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const {options, status} = useAsyncOptions(loadOptions, query, {active: open, debounceMs, minQueryLength});
@@ -96,6 +99,7 @@ export function AsyncAutocompleteInput<T>({
       isOptionEqualToValue={(option, selected) => getOptionValue(option) === getOptionValue(selected)}
       loading={status === 'loading'}
       disabled={disabled}
+      size={fieldSize}
       fullWidth
       {...text}
       noOptionsText={status === 'error' ? labels.loadFailed : text.noOptionsText}

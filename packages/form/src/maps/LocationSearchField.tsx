@@ -33,6 +33,7 @@ export function LocationSearchField({
   tooltip,
   disabled,
   autoFocus,
+  size,
   provider,
   placeholder,
   minQueryLength = 3,
@@ -65,6 +66,7 @@ export function LocationSearchField({
         placeholder={placeholder}
         autoFocus={autoFocus}
         disabled={disabled}
+        size={size}
       />
     </FieldShell>
   );

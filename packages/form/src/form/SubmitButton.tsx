@@ -3,6 +3,7 @@ import type {ButtonProps} from '@mui/material/Button';
 import {useStore} from '@tanstack/react-form';
 import type {ReactNode} from 'react';
 
+import {useFormConfig} from '../config/FormConfigContext.js';
 import {useFormContext} from '../context.js';
 
 export interface SubmitButtonProps {
@@ -24,10 +25,18 @@ export function SubmitButton({
   fullWidth,
 }: Readonly<SubmitButtonProps>) {
   const form = useFormContext();
+  const {size} = useFormConfig();
   const isSubmitting = useStore(form.store, (state) => state.isSubmitting);
 
   return (
-    <Button type="submit" variant={variant} fullWidth={fullWidth} disabled={isSubmitting} aria-busy={isSubmitting}>
+    <Button
+      type="submit"
+      variant={variant}
+      size={size}
+      fullWidth={fullWidth}
+      disabled={isSubmitting}
+      aria-busy={isSubmitting}
+    >
       {isSubmitting && submittingLabel !== undefined ? submittingLabel : children}
     </Button>
   );

@@ -3,7 +3,7 @@ import MuiTextField from '@mui/material/TextField';
 import {useStore} from '@tanstack/react-form';
 import {useState} from 'react';
 
-import {useFormConfig} from '../config/FormConfigContext.js';
+import {useFormConfig, useFieldSize} from '../config/FormConfigContext.js';
 import type {FormLabels} from '../config/labels.js';
 import {useFieldContext} from '../context.js';
 import {FieldShell} from '../core/FieldShell.js';
@@ -70,6 +70,7 @@ export function NumberField({
   tooltip,
   disabled,
   autoFocus,
+  size,
   decimalSeparator = '.',
   allowDecimals = true,
   placeholder,
@@ -80,6 +81,7 @@ export function NumberField({
 }: Readonly<NumberFieldProps>) {
   const {labels} = useFormConfig();
   const binding = useFieldBinding<number | null>({required, expect: NULLABLE_NUMBER});
+  const fieldSize = useFieldSize(size);
   // NaN and Infinity count as empty: NaN never equals itself, so the resync below would loop.
   const value = Number.isFinite(binding.value) ? binding.value : null;
   const field = useFieldContext<unknown>();
@@ -138,6 +140,7 @@ export function NumberField({
         disabled={disabled}
         autoFocus={autoFocus}
         placeholder={placeholder}
+        size={fieldSize}
         fullWidth
         slotProps={{
           input: unit ? {endAdornment: <InputAdornment position="end">{unit}</InputAdornment>} : undefined,

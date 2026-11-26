@@ -1,6 +1,7 @@
 import {DatePicker} from '@mui/x-date-pickers/DatePicker';
 import {usePickerAdapter} from '@mui/x-date-pickers/hooks';
 
+import {useFieldSize} from '../config/FormConfigContext.js';
 import {LabelledByShell} from '../core/LabelledByShell.js';
 import type {CommonFieldProps} from '../core/types.js';
 import {useFieldBinding} from '../core/useFieldBinding.js';
@@ -35,6 +36,7 @@ export function DateField({
   tooltip,
   disabled,
   autoFocus,
+  size,
   minDate,
   maxDate,
   disablePast,
@@ -62,6 +64,7 @@ export function DateField({
         disableFuture={disableFuture}
         disabled={disabled}
         autoFocus={autoFocus}
+        size={size}
       />
     </LabelledByShell>
   );
@@ -75,6 +78,7 @@ export interface DateInputProps extends Pick<DateFieldProps, 'minDate' | 'maxDat
   readonly onChange: (value: string | null) => void;
   readonly disabled?: boolean;
   readonly autoFocus?: boolean;
+  readonly size?: CommonFieldProps['size'];
 }
 
 /** One `DatePicker` over a `'YYYY-MM-DD'` value. `DateField` renders one, `DateRangeField` two. */
@@ -89,7 +93,9 @@ export function DateInput({
   disableFuture,
   disabled,
   autoFocus,
+  size,
 }: Readonly<DateInputProps>) {
+  const fieldSize = useFieldSize(size);
   const adapter = usePickerAdapter();
   const {draft, change, settle} = usePickerDraft(value, dateFromString, dateToString, onChange);
 
@@ -105,7 +111,7 @@ export function DateInput({
       maxDate={dateFromString(adapter, maxDate ?? null) ?? undefined}
       disablePast={disablePast}
       disableFuture={disableFuture}
-      slotProps={pickerSlotProps(binding, labelledBy)}
+      slotProps={pickerSlotProps(binding, labelledBy, fieldSize)}
     />
   );
 }
