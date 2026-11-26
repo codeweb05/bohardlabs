@@ -64,7 +64,7 @@ Every entry in `features` is `boolean | options`. `false` removes the tool and i
 | `replace`    |   on    | A Replace image button that opens the picker                                                                  |
 
 Adjustments need `CanvasRenderingContext2D.filter`. Where a browser lacks it, the Adjust tab
-does not appear.
+does not appear, and a note in its place (`labels.adjustUnavailable`) tells the user why.
 
 ## Upload rules
 

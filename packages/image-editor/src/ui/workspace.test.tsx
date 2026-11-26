@@ -91,6 +91,25 @@ describe('the tabs', () => {
     expect(screen.queryByRole('group', {name: L.adjustment})).not.toBeInTheDocument();
   });
 
+  it('give way to a note saying why when the canvas cannot filter', async () => {
+    view.filter = false;
+    await setup({adjust: true});
+    expect(screen.getByRole('note')).toHaveTextContent(L.adjustUnavailable);
+    // The crop tools are still there under it.
+    expect(screen.getByRole('button', {name: L.rotateLeft})).toBeInTheDocument();
+  });
+
+  it('leave no note when adjustments were never asked for', async () => {
+    view.filter = false;
+    await setup({adjust: false});
+    expect(screen.queryByRole('note')).not.toBeInTheDocument();
+  });
+
+  it('leave no note when the canvas can filter', async () => {
+    await setup({adjust: true});
+    expect(screen.queryByRole('note')).not.toBeInTheDocument();
+  });
+
   it('switch between the crop and adjust tools', async () => {
     const user = await setup({adjust: true});
     expect(screen.getByRole('tab', {name: L.cropTab})).toHaveAttribute('aria-selected', 'true');

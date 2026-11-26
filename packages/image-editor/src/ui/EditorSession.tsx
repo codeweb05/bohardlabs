@@ -165,9 +165,20 @@ function Dock({mobile, ...props}: Readonly<DockProps>) {
   const labels = useLabels();
   const id = useId();
   const [tab, setTab] = useState<'crop' | 'adjust'>('crop');
-  // Where the canvas cannot filter, an adjustment would preview but not export. Hidden instead.
+  // Where the canvas cannot filter, an adjustment would preview but not export. Hidden instead,
+  // with a note in the tabs' place so the user knows why.
   const adjust = props.features.adjust && supportsCanvasFilter() ? props.features.adjust : false;
   const crop = <CropControls {...props} transforms={!mobile} />;
+  if (props.features.adjust && !adjust) {
+    return (
+      <>
+        <Alert severity="info" role="note" sx={{mt: 1}}>
+          {labels.adjustUnavailable}
+        </Alert>
+        {crop}
+      </>
+    );
+  }
   if (!adjust) return crop;
 
   return (

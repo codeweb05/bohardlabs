@@ -309,6 +309,32 @@ export const Adjust: Story = {
   },
 };
 
+/**
+ * A browser without `CanvasRenderingContext2D.filter` (Safari before 18) could preview an
+ * adjustment but not save it. The Adjust tab stays out, and a note in its place says why, so
+ * the user is not left looking for a tool that vanished.
+ */
+export const AdjustUnavailable: Story = {
+  parameters: showcase('features', 'labels'),
+  beforeEach: () => {
+    const proto = CanvasRenderingContext2D.prototype;
+    const filter = Object.getOwnPropertyDescriptor(proto, 'filter');
+    // Removed for this story only, the way such a browser lacks it.
+    Reflect.deleteProperty(proto, 'filter');
+    return () => {
+      if (filter) Object.defineProperty(proto, 'filter', filter);
+    };
+  },
+  play: async ({canvasElement}) => {
+    const dialog = await openEditor(canvasElement);
+    const ui = within(dialog);
+    await expect(ui.getByRole('note')).toHaveTextContent("Adjustments aren't available in this browser.");
+    await expect(ui.queryByRole('tab', {name: 'Adjust'})).not.toBeInTheDocument();
+    await expect(ui.queryByRole('slider', {name: 'Brightness'})).not.toBeInTheDocument();
+    await expect(ui.getByRole('button', {name: 'Rotate left'})).toBeInTheDocument();
+  },
+};
+
 /** The three sliders switched off: the Adjust tab is a row of one-tap looks. */
 export const Presets: Story = {
   parameters: showcase('features'),

@@ -23,6 +23,8 @@ export interface ImageEditorLabels {
   /** Tabs, shown only when adjustments are enabled. */
   cropTab: string;
   adjustTab: string;
+  /** Shown where the Adjust tab would be, when `adjust` is on but the browser cannot apply it. */
+  adjustUnavailable: string;
   /** The ratio control's group label, and how each ratio reads. */
   ratio: string;
   ratioName: (ratio: CropRatio) => string;
@@ -89,6 +91,7 @@ export const DEFAULT_IMAGE_EDITOR_LABELS: ImageEditorLabels = {
   loading: 'Loading image…',
   cropTab: 'Crop',
   adjustTab: 'Adjust',
+  adjustUnavailable: "Adjustments aren't available in this browser.",
   ratio: 'Aspect ratio',
   ratioName: (ratio) => {
     if (ratio === 'free') return 'Free';

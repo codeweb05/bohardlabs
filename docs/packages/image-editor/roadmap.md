@@ -15,7 +15,7 @@ asked for them while building on the published package (2026-10-26).
 | #   | Feature                                        | Source | Status            |
 | --- | ---------------------------------------------- | ------ | ----------------- |
 | 1   | Redo and rotate left in the phone toolbar      | app    | done (2026-11-26) |
-| 2   | A notice when the adjust tools are unavailable | app    | proposed          |
+| 2   | A notice when the adjust tools are unavailable | app    | done (2026-11-26) |
 
 ---
 
