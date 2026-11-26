@@ -16,7 +16,7 @@ asked for them while building on the published package (2026-10-26).
 | --- | ----------------------------------- | ------ | ----------------- |
 | 1   | A field for a list of whole numbers | app    | done (2026-11-26) |
 | 2   | Number field: unit, min, max, step  | app    | done (2026-11-26) |
-| 3   | File or photo field                 | app    | proposed          |
+| 3   | File or photo field                 | app    | done (2026-11-27) |
 | 4   | A size option for denser forms      | app    | done (2026-11-26) |
 
 ---

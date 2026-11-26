@@ -50,6 +50,26 @@ export interface FormLabels {
   integerListOutOfRange: (entry: string, min: number | undefined, max: number | undefined) => string;
   /** The accessible name of an IntegerListField chip, which removes the entry when pressed. */
   removeEntry: (entry: string) => string;
+  /** FileField's button while nothing is chosen. */
+  chooseFile: string;
+  /** Beside FileField's button, telling the user the area takes a drop. */
+  dropFile: string;
+  /** FileField's button that swaps the chosen file for another. */
+  replaceFile: string;
+  /** The accessible name of FileField's remove button for one file. */
+  removeFile: (name: string) => string;
+  /** FileField's photo button while nothing is chosen. */
+  choosePhoto: string;
+  /** The accessible names of the buttons over FileField's photo preview. */
+  editPhoto: string;
+  replacePhoto: string;
+  removePhoto: string;
+  /** A file's size as FileField shows it, such as "1.2 MB". */
+  fileSize: (bytes: number) => string;
+  /** FileField's message for a file over `maxBytes`. `size` and `limit` come from `fileSize`. */
+  fileTooLarge: (name: string, size: string, limit: string) => string;
+  /** FileField's message for a file `accept` does not allow. */
+  fileWrongType: (name: string) => string;
 }
 
 export const DEFAULT_FORM_LABELS: FormLabels = {
@@ -87,4 +107,21 @@ export const DEFAULT_FORM_LABELS: FormLabels = {
     return `${entry} is above ${max}`;
   },
   removeEntry: (entry) => `Remove ${entry}`,
+  chooseFile: 'Choose file',
+  dropFile: 'or drop it here',
+  replaceFile: 'Replace',
+  removeFile: (name) => `Remove ${name}`,
+  choosePhoto: 'Add photo',
+  editPhoto: 'Edit photo',
+  replacePhoto: 'Replace photo',
+  removePhoto: 'Remove photo',
+  fileSize: (bytes) => {
+    if (bytes < 1000) return `${bytes} B`;
+    const round = (amount: number) => Number(amount.toFixed(amount < 10 ? 1 : 0));
+    if (bytes < 1e6) return `${round(bytes / 1e3)} KB`;
+    if (bytes < 1e9) return `${round(bytes / 1e6)} MB`;
+    return `${round(bytes / 1e9)} GB`;
+  },
+  fileTooLarge: (name, size, limit) => `“${name}” is ${size}. The limit is ${limit}.`,
+  fileWrongType: (name) => `“${name}” is not a file type this field accepts.`,
 };

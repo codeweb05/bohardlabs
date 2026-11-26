@@ -14,6 +14,8 @@ export {DurationField} from './fields/DurationField.js';
 export type {DurationFieldProps} from './fields/DurationField.js';
 export {FieldShell} from './core/FieldShell.js';
 export type {FieldShellProps} from './core/FieldShell.js';
+export {FileField} from './fields/FileField.js';
+export type {FileFieldProps} from './fields/FileField.js';
 export type {CommonFieldProps, Option} from './core/types.js';
 export {useFieldBinding} from './core/useFieldBinding.js';
 export type {FieldBinding} from './core/useFieldBinding.js';

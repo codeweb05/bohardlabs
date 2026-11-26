@@ -21,6 +21,7 @@ const ROOT_API = [
   'DEFAULT_FORM_LABELS',
   'DurationField',
   'FieldShell',
+  'FileField',
   'FormConfigProvider',
   'FormError',
   'IntegerListField',

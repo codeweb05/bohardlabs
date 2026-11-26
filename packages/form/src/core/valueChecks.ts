@@ -34,6 +34,13 @@ export const NUMBER_ARRAY: ValueExpectation = {
   description: 'an array of finite numbers',
 };
 
+const isFile = (value: unknown) => typeof File !== 'undefined' && value instanceof File;
+
+export const NULLABLE_FILES: ValueExpectation = {
+  test: (value) => value === null || isFile(value) || (Array.isArray(value) && value.every(isFile)),
+  description: 'a File, an array of Files or null',
+};
+
 // Declared here rather than pulling in `@types/node`: this is browser code, and the only use
 // is the `NODE_ENV` read below.
 declare const process: {readonly env: {readonly NODE_ENV?: string}};

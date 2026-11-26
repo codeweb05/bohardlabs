@@ -98,6 +98,7 @@ A field reads and writes one shape. An empty single choice is `null`, never `''`
 | `TextField`, `TextArea`, `PasswordField` | `string`                                         |
 | `NumberField`                            | `number \| null`                                 |
 | `IntegerListField`                       | `number[]`                                       |
+| `FileField`                              | `File \| null`, or `File[]` with `multiple`      |
 | `CheckboxField`, `SwitchField`           | `boolean`                                        |
 | `SelectField`, `SearchableSelectField`   | `V \| null` (an option's `value`)                |
 | `RadioGroupField`                        | `V \| null`                                      |
@@ -148,6 +149,69 @@ list on every commit; `unit` labels each chip.
 <form.AppField name="reminders">
   {(field) => <field.IntegerListField label="Reminder offsets" unit="min" min={5} max={1440} sorted />}
 </form.AppField>
+```
+
+## Files and photos
+
+`FileField` holds what the user chose as a `File` (or `File[]` with `multiple`). It never
+uploads: send the file from your submit handler. The user picks with the button or drops a
+file on the field. `accept` (the `<input accept>` format) and `maxBytes` are checked on the
+way in, and a refused file never reaches the value. The field shows why instead, through the
+`fileTooLarge` and `fileWrongType` labels. Say what the field takes in `description`; it is
+not built in.
+
+```tsx
+<form.AppField name="certificate">
+  {(field) => (
+    <field.FileField
+      label="Insurance certificate"
+      description="PDF or PNG, up to 5 MB"
+      accept=".pdf,image/png"
+      maxBytes={5_000_000}
+    />
+  )}
+</form.AppField>
+```
+
+With a file chosen, the field shows its name and size with Replace and remove buttons. With
+`multiple`, each choice adds to the list and each file has its own remove button.
+
+`variant="photo"` shows a square button, then a preview of the image with Replace and Remove.
+`accept` defaults to `image/*` there, and `multiple` does not apply. Pass `onEdit` to add an
+Edit button: it receives the current file and resolves the edited one, or `null` to keep it.
+The edited file goes through `accept` and `maxBytes` again. That is how
+`@vt-labs/image-editor` plugs in, without the form package depending on it:
+
+```tsx
+import {ImageEditor} from '@vt-labs/image-editor';
+import {useState} from 'react';
+
+function usePhotoEditor() {
+  const [editing, setEditing] = useState<{file: File; done: (file: File | null) => void} | null>(null);
+  const onEdit = (file: File) => new Promise<File | null>((done) => setEditing({file, done}));
+  const close = (file: File | null) => {
+    editing?.done(file);
+    setEditing(null);
+  };
+  const editor = (
+    <ImageEditor
+      open={editing !== null}
+      source={editing?.file ?? null}
+      onClose={() => close(null)}
+      onApply={({file}) => close(file)}
+    />
+  );
+  return {onEdit, editor};
+}
+
+// in the form
+const {onEdit, editor} = usePhotoEditor();
+<form.AppField name="storePhoto">
+  {(field) => <field.FileField variant="photo" label="Store photo" maxBytes={5_000_000} onEdit={onEdit} />}
+</form.AppField>;
+{
+  editor;
+}
 ```
 
 ## Dense forms
@@ -315,42 +379,53 @@ export function FormTranslations({children}: {readonly children: ReactNode}) {
 validator arrives as `{message}`. Keep `labels` and `formatError` stable (module level or
 `useMemo`) so the provider does not rebuild its value on every render.
 
-Every key of `DEFAULT_FORM_LABELS`, with its English default. The `number*`, `integerList*`
-and `removeEntry` keys are functions that take the bounds or the entry, so a translation can
-format them:
+Every key of `DEFAULT_FORM_LABELS`, with its English default. The `number*`, `integerList*`,
+`removeEntry`, `removeFile`, `fileSize`, `fileTooLarge` and `fileWrongType` keys are functions
+that take the bounds, the entry or the file, so a translation can format them:
 
-| Key                     | Default                                | Where                                         |
-| ----------------------- | -------------------------------------- | --------------------------------------------- |
-| `showPassword`          | Show password                          | `PasswordField` toggle, password hidden       |
-| `hidePassword`          | Hide password                          | `PasswordField` toggle, password visible      |
-| `moreInfo`              | More information                       | the info button beside a label with `tooltip` |
-| `hours`                 | Hours                                  | `DurationField`                               |
-| `minutes`               | Minutes                                | `DurationField`                               |
-| `cancel`                | Cancel                                 | `CancelButton` with no children               |
-| `noOptions`             | No options                             | autocomplete fields                           |
-| `loading`               | Loading…                               | autocomplete fields                           |
-| `loadFailed`            | Could not load options                 | autocomplete fields                           |
-| `clear`                 | Clear                                  | autocomplete fields                           |
-| `open`                  | Open                                   | autocomplete fields                           |
-| `close`                 | Close                                  | autocomplete fields                           |
-| `rangeStart`            | Start                                  | `DateRangeField`                              |
-| `rangeEnd`              | End                                    | `DateRangeField`                              |
-| `selectCountry`         | Select country                         | `PhoneField` country button                   |
-| `placeLookupFailed`     | Could not look up that place           | maps fields, when a pick cannot be resolved   |
-| `searchAddress`         | Search for an address                  | `AddressField` search box                     |
-| `addressLine1`          | Address line 1                         | `AddressField`                                |
-| `addressLine2`          | Address line 2                         | `AddressField`                                |
-| `city`                  | City                                   | `AddressField`                                |
-| `region`                | State or region                        | `AddressField`                                |
-| `postalCode`            | Postal code                            | `AddressField`                                |
-| `country`               | Country code                           | `AddressField`                                |
-| `numberRange`           | Between {min} and {max}                | `NumberField` with `min` and `max`            |
-| `numberMin`             | At least {min}                         | `NumberField` with only `min`                 |
-| `numberMax`             | At most {max}                          | `NumberField` with only `max`                 |
-| `integerListInvalid`    | {entry} is not a whole number          | `IntegerListField` error chip                 |
-| `integerListDuplicate`  | {entry} is already in the list         | `IntegerListField` error chip                 |
-| `integerListOutOfRange` | {entry} is not between {min} and {max} | `IntegerListField` error chip                 |
-| `removeEntry`           | Remove {entry}                         | `IntegerListField` chip's accessible name     |
+| Key                     | Default                                         | Where                                         |
+| ----------------------- | ----------------------------------------------- | --------------------------------------------- |
+| `showPassword`          | Show password                                   | `PasswordField` toggle, password hidden       |
+| `hidePassword`          | Hide password                                   | `PasswordField` toggle, password visible      |
+| `moreInfo`              | More information                                | the info button beside a label with `tooltip` |
+| `hours`                 | Hours                                           | `DurationField`                               |
+| `minutes`               | Minutes                                         | `DurationField`                               |
+| `cancel`                | Cancel                                          | `CancelButton` with no children               |
+| `noOptions`             | No options                                      | autocomplete fields                           |
+| `loading`               | Loading…                                        | autocomplete fields                           |
+| `loadFailed`            | Could not load options                          | autocomplete fields                           |
+| `clear`                 | Clear                                           | autocomplete fields                           |
+| `open`                  | Open                                            | autocomplete fields                           |
+| `close`                 | Close                                           | autocomplete fields                           |
+| `rangeStart`            | Start                                           | `DateRangeField`                              |
+| `rangeEnd`              | End                                             | `DateRangeField`                              |
+| `selectCountry`         | Select country                                  | `PhoneField` country button                   |
+| `placeLookupFailed`     | Could not look up that place                    | maps fields, when a pick cannot be resolved   |
+| `searchAddress`         | Search for an address                           | `AddressField` search box                     |
+| `addressLine1`          | Address line 1                                  | `AddressField`                                |
+| `addressLine2`          | Address line 2                                  | `AddressField`                                |
+| `city`                  | City                                            | `AddressField`                                |
+| `region`                | State or region                                 | `AddressField`                                |
+| `postalCode`            | Postal code                                     | `AddressField`                                |
+| `country`               | Country code                                    | `AddressField`                                |
+| `numberRange`           | Between {min} and {max}                         | `NumberField` with `min` and `max`            |
+| `numberMin`             | At least {min}                                  | `NumberField` with only `min`                 |
+| `numberMax`             | At most {max}                                   | `NumberField` with only `max`                 |
+| `integerListInvalid`    | {entry} is not a whole number                   | `IntegerListField` error chip                 |
+| `integerListDuplicate`  | {entry} is already in the list                  | `IntegerListField` error chip                 |
+| `integerListOutOfRange` | {entry} is not between {min} and {max}          | `IntegerListField` error chip                 |
+| `removeEntry`           | Remove {entry}                                  | `IntegerListField` chip's accessible name     |
+| `chooseFile`            | Choose file                                     | `FileField` button, nothing chosen            |
+| `dropFile`              | or drop it here                                 | beside the `FileField` button                 |
+| `replaceFile`           | Replace                                         | `FileField` with a file chosen                |
+| `removeFile`            | Remove {name}                                   | `FileField` remove button's accessible name   |
+| `choosePhoto`           | Add photo                                       | `FileField` photo button, nothing chosen      |
+| `editPhoto`             | Edit photo                                      | over the photo preview, with `onEdit`         |
+| `replacePhoto`          | Replace photo                                   | over the photo preview                        |
+| `removePhoto`           | Remove photo                                    | over the photo preview                        |
+| `fileSize`              | 1.2 MB, 840 KB, 512 B                           | a chosen file's size                          |
+| `fileTooLarge`          | “{name}” is {size}. The limit is {limit}.       | `FileField`, a file over `maxBytes`           |
+| `fileWrongType`         | “{name}” is not a file type this field accepts. | `FileField`, a file `accept` refuses          |
 
 ## Server errors
 
