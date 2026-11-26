@@ -1122,6 +1122,22 @@ export interface DataTableProps<TData extends RowData> extends TableEventHandler
    * the whole card, including rendering those actions.
    */
   readonly renderMobileCard?: (row: TData, actions?: readonly RowAction<TData>[]) => ReactNode;
+  /**
+   * What a tap on a built-in card does below `mobileBreakpoint`.
+   *
+   * `'select'` toggles the row's selection (and its expansion, with `enableExpanding`), then
+   * calls `onRowClick`: how cards have always behaved. `'open'` calls `onRowClick` and
+   * nothing else, so a tap that opens a record never also selects it. Selection moves to the
+   * checkbox, expansion to the chevron, and the card shows a chevron of its own.
+   *
+   * In both modes a card with `onRowClick` or a checkbox is a tab stop, named by its title:
+   * `Enter` calls `onRowClick` and `Space` toggles the selection. A card from
+   * `renderMobileCard` is the consumer's own and ignores this.
+   *
+   * @defaultValue `'select'`. The next major makes `'open'` the default whenever
+   * `onRowClick` is set.
+   */
+  readonly cardTapAction?: 'open' | 'select';
 
   // Accessibility
   /**

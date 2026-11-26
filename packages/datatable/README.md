@@ -341,6 +341,7 @@ rather than a part of its composition.
 | `toolbarContent`                                    | your own controls in the toolbar, after search   |
 | `exportRows`, `exportRowLimit`                      | export every matching row, not just the page     |
 | `BulkActionResult`, `onBulkActionResult`            | a bulk action that fails for some rows only      |
+| `cardTapAction`                                     | a card tap that opens the row and nothing else   |
 | `@vt-labs/datatable/server`                         | `useServerSidePagination` (needs React Query)    |
 
 Every prop is documented in `types.ts` with the gotcha attached, and rendered as a prop

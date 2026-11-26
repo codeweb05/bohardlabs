@@ -6,12 +6,13 @@ import IconButton from '@mui/material/IconButton';
 import ListItemText from '@mui/material/ListItemText';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
+import {ThemeProvider, createTheme, type Theme} from '@mui/material/styles';
 import ToggleButton from '@mui/material/ToggleButton';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import Typography from '@mui/material/Typography';
 import {LocalizationProvider} from '@mui/x-date-pickers';
 import {AdapterDayjs} from '@mui/x-date-pickers/AdapterDayjs';
-import type {Meta, StoryObj} from '@storybook/react-vite';
+import type {Decorator, Meta, StoryObj} from '@storybook/react-vite';
 import {useEffect, useId, useState, type ReactNode} from 'react';
 import {expect, fn, screen, spyOn, userEvent, waitFor, within} from 'storybook/test';
 
@@ -1656,5 +1657,71 @@ export const MobileCards: Story = {
     // True at any width: the assertion is about the data arriving, not about which of the
     // two layouts the current viewport picked.
     await expect(await within(canvasElement).findByText('SW-1000')).toBeInTheDocument();
+  },
+};
+
+// The card layout is chosen by the theme's `sm` breakpoint. Raising it past any screen puts
+// the test run, whatever its window, on the layout a phone gets.
+const phoneTheme = (outer: Theme): Theme => ({
+  ...outer,
+  breakpoints: createTheme({breakpoints: {values: {xs: 0, sm: 100_000, md: 100_001, lg: 100_002, xl: 100_003}}})
+    .breakpoints,
+});
+
+const onPhone: Decorator = (Story) => (
+  <ThemeProvider theme={phoneTheme}>
+    <Story />
+  </ThemeProvider>
+);
+
+const cardColumns: DataTableColumnDef<Order>[] = [
+  {id: 'reference', accessorKey: 'reference', header: 'Reference', mobileOrder: 0},
+  {id: 'customer', accessorKey: 'customer', header: 'Customer', mobileOrder: 1},
+  {id: 'status', accessorKey: 'status', header: 'Status', mobileOrder: 2},
+  {
+    id: 'total',
+    accessorKey: 'total',
+    header: 'Total',
+    align: 'right',
+    mobileOrder: 3,
+    cell: ({row}) => `$${row.original.total.toFixed(2)}`,
+  },
+  {id: 'placedAt', accessorKey: 'placedAt', header: 'Placed', mobileOrder: 4},
+];
+
+/**
+ * With `cardTapAction: 'open'` a tap on a card calls `onRowClick` and does nothing else,
+ * and a chevron says so. Selection stays on the checkbox. From the keyboard each card is a
+ * tab stop named by its title: Enter opens it, Space selects it.
+ */
+export const CardTapOpens: Story = {
+  name: 'Card view, tap opens',
+  parameters: {...showcase('cardTapAction', 'onRowClick', 'enableRowSelection'), layout: 'fullscreen'},
+  globals: {viewport: {value: 'iphone14', isRotated: false}},
+  decorators: [onPhone],
+  args: {
+    columns: cardColumns,
+    data: ORDERS.slice(0, 4),
+    cardTapAction: 'open',
+    enableRowSelection: true,
+    onRowClick: fn(),
+  },
+  play: async ({args, canvasElement}) => {
+    const canvas = within(canvasElement);
+    const card = await canvas.findByRole('group', {name: 'SW-1000'});
+    const checkbox = canvas.getByRole('checkbox', {name: 'Select row order-1'});
+
+    await userEvent.click(within(card).getByText('Placed:'));
+    await expect(args.onRowClick).toHaveBeenCalledWith(ORDERS[0]);
+    await expect(checkbox).not.toBeChecked();
+
+    card.focus();
+    await userEvent.keyboard('{Enter}');
+    await expect(args.onRowClick).toHaveBeenCalledTimes(2);
+    await expect(checkbox).not.toBeChecked();
+
+    await userEvent.keyboard(' ');
+    await expect(checkbox).toBeChecked();
+    await expect(args.onRowClick).toHaveBeenCalledTimes(2);
   },
 };

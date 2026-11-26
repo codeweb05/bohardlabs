@@ -1,42 +1,19 @@
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
+import type {Theme} from '@mui/material';
 import {Box, Card, CardContent, Checkbox, IconButton, Typography} from '@mui/material';
 import type {Row, Table} from '@tanstack/react-table';
 import {flexRender} from '@tanstack/react-table';
-import {useState} from 'react';
+import {useId, useState} from 'react';
 
 import {useLabels} from '../i18n';
 import {visibleRowActions} from '../rowActions';
 import {RowActionsMenu} from '../RowActionsMenu';
 import type {DataTableColumnDef, RowAction, RowData} from '../types';
 
-interface CardItemProps<TData extends RowData> {
-  readonly row: Row<TData>;
-  readonly table: Table<TData>;
-  readonly rowActions?: readonly RowAction<TData>[];
-  readonly onRowClick?: (row: TData) => void;
-  readonly enableExpanding?: boolean;
-  readonly isExpanded?: boolean;
-  readonly isSelected?: boolean;
-}
-
-export function CardItem<TData extends RowData>({
-  row,
-  table,
-  rowActions,
-  onRowClick,
-  enableExpanding = false,
-  isExpanded = false,
-  isSelected = false,
-}: Readonly<CardItemProps<TData>>) {
-  const labels = useLabels();
-  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
-
-  const canSelect = !!table.options.enableRowSelection;
-  const canSelectThisRow = canSelect && row.getCanSelect();
-
-  // Get columns configured for mobile display, sorted by mobileOrder
-  const mobileColumns = table
+/** The columns a card shows, sorted by `mobileOrder`; the first is its title. */
+function cardColumns<TData extends RowData>(table: Table<TData>) {
+  return table
     .getAllLeafColumns()
     .filter((col) => {
       const meta = col.columnDef as DataTableColumnDef<TData>;
@@ -52,6 +29,58 @@ export function CardItem<TData extends RowData>({
       return (metaA.mobileOrder ?? 999) - (metaB.mobileOrder ?? 999);
     })
     .slice(0, 5);
+}
+
+/** Enter opens the card's row, Space toggles its selection. */
+function handleCardKey<TData extends RowData>(
+  event: React.KeyboardEvent<HTMLElement>,
+  row: Row<TData>,
+  onRowClick: ((row: TData) => void) | undefined,
+  canSelectThisRow: boolean,
+) {
+  // Keys pressed on the checkbox, the chevron or the menu button bubble up here and belong
+  // to them, so only a key pressed on the card itself is handled.
+  if (event.target !== event.currentTarget) return;
+  if (event.key === 'Enter' && onRowClick) {
+    event.preventDefault();
+    onRowClick(row.original);
+  } else if (event.key === ' ' && canSelectThisRow) {
+    // Without preventDefault the page scrolls as well.
+    event.preventDefault();
+    row.toggleSelected();
+  }
+}
+
+interface CardItemProps<TData extends RowData> {
+  readonly row: Row<TData>;
+  readonly table: Table<TData>;
+  readonly rowActions?: readonly RowAction<TData>[];
+  readonly onRowClick?: (row: TData) => void;
+  readonly enableExpanding?: boolean;
+  readonly isExpanded?: boolean;
+  readonly isSelected?: boolean;
+  /** What a tap on the card does. See `DataTableProps.cardTapAction`. */
+  readonly cardTapAction?: 'open' | 'select';
+}
+
+export function CardItem<TData extends RowData>({
+  row,
+  table,
+  rowActions,
+  onRowClick,
+  enableExpanding = false,
+  isExpanded = false,
+  isSelected = false,
+  cardTapAction = 'select',
+}: Readonly<CardItemProps<TData>>) {
+  const labels = useLabels();
+  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+  const titleId = useId();
+
+  const canSelect = !!table.options.enableRowSelection;
+  const canSelectThisRow = canSelect && row.getCanSelect();
+
+  const mobileColumns = cardColumns(table);
 
   const primaryColumn = mobileColumns[0];
   const secondaryColumns = mobileColumns.slice(1);
@@ -59,7 +88,14 @@ export function CardItem<TData extends RowData>({
   // Filter visible actions
   const visibleActions = visibleRowActions(row.original, rowActions);
 
+  const opensOnTap = cardTapAction === 'open';
+
   const handleCardClick = () => {
+    // One tap, one meaning: the checkbox and the chevron keep selection and expansion.
+    if (opensOnTap) {
+      onRowClick?.(row.original);
+      return;
+    }
     // Toggle selection when card is clicked (if selectable)
     if (canSelectThisRow) {
       row.toggleSelected();
@@ -76,21 +112,38 @@ export function CardItem<TData extends RowData>({
     row.toggleSelected();
   };
 
+  const handleCardKeyDown = (event: React.KeyboardEvent<HTMLElement>) =>
+    handleCardKey(event, row, onRowClick, canSelectThisRow);
+
+  const tapDoesSomething = opensOnTap ? !!onRowClick : !!onRowClick || canSelect || enableExpanding;
+  // A tab stop only where a key has something to do: Enter opens, Space selects. A group
+  // rather than a button: the card holds a checkbox and a menu button of its own, and a
+  // button may not contain other controls.
+  const focusProps =
+    onRowClick || canSelectThisRow
+      ? {
+          role: 'group',
+          tabIndex: 0,
+          'aria-labelledby': primaryColumn ? titleId : undefined,
+          onKeyDown: handleCardKeyDown,
+        }
+      : {};
+
   const hasLeftContent = canSelect || enableExpanding;
   const hasRightContent = visibleActions && visibleActions.length > 0;
 
   return (
     <>
       <Card
+        {...focusProps}
         sx={{
-          cursor: onRowClick || canSelect || enableExpanding ? 'pointer' : 'default',
+          cursor: tapDoesSomething ? 'pointer' : 'default',
           bgcolor: isSelected ? 'action.selected' : 'background.paper',
-          '&:hover':
-            onRowClick || canSelect || enableExpanding
-              ? {
-                  bgcolor: 'action.hover',
-                }
-              : undefined,
+          '&:focus-visible': {
+            outline: (theme: Theme) => `2px solid ${theme.palette.primary.main}`,
+            outlineOffset: 2,
+          },
+          '&:hover': tapDoesSomething ? {bgcolor: 'action.hover'} : undefined,
           border: 1,
           borderColor: isSelected ? 'primary.main' : 'divider',
           borderRadius: 2,
@@ -161,6 +214,7 @@ export function CardItem<TData extends RowData>({
                 const content = flexRender(cell.column.columnDef.cell, cell.getContext());
                 return (
                   <Typography
+                    id={titleId}
                     variant="subtitle2"
                     sx={{
                       fontWeight: 600,
@@ -190,6 +244,11 @@ export function CardItem<TData extends RowData>({
               >
                 <MoreVertIcon fontSize="small" />
               </IconButton>
+            )}
+
+            {/* Says the card opens something when a tap does nothing else. */}
+            {opensOnTap && onRowClick && (
+              <ChevronRightIcon fontSize="small" sx={{flexShrink: 0, color: 'text.secondary'}} />
             )}
           </Box>
 

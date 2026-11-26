@@ -173,6 +173,7 @@ export function DataTable<TData extends RowData>(props: Readonly<DataTableProps<
     mobileBreakpoint = 'sm',
     enableMobileCardView = true,
     renderMobileCard,
+    cardTapAction = 'select',
 
     // Events
     onRowClick,
@@ -443,6 +444,7 @@ export function DataTable<TData extends RowData>(props: Readonly<DataTableProps<
                       rowActions={rowActions}
                       renderCard={renderMobileCard}
                       onRowClick={onRowClick}
+                      cardTapAction={cardTapAction}
                       enableExpanding={enableExpanding}
                       renderExpandedRow={renderExpandedRow}
                       animateExpansion={animateExpansion}

@@ -12,6 +12,7 @@ interface CardViewProps<TData extends RowData> {
   readonly rowActions?: readonly RowAction<TData>[];
   readonly renderCard?: (row: TData, actions?: readonly RowAction<TData>[]) => ReactNode;
   readonly onRowClick?: (row: TData) => void;
+  readonly cardTapAction?: 'open' | 'select';
   // Expansion props
   readonly enableExpanding?: boolean;
   readonly renderExpandedRow?: (row: Row<TData>) => ReactNode;
@@ -25,6 +26,7 @@ export function CardView<TData extends RowData>({
   rowActions,
   renderCard,
   onRowClick,
+  cardTapAction,
   enableExpanding = false,
   renderExpandedRow,
   animateExpansion = true,
@@ -62,6 +64,7 @@ export function CardView<TData extends RowData>({
                 table={table}
                 rowActions={rowActions}
                 onRowClick={onRowClick}
+                cardTapAction={cardTapAction}
                 enableExpanding={enableExpanding}
                 isExpanded={rowIsExpanded}
                 isSelected={!!rowSelection?.[row.id]}
