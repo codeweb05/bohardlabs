@@ -586,6 +586,27 @@ describe('DataTable – Feature Interactions', () => {
         expect(nameHeader).toHaveTextContent('↑');
       });
     });
+
+    it('leaves every header unsortable when enableSorting is false', async () => {
+      const onServerStateChange = vi.fn();
+      render(
+        <DataTable
+          columns={testColumns}
+          data={makePagedData(5)}
+          enablePagination={false}
+          enableSorting={false}
+          onServerStateChange={onServerStateChange}
+        />,
+      );
+      onServerStateChange.mockClear();
+
+      await userEvent.click(screen.getByText('Name'));
+
+      const nameHeader = screen.getByRole('columnheader', {name: /Name/});
+      expect(nameHeader).not.toHaveAttribute('aria-sort');
+      expect(nameHeader).not.toHaveTextContent('↑');
+      expect(onServerStateChange).not.toHaveBeenCalled();
+    });
   });
 
   // =========================================================================

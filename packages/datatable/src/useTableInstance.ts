@@ -138,6 +138,8 @@ export function useTableInstance<TData extends RowData>(options: UseTableInstanc
       grouping: state.grouping,
     },
     getCoreRowModel: coreRowModel,
+    // TanStack defaults it to true, so a column would still sort from its header.
+    enableSorting,
     getRowId: getRowId ? (row) => getRowId(row) : (row) => String(row.id),
 
     ...(enablePagination && {
