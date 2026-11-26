@@ -81,15 +81,17 @@ interface HarnessProps {
   readonly initialState?: Partial<TableState>;
   readonly onExport?: (format: ExportFormat, data: Payout[]) => void;
   readonly onExportComplete?: (format: ExportFormat, success: boolean) => void;
+  /** False for a table with no `getRowId`, which TanStack then ids by index. */
+  readonly rowIds?: boolean;
 }
 
-function Harness({formats = ['csv'], initialState, ...props}: Readonly<HarnessProps>) {
+function Harness({formats = ['csv'], initialState, rowIds = true, ...props}: Readonly<HarnessProps>) {
   'use no memo';
   const table = useReactTable({
     data: page,
     columns,
     initialState,
-    getRowId: (row) => row.id,
+    getRowId: rowIds ? (row) => row.id : undefined,
     getCoreRowModel: getCoreRowModel(),
   });
   return <ExportMenu table={table} formats={formats} manualPagination {...props} />;
@@ -156,6 +158,18 @@ describe('ExportMenu, all matching rows', () => {
     await waitFor(() => expect(screen.queryByRole('menu')).not.toBeInTheDocument());
   });
 
+  it('writes the fetched rows from a table that has no getRowId', async () => {
+    const download = setupDownloadMocks();
+    render(<Harness exportRows={() => Promise.resolve(matching)} totalRows={3} rowIds={false} />);
+
+    await openMenu();
+    await userEvent.click(await csvItem(DEFAULT_LABELS.exportAllMatching(3)));
+
+    await waitFor(() =>
+      expect(download.lines()).toEqual(['Order,Status', '#10482,PENDING', '#10477,PAID', '#10469,PAID']),
+    );
+  });
+
   it('still exports the page alone from the current page items', async () => {
     const download = setupDownloadMocks();
     const exportRows = vi.fn(() => Promise.resolve(matching));
@@ -211,6 +225,37 @@ describe('ExportMenu, all matching rows', () => {
     await new Promise((done) => setTimeout(done, 0));
     expect(download.contents).toHaveLength(0);
     expect(onExportComplete).toHaveBeenCalledTimes(1);
+  });
+
+  it('stays quiet about a rejection that lands after a cancel', async () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+    let fail: (error: Error) => void = () => {};
+    const exportRows = () =>
+      new Promise<readonly Payout[]>((_, reject) => {
+        fail = reject;
+      });
+    const onExportComplete = vi.fn();
+    render(<Harness exportRows={exportRows} totalRows={3} onExportComplete={onExportComplete} />);
+
+    await openMenu();
+    await userEvent.click(await csvItem(DEFAULT_LABELS.exportAllMatching(3)));
+    await userEvent.click(await screen.findByRole('menuitem', {name: DEFAULT_LABELS.cancel}));
+
+    fail(new Error('timeout'));
+    await new Promise((done) => setTimeout(done, 0));
+
+    expect(onExportComplete).toHaveBeenCalledTimes(1);
+    expect(onExportComplete).toHaveBeenCalledWith('csv', false);
+    expect(consoleError).not.toHaveBeenCalled();
+    expect(screen.queryByText(DEFAULT_LABELS.exportFailed)).not.toBeInTheDocument();
+  });
+
+  it('counts all matching from the rows held when there is no totalRows', async () => {
+    render(<Harness exportRows={vi.fn()} />);
+
+    await openMenu();
+
+    expect(await csvItem(DEFAULT_LABELS.exportAllMatching(1))).toBeInTheDocument();
   });
 
   it('reports a rejection through onExportComplete and says so in the menu', async () => {

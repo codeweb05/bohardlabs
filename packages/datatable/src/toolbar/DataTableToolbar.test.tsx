@@ -308,6 +308,19 @@ describe('DataTableToolbar — mobile bulk actions', () => {
     });
   });
 
+  it('keeps the failed rows selected and hands the result on', async () => {
+    const result = {succeeded: ['row-1'], failed: ['row-2']};
+    const action: BulkAction<Item> = {id: 'pay', label: 'Mark as paid', onClick: () => Promise.resolve(result)};
+    const onBulkActionResult = vi.fn();
+    renderToolbar({isMobile: true, bulkActions: [action], onBulkActionResult}, {'row-1': true, 'row-2': true});
+
+    await userEvent.click(screen.getByRole('button', {name: DEFAULT_LABELS.actions}));
+    await userEvent.click(await screen.findByRole('menuitem', {name: 'Mark as paid'}));
+
+    await waitFor(() => expect(onBulkActionResult).toHaveBeenCalledExactlyOnceWith(action, result));
+    expect(screen.getByText('selection: row-2')).toBeInTheDocument();
+  });
+
   it('closes the menu on Escape without running an action', async () => {
     // The menu's `onClose` (DataTableToolbar.tsx:201) had no coverage: the other tests
     // all close it by picking an item. On a phone the menu is the only thing on screen,
@@ -445,6 +458,17 @@ describe('DataTableToolbar, search with no handler, after the debounce', () => {
     // The earlier test stops before the debounce fires. This one waits it out: the report
     // has nowhere to go, and the box must still hold the text instead of snapping back.
     renderToolbar();
+    const box = screen.getByPlaceholderText(DEFAULT_LABELS.globalSearch);
+
+    await userEvent.type(box, 'det');
+    await new Promise((resolve) => setTimeout(resolve, 350));
+
+    expect(box).toHaveValue('det');
+  });
+
+  it('does the same when a consumer control shares the row', async () => {
+    // `toolbarContent` draws the search box through its own branch, with its own fallback.
+    renderToolbar({toolbarContent: <button type="button">Filter by status</button>});
     const box = screen.getByPlaceholderText(DEFAULT_LABELS.globalSearch);
 
     await userEvent.type(box, 'det');

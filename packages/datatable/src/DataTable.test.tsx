@@ -116,6 +116,21 @@ describe('DataTable', () => {
       expect(screen.queryByText('No roles found')).not.toBeInTheDocument();
     });
 
+    it('shows a thin progress bar over the rows while a refetch runs', () => {
+      render(<DataTable columns={testColumns} data={testData} isFetching />);
+
+      expect(within(screen.getByTestId('data-table-content')).getByRole('progressbar')).toBeInTheDocument();
+      expect(screen.getByText('Role 1')).toBeInTheDocument();
+    });
+
+    it('leaves the progress bar to the skeleton on a first load', () => {
+      render(<DataTable columns={testColumns} data={[]} isLoading isFetching />);
+
+      expect(
+        within(screen.getByTestId('data-table-content')).queryByRole('progressbar', {hidden: true}),
+      ).not.toBeInTheDocument();
+    });
+
     it('renders error state with retry button', async () => {
       const onRetry = vi.fn();
       render(

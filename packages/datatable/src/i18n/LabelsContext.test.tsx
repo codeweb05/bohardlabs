@@ -45,3 +45,12 @@ describe('DataTableLabelsProvider', () => {
     expect(screen.queryByText('Suchen')).not.toBeInTheDocument();
   });
 });
+
+// The bar only shows `bulkResult` while a failed row is still selected, so it never asks for
+// a clean run. `DEFAULT_LABELS` is exported, though, and a consumer reporting its own result
+// can call it with no failures.
+describe('DEFAULT_LABELS.bulkResult', () => {
+  it('reports a clean run without mentioning failures', () => {
+    expect(DEFAULT_LABELS.bulkResult(4, 0)).toBe('4 updated.');
+  });
+});

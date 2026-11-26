@@ -98,6 +98,27 @@ describe('BulkActions, partial results', () => {
     expect(selection()).toBe('p-1,p-2,p-3,p-4');
   });
 
+  it('says nothing after a clean run: no row is left selected, so the bar goes', async () => {
+    const {selection} = renderBar(payAction(() => ({succeeded: ['p-1', 'p-2', 'p-3', 'p-4'], failed: []})));
+
+    await runPay();
+
+    await waitFor(() => expect(selection()).toBe(''));
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', {name: 'Mark as paid'})).not.toBeInTheDocument();
+  });
+
+  it('speaks of one failed row in the singular', async () => {
+    const {selection} = renderBar(payAction(() => ({succeeded: ['p-1', 'p-2', 'p-3'], failed: ['p-4']})));
+
+    await runPay();
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('3 updated, 1 failed. The failed row is still selected.');
+    expect(alert).toHaveClass('MuiAlert-colorError');
+    expect(selection()).toBe('p-4');
+  });
+
   it('ignores a failed id that was not selected', async () => {
     const {selection} = renderBar(payAction(() => ({succeeded: [], failed: ['p-2', 'p-9']})));
 

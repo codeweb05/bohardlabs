@@ -45,10 +45,9 @@ interface ExportScope {
   readonly blocked?: string;
 }
 
-/** An "All matching" export waiting on `exportRows`. Cancel flips `cancelled`. */
+/** An "All matching" export waiting on `exportRows`. Cancel adds it to `cancelledRef`. */
 interface PendingExport {
   readonly format: ExportFormat;
-  cancelled: boolean;
 }
 
 export function ExportMenu<TData extends RowData>({
@@ -73,17 +72,17 @@ export function ExportMenu<TData extends RowData>({
   const [hasColumns, setHasColumns] = useState(true);
   // Read on open for the same reason: how many rows the table holds.
   const [heldCount, setHeldCount] = useState(0);
-  // State to draw the progress, a ref so a cancel reaches the run that is already awaiting.
-  const [pending, setPending] = useState<ExportFormat | null>(null);
-  const pendingRef = useRef<PendingExport | null>(null);
+  // The run to draw the progress for. A ref holds the cancelled ones, so a cancel reaches the
+  // run that is already awaiting.
+  const [pending, setPending] = useState<PendingExport | null>(null);
+  const cancelledRef = useRef(new WeakSet<PendingExport>());
   const [failed, setFailed] = useState(false);
   const headingId = useId();
 
   const handleExport = async (format: ExportFormat, allMatching: boolean) => {
     // Only "All matching" keeps the menu open, to show its progress.
-    const run: PendingExport | null = allMatching && exportRows ? {format, cancelled: false} : null;
-    pendingRef.current = run;
-    setPending(run ? format : null);
+    const run: PendingExport | null = allMatching && exportRows ? {format} : null;
+    setPending(run);
     setFailed(false);
     if (!run) setAnchorEl(null);
     onExportStart?.(format);
@@ -91,21 +90,19 @@ export function ExportMenu<TData extends RowData>({
     try {
       const rows = run && exportRows ? await matchingRows(exportRows) : heldRows();
       // A cancel has already closed the progress and reported the export.
-      if (run?.cancelled) return;
+      if (run && cancelledRef.current.has(run)) return;
       if (run) {
-        pendingRef.current = null;
         setPending(null);
         setAnchorEl(null);
       }
       await runExport(format, rows);
     } catch (error) {
-      if (run?.cancelled) return;
+      if (run && cancelledRef.current.has(run)) return;
       // The click handler does not await this, so a throw from here would be a rejection
       // nobody is listening for. The consumer hears about it through `onExportComplete`.
       console.error(`Failed to export the table as "${format}":`, error);
       succeeded = false;
       if (run) {
-        pendingRef.current = null;
         setPending(null);
         setFailed(true);
       }
@@ -113,11 +110,8 @@ export function ExportMenu<TData extends RowData>({
     onExportComplete?.(format, succeeded);
   };
 
-  const cancelPending = () => {
-    const run = pendingRef.current;
-    if (!run) return;
-    run.cancelled = true;
-    pendingRef.current = null;
+  const cancelPending = (run: PendingExport) => {
+    cancelledRef.current.add(run);
     setPending(null);
     onExportComplete?.(run.format, false);
   };
@@ -283,7 +277,7 @@ export function ExportMenu<TData extends RowData>({
                 <LinearProgress aria-hidden sx={{mt: 1}} />
               </MenuItem>,
               // The item that was clicked is gone, so focus comes here rather than to the page.
-              <MenuItem key="cancel" ref={focusOnMount} onClick={cancelPending}>
+              <MenuItem key="cancel" ref={focusOnMount} onClick={() => cancelPending(pending)}>
                 {labels.cancel}
               </MenuItem>,
             ]

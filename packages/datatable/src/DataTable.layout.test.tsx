@@ -112,6 +112,15 @@ describe('DataTable, a column declared sticky', () => {
   });
 });
 
+describe('DataTable, a column aligned right', () => {
+  it("aligns that column's cells and leaves the others on the left", () => {
+    render(<DataTable columns={[columns[0], {...columns[1], align: 'right'}]} data={data} />);
+
+    expect(screen.getByRole('cell', {name: 'Role 1'})).toHaveClass('MuiTableCell-alignLeft');
+    expect(screen.getAllByRole('cell', {name: data[0].roleType})[0]).toHaveClass('MuiTableCell-alignRight');
+  });
+});
+
 describe('DataTable, getRowSx', () => {
   it('styles the rows it returns something for and leaves the rest alone', () => {
     render(

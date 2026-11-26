@@ -173,9 +173,10 @@ export function BulkActions<TData extends RowData>({
         </Box>
       </Box>
 
+      {/* Always an error: after a clean run no row is left selected, and the bar is gone. */}
       {notice && (
         <Alert
-          severity={notice.failed > 0 ? 'error' : 'success'}
+          severity="error"
           closeText={labels.close}
           onClose={() => setNotice(null)}
           sx={{borderRadius: 0, borderBottom: (theme) => `1px solid ${theme.palette.divider}`}}
