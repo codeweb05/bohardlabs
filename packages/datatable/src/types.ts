@@ -797,6 +797,14 @@ export interface DataTableProps<TData extends RowData> extends TableEventHandler
   readonly enableFiltering?: boolean;
   /** The single search box in the toolbar. Debounced before it reaches `onServerStateChange`. */
   readonly enableGlobalFilter?: boolean;
+  /**
+   * A row of chips under the toolbar, one per active column filter plus one for the search,
+   * each saying what the request sends: "Status is not Cancelled", "Total between 10 and
+   * 50". A filter's chip removes it, "Clear all" removes everything, and both go back to
+   * page 1. The words come from `labels` (`filterChip`, `filterOperator` and the rest).
+   * @defaultValue false
+   */
+  readonly enableFilterChips?: boolean;
   /** Placeholder for the search box. Also its accessible name, so make it say what it searches. */
   readonly globalFilterPlaceholder?: string;
   /**

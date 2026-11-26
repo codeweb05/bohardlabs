@@ -430,6 +430,77 @@ export const FilterTypes: Story = {
   },
 };
 
+/**
+ * **What is narrowing the list.** `enableFilterChips` adds a row under the toolbar with one
+ * chip per active filter and one for the search. Each chip reads the way the request sends
+ * it, operator included: "Items at least 2", "Total between 10 and 50", "Status is not
+ * Cancelled" when the column's `filterConfig.operator` is `notEquals`. A select shows the
+ * option's label and a date shows `dateFormats.display`.
+ *
+ * A chip's × removes that filter, **Clear all** removes everything, and both go back to
+ * page 1. The search chip has no ×: the search box is where it is cleared.
+ *
+ * Off by default, so a screen built before it does not change. Every word is in `labels`.
+ */
+export const FilterChips: Story = {
+  parameters: {
+    ...KNOWN_CONTRAST_EXCEPTION,
+    ...showcase('enableFilterChips', 'enableFiltering', 'initialFilters', 'onServerStateChange'),
+  },
+  args: {
+    columns: filterTypeColumns,
+    data: makeOrders(40),
+    pageSize: 5,
+    enableFiltering: true,
+    enableFilterChips: true,
+    onServerStateChange: fn(),
+  },
+  decorators: [
+    (Story) => (
+      <LocalizationProvider dateAdapter={AdapterDayjs}>
+        <Story />
+      </LocalizationProvider>
+    ),
+  ],
+  play: async ({args, canvasElement}) => {
+    const canvas = within(canvasElement);
+    const removeCustomer = {name: 'Remove filter: Customer contains e'};
+
+    await userEvent.click(canvas.getByRole('button', {name: 'Filters'}));
+    const drawer = within(await screen.findByRole('dialog'));
+    await userEvent.type(drawer.getByPlaceholderText('Customer name'), 'e');
+    await userEvent.type(within(drawer.getByRole('group', {name: 'Items'})).getByRole('textbox', {name: 'From'}), '2');
+
+    // The filters commit after a debounce. The drawer is modal, so the chips behind it are
+    // hidden from the accessibility tree until it closes.
+    await waitFor(() => expect(canvas.getByRole('button', {...removeCustomer, hidden: true})).toBeInTheDocument());
+    await userEvent.click(drawer.getByRole('button', {name: 'Close'}));
+
+    const chips = within(await canvas.findByRole('group', {name: '2 active filter(s)'}));
+    await expect(chips.getByText('Items at least 2')).toBeInTheDocument();
+
+    await userEvent.click(canvas.getByRole('button', {name: 'Next page'}));
+    await waitFor(() =>
+      expect(args.onServerStateChange).toHaveBeenLastCalledWith(
+        expect.objectContaining({pagination: expect.objectContaining({pageIndex: 1})}),
+      ),
+    );
+
+    await userEvent.click(chips.getByRole('button', removeCustomer));
+
+    // One filter left in the request, and back on the first page.
+    await waitFor(() =>
+      expect(args.onServerStateChange).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          columnFilters: [expect.objectContaining({id: 'items'})],
+          pagination: expect.objectContaining({pageIndex: 0}),
+        }),
+      ),
+    );
+    await expect(canvas.queryByRole('button', removeCustomer)).not.toBeInTheDocument();
+  },
+};
+
 const bulkActions: BulkAction<Order>[] = [
   {id: 'assign', label: 'Assign driver', onClick: fn()},
   {
@@ -1231,6 +1302,26 @@ export const VerbatimHeaders: Story = {
  * app is translating a subset on purpose; it is the wrong type when the goal is coverage,
  * because a missing key then silently renders in English.
  */
+// Hindi puts the comparison after the value ("स्थिति रद्द नहीं है"), which is why the chip
+// text is a function of all three parts rather than a fixed order.
+const HINDI_OPERATORS: Record<Parameters<DataTableLabels['filterOperator']>[0], string> = {
+  equals: 'है',
+  in: 'में से कोई है',
+  notEquals: 'नहीं है',
+  contains: 'शामिल है',
+  startsWith: 'से शुरू होता है',
+  endsWith: 'पर समाप्त होता है',
+  greaterThan: 'से अधिक है',
+  lessThan: 'से कम है',
+  between: 'के बीच है',
+  isEmpty: 'खाली है',
+  isNotEmpty: 'खाली नहीं है',
+  atLeast: 'या अधिक',
+  atMost: 'या कम',
+  after: 'के बाद',
+  before: 'से पहले',
+};
+
 const HINDI_LABELS: DataTableLabels = {
   actions: 'कार्रवाई',
   all: 'सभी',
@@ -1266,6 +1357,13 @@ const HINDI_LABELS: DataTableLabels = {
   resetToDefault: 'डिफ़ॉल्ट पर लौटाएँ',
   resetToDefaultTooltip: 'सभी फ़िल्टर, स्तंभ दृश्यता और स्तंभ चौड़ाई डिफ़ॉल्ट पर लौटाएँ',
   showAll: 'सभी दिखाएँ',
+
+  filterChip: (column, operator, value) => `${column} ${value} ${operator}`,
+  filterOperator: (operator) => HINDI_OPERATORS[operator],
+  filterRange: (from, to) => `${from} और ${to}`,
+  filterSearch: (term) => `खोज: “${term}”`,
+  removeFilter: (chip) => `फ़िल्टर हटाएँ: ${chip}`,
+  clearAllFilters: 'सभी हटाएँ',
 
   densityLabel: 'घनत्व',
   densityCompact: 'सघन',

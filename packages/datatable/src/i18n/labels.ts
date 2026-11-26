@@ -1,3 +1,5 @@
+import type {FilterOperator} from '../types';
+
 /**
  * Every user-facing string the table can render.
  *
@@ -68,6 +70,28 @@ export interface DataTableLabels {
   readonly resetToDefault: string;
   readonly resetToDefaultTooltip: string;
   readonly showAll: string;
+
+  // Filter chips (`enableFilterChips`)
+  /**
+   * One chip's text. `operator` comes from `filterOperator` and `value` is already
+   * formatted: an option's label, a date in `dateFormats.display`, or `filterRange`.
+   */
+  readonly filterChip: (column: string, operator: string, value: string) => string;
+  /**
+   * The words for the comparison a filter sends. A range with one end set reads as
+   * `atLeast`/`atMost` for a number and `after`/`before` for a date. A translation written as
+   * a full `Record` over these operators needs a new key whenever `FilterOperator` gains a
+   * member, which can happen in a minor release.
+   */
+  readonly filterOperator: (operator: FilterOperator | 'atLeast' | 'atMost' | 'after' | 'before') => string;
+  /** Both ends of a range, after the `between` operator: "10 and 50". */
+  readonly filterRange: (from: string, to: string) => string;
+  /** The chip for the search box. */
+  readonly filterSearch: (term: string) => string;
+  /** The accessible name of a chip's remove button. `chip` is the chip's text. */
+  readonly removeFilter: (chip: string) => string;
+  /** The button at the end of the chip row that clears every filter and the search. */
+  readonly clearAllFilters: string;
 
   // Density
   readonly densityLabel: string;
@@ -158,6 +182,24 @@ function rowCount(count: number): string {
   return `${count.toLocaleString('en')} ${count === 1 ? 'row' : 'rows'}`;
 }
 
+const FILTER_OPERATOR_WORDS: Record<Parameters<DataTableLabels['filterOperator']>[0], string> = {
+  equals: 'is',
+  in: 'is any of',
+  notEquals: 'is not',
+  contains: 'contains',
+  startsWith: 'starts with',
+  endsWith: 'ends with',
+  greaterThan: 'is greater than',
+  lessThan: 'is less than',
+  between: 'between',
+  isEmpty: 'is empty',
+  isNotEmpty: 'is not empty',
+  atLeast: 'at least',
+  atMost: 'at most',
+  after: 'after',
+  before: 'before',
+};
+
 function bulkResult(succeeded: number, failed: number): string {
   if (failed === 0) return `${succeeded} updated.`;
   const stillSelected =
@@ -200,6 +242,13 @@ export const DEFAULT_LABELS: DataTableLabels = {
   resetToDefault: 'Reset to Default',
   resetToDefaultTooltip: 'Reset all filters, column visibility, and column sizes to default',
   showAll: 'Show All',
+
+  filterChip: (column, operator, value) => `${column} ${operator} ${value}`,
+  filterOperator: (operator) => FILTER_OPERATOR_WORDS[operator],
+  filterRange: (from, to) => `${from} and ${to}`,
+  filterSearch: (term) => `Search: “${term}”`,
+  removeFilter: (chip) => `Remove filter: ${chip}`,
+  clearAllFilters: 'Clear all',
 
   densityLabel: 'Density',
   densityCompact: 'Compact',

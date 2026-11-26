@@ -16,6 +16,7 @@ import {ErrorState} from './states/ErrorState';
 import {LoadingState} from './states/LoadingState';
 import {BulkActions} from './toolbar/BulkActions';
 import {DataTableToolbar} from './toolbar/DataTableToolbar';
+import {FilterChips} from './toolbar/FilterChips';
 import type {DataTableColumnDef, DataTableProps, RowData} from './types';
 import {DEFAULT_HEADER_CASE, DEFAULT_PAGE_SIZE, DEFAULT_PAGE_SIZE_OPTIONS} from './types';
 import {useDataTableState} from './useDataTableState';
@@ -100,6 +101,7 @@ export function DataTable<TData extends RowData>(props: Readonly<DataTableProps<
     // Filtering
     enableFiltering = true,
     enableGlobalFilter = true,
+    enableFilterChips = false,
     globalFilterPlaceholder,
     globalFilterHelperText,
     initialFilters = [],
@@ -398,6 +400,18 @@ export function DataTable<TData extends RowData>(props: Readonly<DataTableProps<
                 selectedRows={selectedRows}
                 onBulkActionResult={onBulkActionResult}
                 toolbarContent={toolbarContent}
+              />
+            )}
+
+            {/* What is narrowing the list. Every clear goes through the state handlers, which
+                reset the page. */}
+            {enableFilterChips && (
+              <FilterChips
+                columns={columns}
+                columnFilters={state.columnFilters}
+                globalFilter={state.globalFilter}
+                onRemove={(id) => state.handleFiltersChange((filters) => filters.filter((filter) => filter.id !== id))}
+                onClearAll={handleFiltersReset}
               />
             )}
 
