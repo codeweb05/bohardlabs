@@ -453,6 +453,11 @@ function SelectHeaderCell<TData extends RowData>({
         slotProps={{
           input: {
             'aria-label': labels.selectAll || 'Select all rows',
+            // MUI marks an indeterminate box `aria-checked="mixed"` but leaves the input's own
+            // `indeterminate` flag false, so assistive tech and axe see two different states.
+            ref: (input: HTMLInputElement | null) => {
+              if (input) input.indeterminate = isIndeterminate;
+            },
           },
         }}
         size="small"
