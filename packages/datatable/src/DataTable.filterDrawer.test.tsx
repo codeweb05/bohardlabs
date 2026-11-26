@@ -48,7 +48,8 @@ const columns: DataTableColumnDef<Order>[] = [
 const PAST_THE_DEBOUNCE = 700;
 
 async function openFilters(user: ReturnType<typeof userEvent.setup>) {
-  await user.click(screen.getByRole('button', {name: L.filters}));
+  // Starts with, since an active filter adds its count to the name.
+  await user.click(screen.getByRole('button', {name: /^Filters/}));
   return screen.findByRole('dialog');
 }
 

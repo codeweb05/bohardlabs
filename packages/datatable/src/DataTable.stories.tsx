@@ -417,7 +417,7 @@ export const FilterTypes: Story = {
     await expect(canvas.getByText('SW-1004')).toBeInTheDocument();
     await expect(canvas.queryByText('SW-1000')).not.toBeInTheDocument();
 
-    await userEvent.click(canvas.getByRole('button', {name: 'Filters'}));
+    await userEvent.click(canvas.getByRole('button', {name: 'Filters, 1 active filter(s)'}));
 
     // The drawer is portalled to the body, outside the canvas.
     const drawer = within(await screen.findByRole('dialog'));
@@ -508,6 +508,8 @@ export const FilterChips: Story = {
       ),
     );
     await expect(canvas.queryByRole('button', removeCustomer)).not.toBeInTheDocument();
+    // The trigger's badge count is part of its name.
+    await expect(canvas.getByRole('button', {name: 'Filters, 1 active filter(s)'})).toBeInTheDocument();
   },
 };
 

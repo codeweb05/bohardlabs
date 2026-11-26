@@ -188,7 +188,10 @@ export function FilterPanel<TData extends RowData>({
         <IconButton
           onClick={() => setOpen(true)}
           size="small"
-          aria-label={labels.filters}
+          // The badge's count is visible text, so the name has to carry it too.
+          aria-label={
+            activeFilterCount > 0 ? `${labels.filters}, ${labels.activeFilters(activeFilterCount)}` : labels.filters
+          }
           sx={{
             p: {xs: 0.5, sm: 1},
           }}

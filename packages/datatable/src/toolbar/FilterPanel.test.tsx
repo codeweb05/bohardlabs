@@ -70,7 +70,8 @@ function Harness({columns, onReset, initialFilters = []}: Readonly<HarnessProps>
   );
 }
 
-const FILTERS_LABEL = 'Filters';
+// Starts with, since an active filter adds its count to the name.
+const FILTERS_LABEL = /^Filters/;
 
 function renderPanel(props: HarnessProps) {
   return render(<Harness {...props} />);
