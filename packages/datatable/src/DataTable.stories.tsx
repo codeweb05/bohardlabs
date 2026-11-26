@@ -648,10 +648,10 @@ export const StickyBulkBar: Story = {
     view.scrollTo(0, canvasElement.ownerDocument.body.scrollHeight);
 
     const archive = await canvas.findByRole('button', {name: 'Archive'});
-    await waitFor(() => {
+    await waitFor(async () => {
       const box = archive.getBoundingClientRect();
-      expect(box.top).toBeGreaterThanOrEqual(0);
-      expect(box.bottom).toBeLessThanOrEqual(view.innerHeight);
+      await expect(box.top).toBeGreaterThanOrEqual(0);
+      await expect(box.bottom).toBeLessThanOrEqual(view.innerHeight);
     });
 
     await userEvent.click(canvas.getByRole('button', {name: 'Select all 137 matching'}));
