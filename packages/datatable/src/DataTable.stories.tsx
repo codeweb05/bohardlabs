@@ -1224,7 +1224,8 @@ function sumTotals(orders: readonly Order[]): string {
  * so with `manualPagination` it shows the `aggregates` the API sent instead.
  */
 export const Totals: Story = {
-  parameters: showcase('aggregates', 'manualPagination'),
+  // The search leaves the active-filter chip on screen, as in Filtering.
+  parameters: {...KNOWN_CONTRAST_EXCEPTION, ...showcase('aggregates', 'manualPagination')},
   args: {
     data: TOTALS_ORDERS,
     pageSize: 10,
