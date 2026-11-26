@@ -168,8 +168,9 @@ Query are peers for the usual reason.
 - [ ] **Step 2: Write `vite.config.ts` with two entries**
 
 ```ts
-import react from '@vitejs/plugin-react';
 import {resolve} from 'node:path';
+
+import react from '@vitejs/plugin-react';
 import {defineConfig} from 'vite';
 
 export default defineConfig({

@@ -441,7 +441,14 @@ interface DataTableProps<TData> {
 
 ```ts
 type Aggregate =
-  'sum' | 'avg' | 'count' | 'min' | 'max' | 'median' | 'distinct' | ((values: readonly unknown[]) => number | null);
+  | 'sum'
+  | 'avg'
+  | 'count'
+  | 'min'
+  | 'max'
+  | 'median'
+  | 'distinct'
+  | ((values: readonly unknown[]) => number | null);
 
 interface DataTableColumnDef<TData> {
   meta?: {

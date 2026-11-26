@@ -48,6 +48,9 @@ const config: StorybookConfig = {
       // undocumented and only says so in a startup warning.
       include: ['../../packages/*/src/**/*.tsx'],
       tsconfigPath: './tsconfig.docgen.json',
+      // The 0.9 plugin (pinned by an override in pnpm-workspace.yaml) types this as required
+      // through Storybook's options. 'legacy' is the reader 0.7 used, so the tables match.
+      docgenMode: 'legacy',
       shouldExtractLiteralValuesFromEnum: true,
       shouldRemoveUndefinedFromOptional: true,
       propFilter: (prop) => (prop.parent ? !/node_modules/.test(prop.parent.fileName) : true),

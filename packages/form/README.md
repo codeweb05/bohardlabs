@@ -433,8 +433,8 @@ Turning a response body into `{fields, form}` is your job; the package knows no 
 format. Then:
 
 ```ts
-import {applyServerErrors} from '@vt-labs/form';
 import type {AnyFormApi} from '@tanstack/react-form';
+import {applyServerErrors} from '@vt-labs/form';
 
 export function showSaveError(form: AnyFormApi) {
   applyServerErrors(form, {

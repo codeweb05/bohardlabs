@@ -286,8 +286,10 @@ export function DataTable<TData extends RowData>(props: Readonly<DataTableProps<
   const selectedRows = useMemo(() => {
     if (!needsSelectedRows) return [];
     return table.getFilteredSelectedRowModel().rows.map((row) => row.original);
+    // `table` is mutated in place and keeps its identity, so `state.rowSelection` is what
+    // tells this memo the selection moved.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [table, state.rowSelection, needsSelectedRows]);
+  }, [table, state.rowSelection, needsSelectedRows]); // oxlint-disable-line react/memo-dependencies
 
   // Which rows were selected the last time the consumer was told. Compared by id, not by
   // count: swapping one row for another is a change, and a new `onSelectionChange`

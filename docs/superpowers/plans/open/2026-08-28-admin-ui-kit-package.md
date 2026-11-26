@@ -437,10 +437,10 @@ Expected: FAIL, module not found.
 Copy the app file and change two things: replace the `@/constants/display` import with a local exported constant, and export the props type from the package root in Step 5.
 
 ```tsx
+import type {SxProps, Theme} from '@mui/material/styles';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import type {TypographyProps} from '@mui/material/Typography';
-import type {SxProps, Theme} from '@mui/material/styles';
 
 /**
  * Long enough for most names in a table cell, short enough that two of them fit side by
@@ -1151,8 +1151,8 @@ import DialogTitle from '@mui/material/DialogTitle';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import ListItemText from '@mui/material/ListItemText';
-import Typography from '@mui/material/Typography';
 import {alpha} from '@mui/material/styles';
+import Typography from '@mui/material/Typography';
 
 import {useLabels} from '../i18n';
 import {dialogSx} from './dialogSx';
@@ -1646,8 +1646,8 @@ Expected: FAIL, module not found.
 ```tsx
 import Box from '@mui/material/Box';
 import CircularProgress from '@mui/material/CircularProgress';
-import Typography from '@mui/material/Typography';
 import {keyframes} from '@mui/material/styles';
+import Typography from '@mui/material/Typography';
 import type {ReactNode} from 'react';
 
 import {useLabels} from './i18n';

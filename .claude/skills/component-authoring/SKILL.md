@@ -66,8 +66,8 @@ has no zebra striping.
 Deep import, always:
 
 ```tsx
-import CheckIcon from '@mui/icons-material/Check'; // yes
 import {Check} from '@mui/icons-material'; // no: the whole pack, for every consumer
+import CheckIcon from '@mui/icons-material/Check'; // yes
 ```
 
 ## Props

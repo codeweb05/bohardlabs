@@ -394,8 +394,8 @@ function walk(dir: string): string[] {
 ```tsx
 import {render, screen} from '@testing-library/react';
 
-import {DEFAULT_FORM_LABELS} from './labels';
 import {FormConfigProvider, useFormConfig} from './FormConfigContext';
+import {DEFAULT_FORM_LABELS} from './labels';
 
 function Probe() {
   const {labels, formatError} = useFormConfig();
@@ -4625,12 +4625,12 @@ The test runs in the machine's timezone. To prove the day does not move west of 
 `packages/form/src/pickers/pickers.test.tsx`:
 
 ```tsx
-import type {AnyFormApi} from '@tanstack/react-form';
-import {act, render, screen} from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import {AdapterDateFns} from '@mui/x-date-pickers/AdapterDateFns';
 import {AdapterDayjs} from '@mui/x-date-pickers/AdapterDayjs';
 import {LocalizationProvider} from '@mui/x-date-pickers/LocalizationProvider';
+import type {AnyFormApi} from '@tanstack/react-form';
+import {act, render, screen} from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import {createRef} from 'react';
 import type {ReactNode} from 'react';
 
@@ -4822,8 +4822,8 @@ export function timeToString(adapter: MuiPickersAdapter, date: PickerValidDate |
 `packages/form/src/pickers/usePickerDraft.ts`:
 
 ```ts
-import type {MuiPickersAdapter, PickerValidDate} from '@mui/x-date-pickers/models';
 import {usePickerAdapter} from '@mui/x-date-pickers/hooks';
+import type {MuiPickersAdapter, PickerValidDate} from '@mui/x-date-pickers/models';
 import {useState} from 'react';
 
 type FromString = (adapter: MuiPickersAdapter, value: string | null) => PickerValidDate | null;

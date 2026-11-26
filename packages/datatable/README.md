@@ -52,8 +52,8 @@ The table renders MUI components, so it needs MUI's providers from the host app.
 no provider of its own.
 
 ```tsx
-import {ThemeProvider, createTheme} from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
+import {ThemeProvider, createTheme} from '@mui/material/styles';
 
 const theme = createTheme();
 
@@ -130,8 +130,8 @@ restore, so the first query already uses the persisted page size and no throwawa
 goes out at the default one.
 
 ```tsx
-import {DataTable, useTableServerState} from '@vt-labs/datatable';
 import {keepPreviousData, useQuery} from '@tanstack/react-query';
+import {DataTable, useTableServerState} from '@vt-labs/datatable';
 import {useMemo} from 'react';
 
 export function OrdersPage() {

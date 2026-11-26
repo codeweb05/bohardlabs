@@ -109,6 +109,7 @@ A test send reaches real inboxes and phones: guard the routes as you would any t
 
 ```tsx
 import {createFetchClient, NotificationPreviewPage} from '@vt-labs/notification-preview/react';
+
 import '@vt-labs/notification-preview/style.css';
 
 const client = createFetchClient({

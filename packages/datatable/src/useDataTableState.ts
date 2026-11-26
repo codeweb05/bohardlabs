@@ -113,8 +113,10 @@ export function useDataTableState(options: UseDataTableStateOptions) {
     if (!isPersistenceEnabled) return null;
     const loaded = loadPersistedState();
     return loaded && dropStaleColumns(loaded, columnIds);
+    // Once, not per `tableId` or column set: the state below is seeded from it only on mount,
+    // so a reload here would sync a layout the table is not showing.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isPersistenceEnabled]);
+  }, [isPersistenceEnabled]); // oxlint-disable-line react/memo-dependencies
   // An entry from an earlier build holds the whole layout, defaults included. It is read as
   // preferences like any other, then written back once in the current shape.
   const migratesStoredState = persistedState !== null && persistedState.version !== PERSISTED_STATE_VERSION;

@@ -227,7 +227,7 @@ The model. A matrix is `[a, b, c, d]`, acting on a column vector: `x' = a·x + b
 - **Zoom is derived**, not stored: `zoom = maxWidth(aspect) / crop.width` with
   `maxWidth(a) = min(w, h·a)`, so zoom 1 is the largest crop of that shape.
 - **Layout** for a stage of size `S` with padding `p`: `k = min((S.w − 2p) / crop.w,
-(S.h − 2p) / crop.h)`; the crop centre lands on the stage centre `C`. The image element
+  (S.h − 2p) / crop.h)`; the crop centre lands on the stage centre `C`. The image element
   (absolute at 0,0, natural size, centre transform-origin) takes CSS
   `matrix(M00, M10, M01, M11, e, f)` with `M = k·s·Rot(θ)·O` and
   `(e, f) = C + k·(cF − cropCentre) − cI`. The selection is the fitted crop rect.
