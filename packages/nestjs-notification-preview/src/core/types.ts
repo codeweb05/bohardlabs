@@ -91,6 +91,9 @@ export interface ChannelProvider<C extends Channel> {
    * The locales this channel renders in, the first being the default. The preview passes a
    * request's `locale` to `render` and `send` untouched, so a locale is whatever string the
    * consumer's renderer takes, such as `en` or `pt_BR`.
+   *
+   * An empty list means the channel does not say: any locale a request names is passed on, and a
+   * request that names none gets `en`. The page shows no language picker for such a channel.
    */
   readonly locales: () => readonly string[];
   /**

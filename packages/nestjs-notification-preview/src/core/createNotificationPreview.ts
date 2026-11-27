@@ -77,6 +77,9 @@ export function createNotificationPreview(options: NotificationPreviewOptions): 
     byId.set(entry.id, entry);
   }
 
+  /** The channels the consumer gave a provider for, in the order given. */
+  const channels = (Object.keys(providers) as Channel[]).filter((channel) => providers[channel] !== undefined);
+
   /** The locales a configured channel's provider reports, read on each call so they stay current. */
   const localesOf = (channel: Channel): readonly string[] => providers[channel]?.locales() ?? [];
 
@@ -104,9 +107,7 @@ export function createNotificationPreview(options: NotificationPreviewOptions): 
   return {
     catalog: () => {
       const locales: Partial<Record<Channel, readonly string[]>> = {};
-      for (const channel of ['email', 'push'] as const) {
-        if (providers[channel] !== undefined) locales[channel] = [...localesOf(channel)];
-      }
+      for (const channel of channels) locales[channel] = [...localesOf(channel)];
       return {entries: [...options.registry], locales};
     },
 

@@ -1,2 +1,11 @@
-// The Nest module joins this entry in a later change; until then it is the core.
+// The root entry: the core, and the Nest module that serves the page and its routes.
 export * from './core/index.js';
+export {NotificationPreviewModule} from './nest/NotificationPreviewModule.js';
+export type {
+  NotificationPreviewDecorators,
+  NotificationPreviewModuleAsyncOptions,
+  NotificationPreviewModuleOptions,
+  NotificationPreviewSettings,
+  NotificationPreviewStrings,
+} from './nest/options.js';
+export type {FailureStringsInput} from './pageSettings.js';

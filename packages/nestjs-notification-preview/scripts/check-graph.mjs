@@ -1,8 +1,8 @@
 // Walks dist/ from each entry along relative imports and checks every bare import it reaches.
 // The build marks every bare specifier external, so what this sees is exactly what a
 // consumer's bundler will be asked to resolve. The core entry runs on a server and must
-// reach no package at all. The root entry gains the Nest peers with the module, and its
-// allowance is added here then.
+// reach no package at all. The root entry adds the Nest module, so it may reach the peers and
+// Node's own `node:` modules, and nothing else: React is bundled into dist/ui, never imported.
 import {existsSync, readFileSync} from 'node:fs';
 import {dirname, join, resolve} from 'node:path';
 
@@ -49,12 +49,12 @@ function walk(entryFile, allowed) {
 }
 
 const core = walk('core/index.js', () => false);
-const entry = walk('index.js', (name) => name in peerDependencies);
+const entry = walk('index.js', (name) => name.startsWith('node:') || name in peerDependencies);
 
 if (failures.length > 0) {
   console.error(`check-graph: ${failures.length} problem(s)\n  ${failures.join('\n  ')}`);
   process.exit(1);
 }
 console.log(
-  `check-graph: core/index.js reaches ${core} files and no package; index.js reaches ${entry} files and only peers`,
+  `check-graph: core/index.js reaches ${core} files and no package; index.js reaches ${entry} files and only peers and node: modules`,
 );

@@ -1,19 +1,7 @@
+import type {FailureStringsInput, PageConfig, PageTextStrings} from '../pageSettings.js';
 import {DEFAULT_PAGE_STRINGS} from './strings.js';
-import type {FailureStringsInput, PageStringsInput} from './strings.js';
 
-/** What the module writes into the page, in `<script type="application/json" id="np-config">`. */
-export interface PageConfig {
-  /** Where the three routes live, such as `/notification-preview/api`. */
-  readonly apiBase: string;
-  /** The app's name, on the brand, the inbox header and the phone. */
-  readonly appName: string;
-  /** The badge beside the title, such as `DEV`; `null` for none. */
-  readonly environment: string | null;
-  /** Merged over the English defaults. Only plain strings arrive this way: JSON holds no function. */
-  readonly strings: PageStringsInput;
-  /** The prefix for what the page keeps in this browser: the theme and the recent targets. */
-  readonly storageKey: string;
-}
+export type {PageConfig} from '../pageSettings.js';
 
 const CONFIG_ID = 'np-config';
 
@@ -34,7 +22,7 @@ function failureOf(raw: unknown): FailureStringsInput {
 }
 
 /** The words the page knows as plain strings; an unknown key, a non-string or a function entry is dropped. */
-function stringsOf(raw: unknown): PageStringsInput {
+function stringsOf(raw: unknown): PageTextStrings {
   if (!isRecord(raw)) throw malformed();
   const kept: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(raw)) {
@@ -46,7 +34,7 @@ function stringsOf(raw: unknown): PageStringsInput {
     )
       kept[key] = value;
   }
-  return kept as PageStringsInput;
+  return kept as PageTextStrings;
 }
 
 /** The settings the module wrote into `doc`. Throws when the block is missing or not the settings. */
