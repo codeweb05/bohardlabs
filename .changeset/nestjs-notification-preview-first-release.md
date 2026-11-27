@@ -1,0 +1,5 @@
+---
+'@vt-labs/nestjs-notification-preview': minor
+---
+
+First release, and the new name of `@vt-labs/notification-preview`: a NestJS module, `NotificationPreviewModule.forRoot` and `forRootAsync`, that serves a page at a path you choose where your team previews every email and push notification as its recipient sees it, edits the values it is built from, and sends a test to themselves. Your app supplies a registry of notifications and a render and send for each channel, with the locales it supports. Test mode lets a reviewer tick notifications off and flags one whose render changed. `decorators` puts your own guards and rate limits on the routes, `enabled: false` registers nothing for production, and `strings` replaces any of the page's words. React is bundled into the prebuilt page, so your API installs none. The framework-neutral core stays available at `@vt-labs/nestjs-notification-preview/core`; the old package's React exports (`./react`, `./style.css`, `createFetchClient`) are gone, as the page now ships ready to serve.
