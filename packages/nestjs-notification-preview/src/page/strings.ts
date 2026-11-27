@@ -141,7 +141,7 @@ export const DEFAULT_PAGE_STRINGS: PageStrings = {
     403: 'This account may not use the notification preview.',
     404: 'The notification preview is not available here.',
     422: 'A value was refused.',
-    429: 'Too many requests. Wait a moment and try again.',
+    429: 'Too many requests.',
     500: 'The server failed. Try again.',
     502: 'The server could not be reached.',
     503: 'The server is unavailable. Try again shortly.',
