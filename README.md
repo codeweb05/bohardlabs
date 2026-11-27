@@ -12,12 +12,12 @@ pnpm validate    # lint + typecheck + test + build
 
 ## Packages
 
-| Package                         | What it is                                                                               | Status                        |
-| ------------------------------- | ---------------------------------------------------------------------------------------- | ----------------------------- |
-| `packages/datatable`            | Server-driven React data table (TanStack Table + MUI)                                    | 0.1.0 on npm, 1.0.0 versioned |
-| `packages/form`                 | MUI fields for TanStack Form, with pickers, phone and maps entries                       | 0.1.0 on npm, 0.1.1 versioned |
-| `packages/image-editor`         | MUI dialog that crops, rotates and adjusts an image into an upload-ready `File`          | 0.1.0 on npm, 0.1.1 versioned |
-| `packages/notification-preview` | A registry-backed page that renders and test-sends an app's email and push notifications | 0.1.0 versioned               |
+| Package                                | What it is                                                                                         | Status                                                         |
+| -------------------------------------- | -------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| `packages/datatable`                   | Server-driven React data table (TanStack Table + MUI)                                              | 0.1.0 on npm, 1.0.0 versioned                                  |
+| `packages/form`                        | MUI fields for TanStack Form, with pickers, phone and maps entries                                 | 0.1.0 on npm, 0.1.1 versioned                                  |
+| `packages/image-editor`                | MUI dialog that crops, rotates and adjusts an image into an upload-ready `File`                    | 0.1.0 on npm, 0.1.1 versioned                                  |
+| `packages/nestjs-notification-preview` | A NestJS module that serves a preview and test-send page for an app's email and push notifications | 0.1.0 versioned (published as `@vt-labs/notification-preview`) |
 
 Packages are scoped `@vt-labs/*`. See the [roadmap](docs/roadmap.md#1-publishing).
 

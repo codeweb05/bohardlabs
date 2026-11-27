@@ -553,7 +553,7 @@ importers:
         specifier: 'catalog:'
         version: 5.1.2(@types/node@26.6.10)(@vitest/browser-playwright@5.1.2)(@vitest/coverage-v8@5.1.2)(@vitest/ui@5.1.2)(jsdom@31.0.1)(vite@8.3.8(@types/node@26.6.10)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
 
-  packages/notification-preview:
+  packages/nestjs-notification-preview:
     devDependencies:
       '@arethetypeswrong/cli':
         specifier: ^0.18.5

@@ -1,0 +1,8 @@
+[
+  {
+    "name": "core",
+    "path": "dist/core/index.js",
+    "import": "{ createNotificationPreview }",
+    "limit": "1.5 kB"
+  }
+]

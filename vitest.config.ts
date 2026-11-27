@@ -106,10 +106,10 @@ export default defineConfig({
         'packages/datatable/src/**': {lines: 100, functions: 100, branches: 100, statements: 100},
         'packages/image-editor/src/**': {lines: 100, functions: 100, branches: 100, statements: 100},
         'packages/form/src/**': {lines: 100, functions: 100, branches: 100, statements: 100},
-        // notification-preview starts below 100: its page's branches (clipboard, theme and
+        // nestjs-notification-preview starts below 100: its page's branches (clipboard, theme and
         // send failure paths) are not all reached yet. Raise it to 100, with reasoned
         // `v8 ignore` comments, as those tests land.
-        'packages/notification-preview/src/**': {lines: 90, functions: 85, branches: 80, statements: 90},
+        'packages/nestjs-notification-preview/src/**': {lines: 90, functions: 85, branches: 80, statements: 90},
       },
     },
   },

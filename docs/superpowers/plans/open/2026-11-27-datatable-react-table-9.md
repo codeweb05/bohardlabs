@@ -113,7 +113,7 @@ record them as a decision file in Task 7.
 ## What stays on v8
 
 Nothing. `@vt-labs/datatable` is the only package that imports `@tanstack/react-table`
-(`form` uses `@tanstack/react-form`; `image-editor`, `notification-preview` and the planned
+(`form` uses `@tanstack/react-form`; `image-editor`, `nestjs-notification-preview` and the planned
 packages do not import it). `apps/storybook/package.json:28` uses `catalog:` and moves with the
 catalog. No second catalog entry or override is needed.
 
