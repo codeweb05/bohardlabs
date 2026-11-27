@@ -31,7 +31,7 @@ body,
   --np-accent-soft: light-dark(#eceffc, #1d2347);
   --np-accent-text: light-dark(#3446a6, #b4c3f5);
   --np-bad: light-dark(#b42318, #f97066);
-  --np-good: light-dark(#1a7f4b, #5fd39a);
+  --np-good: light-dark(#187a46, #5fd39a);
   --np-good-bg: light-dark(#e3f4ea, #12301f);
   --np-warn-bg: light-dark(#fff4db, #3a2e10);
   --np-warn-text: light-dark(#7a4f00, #f5c84c);
@@ -1098,6 +1098,7 @@ body,
   font-variant-numeric: tabular-nums;
 }
 .np-bar {
+  display: flex;
   height: 6px;
   border-radius: 3px;
   background: var(--np-surface);
@@ -1106,7 +1107,23 @@ body,
 .np-bar i {
   display: block;
   height: 100%;
+}
+.np-bar-good {
   background: var(--np-good);
+}
+.np-bar-warn {
+  background: var(--np-warn-text);
+}
+.np-testing {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 14px;
+}
+.np-testing .np-progress {
+  margin: 0;
+}
+.np-testing .np-seg {
+  justify-self: start;
 }
 .np-state {
   position: relative;

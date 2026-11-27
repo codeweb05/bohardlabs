@@ -118,17 +118,16 @@ describe('test mode', () => {
     render(<NotificationPreviewPage appName="Acme" client={fakeClient()} storageKey={KEY} />);
     await open(user);
     await user.click(await screen.findByRole('checkbox', {name: 'Mark as tested'}));
-    const progress = screen.getByRole('group', {name: 'Test progress'});
 
-    await user.click(within(progress).getByRole('radio', {name: 'To test'}));
+    await user.click(screen.getByRole('radio', {name: 'To test'}));
     expect(screen.queryByRole('button', {name: /Welcome/u})).not.toBeInTheDocument();
     expect(screen.getByRole('button', {name: /Invoice due/u})).toBeInTheDocument();
 
-    await user.click(within(progress).getByRole('radio', {name: 'Tested'}));
+    await user.click(screen.getByRole('radio', {name: 'Tested'}));
     expect(screen.getByRole('button', {name: /Welcome/u})).toBeInTheDocument();
     expect(screen.queryByRole('button', {name: /Invoice due/u})).not.toBeInTheDocument();
 
-    await user.click(within(progress).getByRole('radio', {name: 'All'}));
+    await user.click(screen.getByRole('radio', {name: 'All'}));
     expect(screen.getByRole('button', {name: /Invoice due/u})).toBeInTheDocument();
   });
 

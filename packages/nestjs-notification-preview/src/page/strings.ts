@@ -135,6 +135,12 @@ export interface PageStrings {
   readonly tested: string;
   /** Tested notifications over all of them, as "3 / 39". */
   readonly testedOf: (tested: number, total: number) => string;
+  /** How many tested notifications changed since the tick, and how many were never tested. */
+  readonly testedSummary: (changed: number, untested: number) => string;
+  readonly filterLegend: string;
+  readonly filterAll: string;
+  readonly filterTodo: string;
+  readonly filterTested: string;
   readonly markTested: string;
   readonly stateTested: string;
   readonly stateRetest: string;
@@ -264,6 +270,11 @@ export const DEFAULT_PAGE_STRINGS: PageStrings = {
   testProgress: 'Test progress',
   tested: 'Tested',
   testedOf: (tested, total) => `${String(tested)} / ${String(total)}`,
+  testedSummary: (changed, untested) => `${String(changed)} changed · ${String(untested)} not tested`,
+  filterLegend: 'Show',
+  filterAll: 'All',
+  filterTodo: 'To test',
+  filterTested: 'Tested',
   markTested: 'Mark as tested',
   stateTested: 'Tested',
   stateRetest: 'Changed since tested',

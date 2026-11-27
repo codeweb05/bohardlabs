@@ -71,3 +71,30 @@ export function createTestedStore(storage: Storage | null, key: string): TestedS
     },
   };
 }
+
+/** The list's filter in test mode: everything, what is left to test (never tested or changed), or what is tested. */
+export type TestFilter = 'all' | 'todo' | 'tested';
+
+export function shows(filter: TestFilter, state: TestState): boolean {
+  if (filter === 'all') return true;
+  return filter === 'tested' ? state === 'tested' : state !== 'tested';
+}
+
+/** Whether the flag stored under `key` is on; off when nothing is stored or storage is missing or throws. */
+export function readFlag(storage: Storage | null, key: string): boolean {
+  try {
+    return storage?.getItem(key) === '1';
+  } catch {
+    return false;
+  }
+}
+
+/** Stores the flag under `key`; off removes it. A storage that throws leaves it for this visit only. */
+export function writeFlag(storage: Storage | null, key: string, on: boolean): void {
+  try {
+    if (on) storage?.setItem(key, '1');
+    else storage?.removeItem(key);
+  } catch {
+    // Kept for this visit only.
+  }
+}

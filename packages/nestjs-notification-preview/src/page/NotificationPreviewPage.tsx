@@ -1,4 +1,4 @@
-import {useRef, useState} from 'react';
+import {useMemo, useRef, useState} from 'react';
 import type {ReactNode} from 'react';
 
 import type {Catalog} from '../core/types.js';
@@ -11,6 +11,9 @@ import {Inspector} from './Inspector.js';
 import {PhoneFrame} from './PhoneFrame.js';
 import {mergeStrings, StringsContext, useStrings} from './strings.js';
 import type {PageStringsInput} from './strings.js';
+import {renderHash} from './testing/renderHash.js';
+import {shows} from './testing/testedStore.js';
+import type {TestFilter} from './testing/testedStore.js';
 import {useTesting} from './testing/useTesting.js';
 import {RetestNotice} from './testing/views/RetestNotice.js';
 import {TestModeSwitch} from './testing/views/TestModeSwitch.js';
@@ -68,6 +71,7 @@ export function NotificationPreviewPage({
               client={client}
               catalog={catalog.catalog}
               testedKey={`${storageKey}:tested`}
+              modeKey={`${storageKey}:testMode`}
               environment={environmentName}
               targetsKey={
                 environmentName === undefined ? `${storageKey}.targets` : `${storageKey}.targets.${environmentName}`
@@ -104,6 +108,7 @@ function Workspace({
   catalog,
   environment,
   testedKey,
+  modeKey,
   targetsKey,
   theme,
   onTheme,
@@ -112,6 +117,7 @@ function Workspace({
   catalog: Catalog;
   environment: string | undefined;
   testedKey: string;
+  modeKey: string;
   targetsKey: string;
   theme: ThemeChoice;
   onTheme: (theme: ThemeChoice) => void;
@@ -121,7 +127,8 @@ function Workspace({
   const sender = useSend(client);
   const searchRef = useRef<HTMLInputElement>(null);
   const [view, setView] = useState<CanvasView>(FIRST_VIEW);
-  const testing = useTesting(testedKey, preview.locale);
+  const testing = useTesting(testedKey, modeKey, preview.locale);
+  const [filter, setFilter] = useState<TestFilter>('all');
   const {entry, render} = preview;
   // A render for another notification is never drawn under this one's name.
   const rendered = entry !== undefined && render.request?.id === entry.id ? render.rendered : undefined;
@@ -129,7 +136,11 @@ function Workspace({
   if (rendered?.channel === 'email') drawn = <EmailCanvas email={rendered} width={view.width} part={view.part} />;
   if (rendered?.channel === 'push')
     drawn = <PhoneFrame device={view.device} surface={view.surface} title={rendered.title} body={rendered.body} />;
-  const state = entry === undefined ? 'untested' : testing.stateOf(entry, rendered);
+  // A tick is for the render of this notification in this language. Right after a language
+  // switch, `rendered` is still the last language's, so it is no hash to judge or tick by.
+  const current = rendered !== undefined && render.request?.locale === preview.locale ? rendered : undefined;
+  const hash = useMemo(() => (current === undefined ? null : renderHash(current)), [current]);
+  const state = entry === undefined ? 'untested' : testing.stateOf(entry, hash);
   const step = (by: 1 | -1): void => {
     sender.clear();
     preview.step(by);
@@ -163,12 +174,19 @@ function Workspace({
           entries={preview.entries}
           selectedId={entry?.id}
           searchRef={searchRef}
-          top={testing.on ? <TestProgress {...testing.count(preview.entries, entry, rendered)} /> : undefined}
-          stateOf={
-            testing.on
-              ? (candidate) => testing.stateOf(candidate, candidate.id === entry?.id ? rendered : undefined)
-              : undefined
+          top={
+            testing.on ? (
+              <TestProgress
+                counts={testing.count(preview.entries, entry?.id, hash)}
+                filter={filter}
+                onFilter={setFilter}
+              />
+            ) : undefined
           }
+          stateOf={
+            testing.on ? (candidate) => testing.stateOf(candidate, candidate.id === entry?.id ? hash : null) : undefined
+          }
+          keeps={(candidate) => shows(filter, candidate)}
           onSelect={(id) => {
             sender.clear();
             preview.select(id);
@@ -186,9 +204,9 @@ function Workspace({
               testing.on && entry !== undefined ? (
                 <TickButton
                   tested={state === 'tested'}
-                  disabled={rendered === undefined}
+                  disabled={hash === null || render.busy}
                   onToggle={() => {
-                    if (rendered !== undefined) testing.toggle(entry, rendered);
+                    if (hash !== null) testing.toggle(entry, hash);
                   }}
                 />
               ) : undefined

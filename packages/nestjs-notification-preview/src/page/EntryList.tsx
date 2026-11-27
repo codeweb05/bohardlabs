@@ -22,6 +22,7 @@ export function EntryList({
   searchRef,
   onSelect,
   stateOf,
+  keeps,
   top,
 }: Readonly<{
   entries: readonly RegistryEntry[];
@@ -29,12 +30,16 @@ export function EntryList({
   searchRef: RefObject<HTMLInputElement | null>;
   onSelect: (id: string) => void;
   stateOf?: (entry: RegistryEntry) => TestState;
+  /** With test mode's filter: whether an item stays in the list. */
+  keeps?: (state: TestState) => boolean;
   top?: ReactNode;
 }>) {
   const strings = useStrings();
   const searchId = useId();
   const [query, setQuery] = useState('');
-  const shown = entries.filter((entry) => matches(entry, query));
+  const shown = entries.filter(
+    (entry) => matches(entry, query) && (stateOf === undefined || keeps === undefined || keeps(stateOf(entry))),
+  );
   const groups: readonly {readonly channel: Channel; readonly title: string}[] = [
     {channel: 'email', title: strings.channelEmail},
     {channel: 'push', title: strings.channelPush},
@@ -70,7 +75,14 @@ export function EntryList({
           <section key={channel} className="np-group" aria-label={title}>
             <h2 className="np-group-title">
               {title}
-              <span className="np-count">{inGroup.length}</span>
+              <span className="np-count">
+                {stateOf === undefined
+                  ? inGroup.length
+                  : strings.testedOf(
+                      entries.filter((entry) => entry.channel === channel && stateOf(entry) === 'tested').length,
+                      entries.filter((entry) => entry.channel === channel).length,
+                    )}
+              </span>
             </h2>
             <ul className="np-items">
               {inGroup.map((entry) => (
