@@ -453,6 +453,7 @@ describe('NotificationPreviewModule content type', () => {
       NotificationPreviewModule.forRoot({
         ...OPTIONS,
         providers: {email: {...email, render: renders, send: sends}, push},
+        decorators: {all: [Public()]},
       }),
     );
   });
