@@ -442,3 +442,78 @@ describe('NotificationPreviewModule path', () => {
     expect(() => NotificationPreviewModule.forRoot({...OPTIONS, path})).not.toThrow();
   });
 });
+
+describe('NotificationPreviewModule content type', () => {
+  // Spies over the providers, to show a refused body never reaches one.
+  const renders = vi.fn(email.render);
+  const sends = vi.fn(email.send);
+  let app: INestApplication;
+  beforeAll(async () => {
+    app = await boot(
+      NotificationPreviewModule.forRoot({
+        ...OPTIONS,
+        providers: {email: {...email, render: renders, send: sends}, push},
+      }),
+    );
+  });
+  afterAll(async () => {
+    await app.close();
+  });
+  beforeEach(() => {
+    renders.mockClear();
+    sends.mockClear();
+  });
+
+  it.each(['render', 'send'])('answers 415 to a form-encoded %s, which another site can post', async (route) => {
+    const response = await request(app.getHttpServer())
+      .post(`${PATH}/api/${route}`)
+      .type('form')
+      .send('id=welcome&locale=en&target=ada%40example.com&values[firstName]=Ada')
+      .expect(415);
+    expect(response.body).toEqual({message: 'The request body must be application/json.'});
+    expect(renders).not.toHaveBeenCalled();
+    expect(sends).not.toHaveBeenCalled();
+  });
+
+  it.each(['render', 'send'])('answers 415 to a text/plain %s', async (route) => {
+    const response = await request(app.getHttpServer())
+      .post(`${PATH}/api/${route}`)
+      .set('Content-Type', 'text/plain')
+      .send(JSON.stringify({id: 'welcome', locale: 'en', values: {}, target: 'ada@example.com'}))
+      .expect(415);
+    expect(response.body).toEqual({message: 'The request body must be application/json.'});
+    expect(renders).not.toHaveBeenCalled();
+    expect(sends).not.toHaveBeenCalled();
+  });
+
+  it('takes JSON with a charset, reading the media type alone', async () => {
+    await request(app.getHttpServer())
+      .post(`${PATH}/api/render`)
+      .set('Content-Type', 'Application/JSON; charset=utf-8')
+      .send(JSON.stringify({id: 'welcome', locale: 'en', values: {firstName: 'Ada'}}))
+      .expect(200);
+    expect(renders).toHaveBeenCalledOnce();
+  });
+});
+
+describe('NotificationPreviewModule under a global prefix', () => {
+  it("serves the page and its API unprefixed with the README's exclusion", async () => {
+    const moduleRef = await Test.createTestingModule({imports: [NotificationPreviewModule.forRoot(OPTIONS)]}).compile();
+    const app = moduleRef.createNestApplication({logger: false});
+    // Exactly the entries the README gives.
+    app.setGlobalPrefix('v1', {exclude: ['notification-preview', 'notification-preview/{*path}']});
+    await app.init();
+    try {
+      const server = app.getHttpServer();
+      const page = await request(server).get(PATH);
+      const catalog = await request(server).get(`${PATH}/api/catalog`);
+      const render = await request(server)
+        .post(`${PATH}/api/render`)
+        .send({id: 'welcome', locale: 'en', values: {firstName: 'Ada'}});
+      expect([page.status, catalog.status, render.status]).toEqual([200, 200, 200]);
+      expect(page.text).toContain(`src="${PATH}/assets/app-test.js"`);
+    } finally {
+      await app.close();
+    }
+  });
+});

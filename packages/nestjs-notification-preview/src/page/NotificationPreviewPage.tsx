@@ -6,6 +6,7 @@ import {AppNameContext} from './appName.js';
 import type {PreviewClient} from './client.js';
 import {EmailCanvas} from './EmailCanvas.js';
 import {EntryList} from './EntryList.js';
+import {catalogFailureOf} from './failures.js';
 import {Header} from './Header.js';
 import {Inspector} from './Inspector.js';
 import {PhoneFrame} from './PhoneFrame.js';
@@ -92,7 +93,7 @@ export function NotificationPreviewPage({
                 className={catalog.state === 'failed' ? 'np-status np-status-error np-loading' : 'np-status np-loading'}
                 role="status"
               >
-                {catalog.state === 'failed' ? merged.catalogFailed : merged.loading}
+                {catalog.state === 'failed' ? catalogFailureOf(catalog.error, merged) : merged.loading}
               </p>
             </>
           )}
@@ -126,7 +127,7 @@ function Workspace({
   const sender = useSend(client);
   const searchRef = useRef<HTMLInputElement>(null);
   const [view, setView] = useState<CanvasView>(FIRST_VIEW);
-  const testing = useTesting(testedKey, modeKey, preview.locale, catalog.fingerprints);
+  const testing = useTesting(testedKey, modeKey, preview.locale, catalog);
   const [filter, setFilter] = useState<TestFilter>('all');
   const {entry, render} = preview;
   // A render for another notification is never drawn under this one's name.

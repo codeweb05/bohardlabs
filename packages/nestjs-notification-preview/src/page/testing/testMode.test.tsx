@@ -214,4 +214,26 @@ describe('test mode', () => {
       expect(screen.getByRole('checkbox', {name: 'Mark as tested'})).toBeDisabled();
     });
   });
+
+  it("judges each entry in its own channel's locale, so a Spanish email leaves an English-only push tested", async () => {
+    const user = userEvent.setup();
+    const client = fakeClient({locales: {email: ['en', 'es'], push: ['en']}});
+    render(<NotificationPreviewPage appName="Acme" client={client} storageKey={KEY} />);
+    await open(user);
+    await user.click(screen.getByRole('button', {name: /Task reminder/u}));
+    await waitFor(() => {
+      expect(screen.getByRole('checkbox', {name: 'Mark as tested'})).toBeEnabled();
+    });
+    await user.click(screen.getByRole('checkbox', {name: 'Mark as tested'}));
+    expect(screen.getByRole('checkbox', {name: 'Tested'})).toBeChecked();
+
+    await user.click(screen.getByRole('button', {name: /Welcome/u}));
+    await screen.findByTitle('Rendered email');
+    await user.selectOptions(screen.getByLabelText('Language'), 'es');
+    await waitFor(() => {
+      expect(client.renders.at(-1)).toMatchObject({id: 'welcome', locale: 'es'});
+    });
+    expect(screen.getByRole('button', {name: /Task reminder/u})).toHaveTextContent('Tested');
+    expect(within(screen.getByRole('group', {name: 'Test progress'})).getByText('1 / 4')).toBeInTheDocument();
+  });
 });

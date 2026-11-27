@@ -20,7 +20,22 @@ const NO_REQUEST: SendRequest = {id: '', locale: '', values: {}, target: ''};
  */
 interface PreviewRequest {
   readonly body?: SendRequest | null;
+  readonly headers: Readonly<Record<string, string | readonly string[] | undefined>>;
 }
+
+/**
+ * Whether the request says its body is JSON, by media type alone (`; charset=utf-8` and other
+ * parameters are ignored). A form or `text/plain` post is what another site can make a browser
+ * send without asking first, with the reviewer's cookies or Basic credentials attached; JSON
+ * from another origin needs a CORS preflight, which the app never grants it.
+ */
+function isJson(request: PreviewRequest): boolean {
+  const header = request.headers['content-type'];
+  if (typeof header !== 'string') return false;
+  return header.split(';', 1)[0]?.trim().toLowerCase() === 'application/json';
+}
+
+const NOT_JSON = {message: 'The request body must be application/json.'};
 
 function writeJson(response: ServerResponse, status: number, body: unknown): void {
   response.statusCode = status;
@@ -30,7 +45,7 @@ function writeJson(response: ServerResponse, status: number, body: unknown): voi
 
 /**
  * Answers `run`'s result, or the package's refusal for an unregistered id (404) or a refused value
- * (422). Anything else is rethrown, so the app's exception filters handle it as any other error.
+ * (422). `render` and `send` answer 415 first when the body is not JSON. Anything else is rethrown, so the app's exception filters handle it as any other error.
  */
 async function answer(response: ServerResponse, run: () => unknown): Promise<void> {
   try {
@@ -65,12 +80,20 @@ export function createPreviewController(path: string, decorators: NotificationPr
       return answer(response, () => this.#preview.catalog());
     }
 
-    render(request: PreviewRequest, response: ServerResponse): Promise<void> {
-      return answer(response, () => this.#preview.render(request.body ?? NO_REQUEST));
+    async render(request: PreviewRequest, response: ServerResponse): Promise<void> {
+      if (!isJson(request)) {
+        writeJson(response, 415, NOT_JSON);
+        return;
+      }
+      await answer(response, () => this.#preview.render(request.body ?? NO_REQUEST));
     }
 
-    send(request: PreviewRequest, response: ServerResponse): Promise<void> {
-      return answer(response, () => this.#preview.send(request.body ?? NO_REQUEST));
+    async send(request: PreviewRequest, response: ServerResponse): Promise<void> {
+      if (!isJson(request)) {
+        writeJson(response, 415, NOT_JSON);
+        return;
+      }
+      await answer(response, () => this.#preview.send(request.body ?? NO_REQUEST));
     }
   }
 

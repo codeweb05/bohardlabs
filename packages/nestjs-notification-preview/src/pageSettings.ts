@@ -42,6 +42,7 @@ export interface PageStrings {
   readonly channelPush: string;
   readonly noMatch: string;
   readonly empty: string;
+  /** The list did not load and no answer said why, as when the response was not JSON. */
   readonly catalogFailed: string;
   readonly loading: string;
 
@@ -79,7 +80,15 @@ export interface PageStrings {
   readonly lockDateShort: string;
   readonly warnings: string;
   readonly renderRefused: string;
-  /** A render failed for a reason other than a refused value; `status` when the server answered. */
+  /**
+   * The server refused the page's language, which happens only when a channel's `locales()`
+   * changed after the page loaded; `message` is the server's reason.
+   */
+  readonly localeRefused: (message: string) => string;
+  /**
+   * A render failed and no answer said why, as when the response was not JSON. A refusal from the
+   * server shows its own `message`, or the `failure` sentence for its status, instead.
+   */
   readonly renderFailed: (status: number | undefined) => string;
 
   readonly inspector: string;
@@ -127,8 +136,10 @@ export interface PageStrings {
   readonly sentEmail: (target: string) => string;
   readonly sentPush: (result: SentPush) => string;
   readonly sendRefused: (message: string) => string;
+  /** As `renderFailed`, for a send. */
   readonly sendFailed: (status: number | undefined) => string;
-  readonly tooManySends: (retryAfterSeconds: number | undefined) => string;
+  /** Added after a 429's message when its `Retry-After` gave a number of seconds. */
+  readonly retryAfter: (seconds: number) => string;
 
   /** The header's switch for test mode, where a reviewer ticks each notification as tested. */
   readonly testMode: string;

@@ -37,7 +37,9 @@ describe('the page strings', () => {
     expect(S.sendRefused('Required.')).toBe('Not sent: Required.');
     expect(S.sendFailed(undefined)).toBe('The test send failed.');
     expect(S.sendFailed(502)).toBe('The test send failed with 502.');
-    expect(S.tooManySends(undefined)).toBe('Too many test sends. Try again shortly.');
-    expect(S.tooManySends(30)).toBe('Too many test sends. Try again in 30 s.');
+    expect(S.retryAfter(30)).toBe('Try again in 30 s.');
+    expect(S.localeRefused('Not a language this notification renders in.')).toBe(
+      'Not rendered: Not a language this notification renders in. Reload the page for the current languages.',
+    );
   });
 });

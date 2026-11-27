@@ -61,6 +61,7 @@ export const DEFAULT_PAGE_STRINGS: PageStrings = {
   lockDateShort: 'Wed, Jan 15',
   warnings: 'Warnings',
   renderRefused: 'Not rendered: a value was refused. The preview keeps the last render.',
+  localeRefused: (message) => `Not rendered: ${message} Reload the page for the current languages.`,
   renderFailed: (status) =>
     status === undefined ? 'The preview failed.' : `The preview failed with ${String(status)}.`,
 
@@ -114,10 +115,7 @@ export const DEFAULT_PAGE_STRINGS: PageStrings = {
   sendRefused: (message) => `Not sent: ${message}`,
   sendFailed: (status) =>
     status === undefined ? 'The test send failed.' : `The test send failed with ${String(status)}.`,
-  tooManySends: (retryAfterSeconds) =>
-    retryAfterSeconds === undefined
-      ? 'Too many test sends. Try again shortly.'
-      : `Too many test sends. Try again in ${String(retryAfterSeconds)} s.`,
+  retryAfter: (seconds) => `Try again in ${String(seconds)} s.`,
 
   testMode: 'Test mode',
   testProgress: 'Test progress',

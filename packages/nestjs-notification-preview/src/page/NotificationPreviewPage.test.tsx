@@ -4,8 +4,11 @@ import {describe, expect, it, vi} from 'vitest';
 
 import type {SendResponse} from '../core/types.js';
 import {fakeClient} from '../test/fakeClient.js';
+import {createPageClient} from './client.js';
 import type {PreviewClient} from './client.js';
 import {NotificationPreviewPage} from './NotificationPreviewPage.js';
+import {mergeStrings} from './strings.js';
+import type {PageStringsInput} from './strings.js';
 
 const frame = (): HTMLIFrameElement => screen.getByTitle<HTMLIFrameElement>('Rendered email');
 
@@ -31,9 +34,9 @@ describe('NotificationPreviewPage', () => {
     });
   });
 
-  it('says when the list did not load', async () => {
+  it("says the server's message when the list did not load", async () => {
     render(<NotificationPreviewPage appName="Acme" client={fakeClient({failCatalog: true})} />);
-    expect(await screen.findByText('The notification list did not load.')).toBeInTheDocument();
+    expect(await screen.findByText('Down.')).toBeInTheDocument();
   });
 
   it('re-renders a moment after an edit, and shows a refusal under its field', async () => {
@@ -164,7 +167,7 @@ describe('NotificationPreviewPage', () => {
     await user.clear(screen.getByLabelText('To'));
     await user.type(screen.getByLabelText('To'), 'busy@example.com');
     await user.click(screen.getByRole('button', {name: 'Send test email'}));
-    expect(await screen.findByText('Too many test sends. Try again in 30 s.')).toBeInTheDocument();
+    expect(await screen.findByText('Slow down. Try again in 30 s.')).toBeInTheDocument();
     await user.click(screen.getByRole('button', {name: 'me@example.com'}));
     expect(screen.getByLabelText('To')).toHaveValue('me@example.com');
   });
@@ -307,5 +310,76 @@ describe('NotificationPreviewPage', () => {
     expect(stage).toHaveAttribute('tabindex', '0');
     stage.focus();
     expect(stage).toHaveFocus();
+  });
+});
+
+describe('NotificationPreviewPage refusals', () => {
+  // As a consumer's guard answers: a status with no body the page can read, or the guard's own message.
+  const STRINGS: PageStringsInput = {
+    failure: {401: 'Sign in at /admin first.', 403: 'Ask an admin for preview access.'},
+  };
+  const failure = mergeStrings(STRINGS).failure;
+  const answering =
+    (status: number, body = '', headers: Record<string, string> = {}): typeof fetch =>
+    async () =>
+      new Response(body, {status, headers});
+
+  it("shows the status's failure sentence when the catalog is refused with 401", async () => {
+    const client = createPageClient('/p', answering(401), failure);
+    render(<NotificationPreviewPage appName="Acme" client={client} strings={STRINGS} />);
+    expect(await screen.findByText('Sign in at /admin first.')).toBeInTheDocument();
+  });
+
+  it("shows a guard's own message and the wait when the catalog is refused with 429", async () => {
+    const body = JSON.stringify({message: 'Too many requests.'});
+    const client = createPageClient('/p', answering(429, body, {'Retry-After': '120'}), failure);
+    render(<NotificationPreviewPage appName="Acme" client={client} strings={STRINGS} />);
+    expect(await screen.findByText('Too many requests. Try again in 120 s.')).toBeInTheDocument();
+  });
+
+  it("shows the status's failure sentence when a render is refused with 401", async () => {
+    const client: PreviewClient = {
+      ...fakeClient(),
+      render: createPageClient('/p', answering(401), failure).render,
+    };
+    render(<NotificationPreviewPage appName="Acme" client={client} strings={STRINGS} />);
+    expect(await screen.findByText('Sign in at /admin first.')).toBeInTheDocument();
+  });
+
+  it('shows a custom failure sentence when a send is refused with 403', async () => {
+    const user = userEvent.setup();
+    const client: PreviewClient = {
+      ...fakeClient(),
+      send: createPageClient('/p', answering(403), failure).send,
+    };
+    render(<NotificationPreviewPage appName="Acme" client={client} strings={STRINGS} />);
+    await screen.findByTitle('Rendered email');
+    await user.click(screen.getByRole('tab', {name: 'Send test'}));
+    await user.type(screen.getByLabelText('To'), 'me@example.com');
+    await user.click(screen.getByRole('button', {name: 'Send test email'}));
+    expect(await screen.findByText('Ask an admin for preview access.')).toBeInTheDocument();
+  });
+
+  it('names a refused language in the status line', async () => {
+    const client: PreviewClient = {
+      ...fakeClient(),
+      render: createPageClient(
+        '/p',
+        answering(
+          422,
+          JSON.stringify({
+            message: 'A value was refused.',
+            fieldErrors: {locale: 'Not a language this notification renders in.'},
+          }),
+        ),
+        failure,
+      ).render,
+    };
+    render(<NotificationPreviewPage appName="Acme" client={client} />);
+    expect(
+      await screen.findByText(
+        'Not rendered: Not a language this notification renders in. Reload the page for the current languages.',
+      ),
+    ).toBeInTheDocument();
   });
 });
