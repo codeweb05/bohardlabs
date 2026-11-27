@@ -10,18 +10,19 @@ ask. The day one is answered, it leaves that file and becomes the next numbered 
 
 ## Log
 
-| #    | Decision                                                                                     | Status      | Date       |
-| ---- | -------------------------------------------------------------------------------------------- | ----------- | ---------- |
-| 0001 | [npm scope is `@vt-labs/*`](0001-npm-scope.md)                                               | decided     | 2026-08-28 |
-| 0002 | [Packages ship ESM only](0002-esm-only.md)                                                   | provisional | 2026-08-28 |
-| 0003 | [The React Compiler runs here, not in the consumer](0003-react-compiler.md)                  | decided     | 2026-08-28 |
-| 0004 | [`noUncheckedIndexedAccess` goes on, in its own change](0004-no-unchecked-indexed-access.md) | decided     | 2026-08-28 |
-| 0005 | [The DataTable feature backlog lives in this repo](0005-datatable-roadmap-location.md)       | decided     | 2026-08-28 |
-| 0006 | [MUI: pinned to the app first, then upgraded](0006-mui-version.md)                           | decided     | 2026-08-28 |
-| 0007 | [Packages are MIT licensed](0007-mit-license.md)                                             | decided     | 2026-09-28 |
-| 0008 | [The packages are for new projects, not the skipwash apps](0008-target-consumers.md)         | decided     | 2026-09-29 |
-| 0009 | [An optional heavy peer gets its own subpath entry](0009-optional-peers-get-a-subpath.md)    | decided     | 2026-09-29 |
-| 0010 | [A new `DataTableLabels` key is a minor](0010-new-label-key-is-a-minor.md)                   | decided     | 2026-11-27 |
+| #    | Decision                                                                                                                          | Status      | Date       |
+| ---- | --------------------------------------------------------------------------------------------------------------------------------- | ----------- | ---------- |
+| 0001 | [npm scope is `@vt-labs/*`](0001-npm-scope.md)                                                                                    | decided     | 2026-08-28 |
+| 0002 | [Packages ship ESM only](0002-esm-only.md)                                                                                        | provisional | 2026-08-28 |
+| 0003 | [The React Compiler runs here, not in the consumer](0003-react-compiler.md)                                                       | decided     | 2026-08-28 |
+| 0004 | [`noUncheckedIndexedAccess` goes on, in its own change](0004-no-unchecked-indexed-access.md)                                      | decided     | 2026-08-28 |
+| 0005 | [The DataTable feature backlog lives in this repo](0005-datatable-roadmap-location.md)                                            | decided     | 2026-08-28 |
+| 0006 | [MUI: pinned to the app first, then upgraded](0006-mui-version.md)                                                                | decided     | 2026-08-28 |
+| 0007 | [Packages are MIT licensed](0007-mit-license.md)                                                                                  | decided     | 2026-09-28 |
+| 0008 | [The packages are for new projects, not the skipwash apps](0008-target-consumers.md)                                              | decided     | 2026-09-29 |
+| 0009 | [An optional heavy peer gets its own subpath entry](0009-optional-peers-get-a-subpath.md)                                         | decided     | 2026-09-29 |
+| 0010 | [A new `DataTableLabels` key is a minor](0010-new-label-key-is-a-minor.md)                                                        | decided     | 2026-11-27 |
+| 0011 | [The notification preview is a Nest module, and its React is bundled](0011-nestjs-notification-preview-name-and-bundled-react.md) | decided     | 2026-11-27 |
 
 **Status** means: `decided` is settled and the reasoning is in the file; `provisional` is
 settled until a named trigger fires, and the file says what the trigger is; `superseded`
