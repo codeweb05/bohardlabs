@@ -1,0 +1,4 @@
+/* A stand-in for the built stylesheet, served by the module tests. */
+body {
+  margin: 0;
+}

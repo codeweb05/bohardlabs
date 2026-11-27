@@ -1,0 +1,2 @@
+// A stand-in for the built page script, served by the module tests.
+export {};

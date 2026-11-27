@@ -5,5 +5,6 @@ import {afterEach, vi} from 'vitest';
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
-  localStorage.clear();
+  // The Nest tests run in node, which has no browser storage.
+  if (typeof localStorage !== 'undefined') localStorage.clear();
 });
