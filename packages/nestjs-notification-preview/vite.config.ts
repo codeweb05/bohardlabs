@@ -8,7 +8,7 @@ export default defineConfig({
     sourcemap: true,
     emptyOutDir: true,
     lib: {
-      entry: {index: 'src/index.ts', core: 'src/core/index.ts'},
+      entry: {index: 'src/index.ts', 'core/index': 'src/core/index.ts'},
       formats: ['es'],
     },
     rolldownOptions: {
