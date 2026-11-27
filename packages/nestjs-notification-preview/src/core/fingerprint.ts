@@ -1,4 +1,4 @@
-import type {RenderResponse} from '../../core/types.js';
+import type {RenderResponse} from './types.js';
 
 /** The JSON of `value` with every object's keys in sorted order, so key order never shows. */
 function canonical(value: unknown): string {
@@ -14,11 +14,12 @@ function canonical(value: unknown): string {
 }
 
 /**
- * A short fingerprint of what the page drew: 32-bit FNV-1a over the render's canonical JSON, as
- * eight hex digits. A tick keeps it, so a render that changes afterwards is told from the one
- * that was tested. The render itself is never stored.
+ * A short fingerprint of a render: 32-bit FNV-1a over its canonical JSON, as eight hex digits.
+ * The catalog carries one per entry and locale, and test mode keeps it with a tick, so a render
+ * that changes afterwards is told from the one that was tested. Plain JS, so the core reaches no
+ * Node module; it tells renders apart and is no security hash.
  */
-export function renderHash(rendered: RenderResponse): string {
+export function fingerprint(rendered: RenderResponse): string {
   let hash = 0x811c9dc5;
   for (const byte of new TextEncoder().encode(canonical(rendered))) {
     hash ^= byte;

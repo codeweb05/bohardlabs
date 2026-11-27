@@ -63,12 +63,18 @@ const email = {
     const w = say(locale);
     if (id === 'order-shipped') {
       const url = values.trackingUrl ?? '';
-      if (url !== '' && !url.startsWith('https://')) throw new InvalidValuesError({trackingUrl: 'Must start with https://.'});
+      if (url !== '' && !url.startsWith('https://'))
+        throw new InvalidValuesError({trackingUrl: 'Must start with https://.'});
       const line = `${w.hi}, order ${values.orderNumber ?? ''} ${w.shipped}. ${url}`;
       return {subject: `Order ${values.orderNumber ?? ''}`, html: page(w.hi, line), text: line};
     }
     const line = `${w.hi}, ${values.tier ?? ''} (${values.seats ?? ''}) ${w.renews}.`;
-    return {subject: 'Renewal', html: page(w.hi, line), text: line, warnings: locale === 'fr' ? ['Subject not translated.'] : []};
+    return {
+      subject: 'Renewal',
+      html: page(w.hi, line),
+      text: line,
+      warnings: locale === 'fr' ? ['Subject not translated.'] : [],
+    };
   },
   send: (_id, _values, _locale, target) => {
     if (!target.endsWith('@example.com')) throw new InvalidValuesError({target: 'Use an @example.com address.'});
@@ -86,7 +92,16 @@ class DemoModule {
   servedAt = path;
 }
 Module({
-  imports: [NotificationPreviewModule.forRoot({path, registry, providers: {email, push}, appName: 'Acme', environment: 'DEV'})],
+  imports: [
+    NotificationPreviewModule.forRoot({
+      path,
+      enabled: true,
+      registry,
+      providers: {email, push},
+      appName: 'Acme',
+      environment: 'DEV',
+    }),
+  ],
 })(DemoModule);
 
 const app = await NestFactory.create(DemoModule, {logger: ['error', 'warn']});

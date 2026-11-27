@@ -1,4 +1,5 @@
 import {InvalidValuesError, UnregisteredNotificationError} from './errors.js';
+import {fingerprint} from './fingerprint.js';
 import type {
   Catalog,
   Channel,
@@ -21,8 +22,11 @@ export interface NotificationPreviewOptions {
 
 /** The three operations a server route hands its request body to. */
 export interface NotificationPreview {
-  /** The registry and each channel's locales, as `GET catalog` answers them. */
-  readonly catalog: () => Catalog;
+  /**
+   * The registry, each channel's locales and each entry's fingerprints, as `GET catalog` answers
+   * them. The fingerprints are rendered on the first call and kept for the life of this preview.
+   */
+  readonly catalog: () => Promise<Catalog>;
   /** Renders a registered notification. Refuses anything else before a provider runs. */
   readonly render: (request: RenderRequest) => Promise<RenderResponse>;
   /** Renders and delivers a registered notification. Refuses anything else before a provider runs. */
@@ -41,7 +45,8 @@ function declaredValues(entry: RegistryEntry, raw: unknown): Values {
   const values: Record<string, string> = {};
   const refused: Record<string, string> = {};
   for (const {name} of entry.variables) {
-    const value = given[name];
+    // Own properties only: a variable named `constructor` is not read off the prototype.
+    const value = Object.hasOwn(given, name) ? given[name] : undefined;
     if (value === undefined) continue;
     if (typeof value === 'string') values[name] = value;
     else refused[name] = 'Must be a string.';
@@ -65,7 +70,7 @@ function providerFor<C extends Channel>(
  *
  * ```ts
  * const preview = createNotificationPreview({registry, providers: {email, push}});
- * preview.catalog();
+ * await preview.catalog();
  * await preview.render({id: 'password-reset', locale: 'en', values: {resetUrl: 'https://…'}});
  * ```
  */
@@ -76,6 +81,9 @@ export function createNotificationPreview(options: NotificationPreviewOptions): 
     if (byId.has(entry.id)) throw new Error(`Notification "${entry.id}" is registered twice.`);
     byId.set(entry.id, entry);
   }
+
+  /** The fallback when a request names no locale and the channel lists none. */
+  const FALLBACK_LOCALE = 'en';
 
   /** The channels the consumer gave a provider for, in the order given. */
   const channels = (Object.keys(providers) as Channel[]).filter((channel) => providers[channel] !== undefined);
@@ -97,40 +105,73 @@ export function createNotificationPreview(options: NotificationPreviewOptions): 
    */
   const localeOf = (entry: RegistryEntry, locale: unknown): string => {
     const offered = localesOf(entry.channel);
-    if (typeof locale !== 'string' || locale === '') return offered[0] ?? 'en';
+    if (typeof locale !== 'string' || locale === '') return offered[0] ?? FALLBACK_LOCALE;
     if (offered.length > 0 && !offered.includes(locale)) {
       throw new InvalidValuesError({locale: 'Not a language this notification renders in.'});
     }
     return locale;
   };
 
+  // Each answer copies only the declared fields, so nothing else a provider returns, and no
+  // `channel` of its own, reaches the page.
+  const rendered = async (entry: RegistryEntry, values: Values, locale: string): Promise<RenderResponse> => {
+    if (entry.channel === 'email') {
+      const email = providerFor(providers.email, entry);
+      const {subject, html, text, warnings} = await email.render(entry.id, values, locale);
+      return {channel: 'email', subject, html, text, warnings: warnings ?? []};
+    }
+    const push = providerFor(providers.push, entry);
+    const {title, body, warnings} = await push.render(entry.id, values, locale);
+    return {channel: 'push', title, body, warnings: warnings ?? []};
+  };
+
+  /** The entry's fingerprint per locale its channel lists; `null` where the render threw. */
+  const fingerprintsOf = async (entry: RegistryEntry): Promise<Record<string, string | null>> => {
+    if (providers[entry.channel] === undefined) return {};
+    const listed = localesOf(entry.channel);
+    const samples = Object.fromEntries(entry.variables.map(({name, sample}) => [name, sample]));
+    const found: [string, string | null][] = [];
+    // One render at a time, so a long registry never floods the consumer's renderer.
+    for (const locale of listed.length === 0 ? [FALLBACK_LOCALE] : listed) {
+      try {
+        found.push([locale, fingerprint(await rendered(entry, samples, locale))]);
+      } catch {
+        // A sample the renderer refuses, or a missing template: no fingerprint, and the catalog still answers.
+        found.push([locale, null]);
+      }
+    }
+    return Object.fromEntries(found);
+  };
+
+  /** Every entry's fingerprints, rendered on the first catalog and kept for the life of this preview. */
+  let fingerprints: Promise<Catalog['fingerprints']> | undefined;
+  const allFingerprints = async (): Promise<Catalog['fingerprints']> => {
+    const found: [string, Record<string, string | null>][] = [];
+    for (const entry of options.registry) found.push([entry.id, await fingerprintsOf(entry)]);
+    // `fromEntries` defines each id as an own property, so an id such as `__proto__` stays an id.
+    return Object.fromEntries(found);
+  };
+
   return {
-    catalog: () => {
+    catalog: async () => {
+      if (fingerprints === undefined) {
+        const pending = allFingerprints();
+        fingerprints = pending;
+        // A failure outside a render, such as a `locales()` that throws, is not kept: the next call tries again.
+        void pending.catch(() => {
+          if (fingerprints === pending) fingerprints = undefined;
+        });
+      }
       const locales: Partial<Record<Channel, readonly string[]>> = {};
       for (const channel of channels) locales[channel] = [...localesOf(channel)];
-      return {entries: [...options.registry], locales};
+      return {entries: [...options.registry], locales, fingerprints: await fingerprints};
     },
 
-    // Each answer copies only the declared fields, so nothing else a provider returns, and
-    // no `channel` of its own, reaches the page.
     render: async (request) => {
       const entry = entryOf(request.id);
-      if (entry.channel === 'email') {
-        const email = providerFor(providers.email, entry);
-        const {subject, html, text, warnings} = await email.render(
-          entry.id,
-          declaredValues(entry, request.values),
-          localeOf(entry, request.locale),
-        );
-        return {channel: 'email', subject, html, text, warnings: warnings ?? []};
-      }
-      const push = providerFor(providers.push, entry);
-      const {title, body, warnings} = await push.render(
-        entry.id,
-        declaredValues(entry, request.values),
-        localeOf(entry, request.locale),
-      );
-      return {channel: 'push', title, body, warnings: warnings ?? []};
+      // The channel's provider is checked before the values, as a send checks it.
+      if (providers[entry.channel] === undefined) throw new UnregisteredNotificationError(entry.id, entry.channel);
+      return rendered(entry, declaredValues(entry, request.values), localeOf(entry, request.locale));
     },
 
     send: async (request) => {

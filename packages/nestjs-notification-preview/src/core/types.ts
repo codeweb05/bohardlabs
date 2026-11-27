@@ -129,6 +129,13 @@ export interface Catalog {
   readonly entries: readonly RegistryEntry[];
   /** One list per configured channel, the first locale being that channel's default. */
   readonly locales: Readonly<Partial<Record<Channel, readonly string[]>>>;
+  /**
+   * For each entry id, a fingerprint per locale of the entry rendered with its sample values:
+   * every locale its channel's provider lists, or the fallback locale only when it lists none.
+   * `null` where that render threw; no locale at all for an entry whose channel has no provider.
+   * Test mode compares these with the ones kept beside its ticks.
+   */
+  readonly fingerprints: Readonly<Record<string, Readonly<Record<string, string | null>>>>;
 }
 
 /** `POST render`. */

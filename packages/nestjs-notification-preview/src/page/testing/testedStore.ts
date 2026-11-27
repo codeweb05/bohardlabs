@@ -1,14 +1,23 @@
 export type TestState = 'untested' | 'tested' | 'retest';
 
+/**
+ * A fingerprint as the catalog gives it; `null` where the server's render threw. A `null` is kept
+ * and compared as a value of its own, so it never reads as tested against a real fingerprint.
+ */
+export type Fingerprint = string | null;
+
 export interface TestedStore {
-  /** `null` hash: the stored state as it is, `tested` when a tick exists, since nothing is there to compare. */
-  readonly stateOf: (id: string, locale: string, hash: string | null) => TestState;
-  readonly tick: (id: string, locale: string, hash: string) => void;
+  /** `tested` when the tick's fingerprint is `fingerprint`, `retest` when it is another, `untested` with no tick. */
+  readonly stateOf: (id: string, locale: string, fingerprint: Fingerprint) => TestState;
+  readonly tick: (id: string, locale: string, fingerprint: Fingerprint) => void;
   readonly untick: (id: string, locale: string) => void;
   readonly clear: () => void;
 }
 
 const keyOf = (id: string, locale: string): string => JSON.stringify([id, locale]);
+
+/** How a fingerprint is stored: no fingerprint is the empty string, which no real one is. */
+const storedForm = (fingerprint: Fingerprint): string => fingerprint ?? '';
 
 /** Ticks as stored: `[id, locale, hash]` triples. Anything else in the value is dropped. */
 function read(storage: Storage | null, key: string): Map<string, string> {
@@ -30,9 +39,9 @@ function read(storage: Storage | null, key: string): Map<string, string> {
 }
 
 /**
- * The ticks a reviewer gave, each for an entry and a locale with the hash of the render ticked.
- * They live in `storage` under `key`, in this browser only, and hold ids and hashes, never a
- * render. With `null` or a storage that throws they are kept for the session.
+ * The ticks a reviewer gave, each for an entry and a locale with the catalog's fingerprint of it
+ * when ticked. They live in `storage` under `key`, in this browser only, and hold ids and
+ * fingerprints, never a render. With `null` or a storage that throws they are kept for the session.
  */
 export function createTestedStore(storage: Storage | null, key: string): TestedStore {
   const ticks = read(storage, key);
@@ -52,13 +61,13 @@ export function createTestedStore(storage: Storage | null, key: string): TestedS
     }
   };
   return {
-    stateOf: (id, locale, hash) => {
+    stateOf: (id, locale, fingerprint) => {
       const ticked = ticks.get(keyOf(id, locale));
       if (ticked === undefined) return 'untested';
-      return hash === null || ticked === hash ? 'tested' : 'retest';
+      return ticked === storedForm(fingerprint) ? 'tested' : 'retest';
     },
-    tick: (id, locale, hash) => {
-      ticks.set(keyOf(id, locale), hash);
+    tick: (id, locale, fingerprint) => {
+      ticks.set(keyOf(id, locale), storedForm(fingerprint));
       save();
     },
     untick: (id, locale) => {

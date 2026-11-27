@@ -33,7 +33,7 @@
     "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
     "clean": "rm -rf dist *.tsbuildinfo",
-    "verify": "node scripts/check-graph.mjs && size-limit && publint && attw --pack . --profile esm-only",
+    "verify": "node scripts/check-graph.mjs && node scripts/check-licence.mjs && size-limit && publint && attw --pack . --profile esm-only",
     "serve:demo": "node scripts/serve-demo.mjs"
   },
   "peerDependencies": {
@@ -42,6 +42,23 @@
     "@nestjs/platform-express": "^12.0.0",
     "reflect-metadata": "^0.1.13 || ^0.2.0",
     "rxjs": "^7.1.0"
+  },
+  "peerDependenciesMeta": {
+    "@nestjs/common": {
+      "optional": true
+    },
+    "@nestjs/core": {
+      "optional": true
+    },
+    "@nestjs/platform-express": {
+      "optional": true
+    },
+    "reflect-metadata": {
+      "optional": true
+    },
+    "rxjs": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.18.5",

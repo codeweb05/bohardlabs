@@ -2,7 +2,8 @@
 
 A NestJS module that serves a page where the team building your app can see every email and push notification as the
 person receiving it would, change the values it is built from, and send one to themselves as a test. A test mode lets
-a reviewer tick each notification off as tested and flags one whose render changed since the tick.
+a reviewer tick each notification off as tested, and flags every one whose template renders differently since the
+tick, opened or not.
 
 It is for a Nest API with Express (`@nestjs/platform-express`) that owns its notification templates. Nothing in the
 package is specific to one product: your app supplies the list of notifications and the code that renders and sends
@@ -16,13 +17,16 @@ pnpm add @vt-labs/nestjs-notification-preview
 ```
 
 Peers: `@nestjs/common`, `@nestjs/core` and `@nestjs/platform-express` at `^12.0.0`, `reflect-metadata` and `rxjs`.
-The package is ESM only. The page is prebuilt with its own React, so your API installs no React.
+All five are optional peers. The root entry (`@vt-labs/nestjs-notification-preview`, the Nest module) needs them, and a
+Nest app has them already. The core entry (`@vt-labs/nestjs-notification-preview/core`) needs none of them, so a
+server without Nest installs nothing more. The package is ESM only. The page is prebuilt with its own React, so your API
+installs no React.
 
 ## Use it
 
 ```ts
 // notification-preview.ts
-import type {Providers, RegistryEntry} from '@vt-labs/nestjs-notification-preview';
+import {InvalidValuesError, type Providers, type RegistryEntry} from '@vt-labs/nestjs-notification-preview';
 
 export const registry: RegistryEntry[] = [
   {
@@ -48,7 +52,13 @@ export const registry: RegistryEntry[] = [
 export const providers: Providers = {
   email: {
     locales: () => ['en', 'es'], // the first is the default
-    render: (id, values, locale) => mailer.render(id, values, locale), // {subject, html, text, warnings?}
+    render: (id, values, locale) => {
+      const url = values.resetUrl;
+      if (url !== undefined && !url.startsWith('https://')) {
+        throw new InvalidValuesError({resetUrl: 'Must start with https://.'});
+      }
+      return mailer.render(id, values, locale); // {subject, html, text, warnings?}
+    },
     send: async (id, values, locale, to) => ({messageId: await mailer.send(id, values, locale, to)}),
   },
   push: {
@@ -125,13 +135,13 @@ module is built. `useFactory` returns the rest: `registry`, `providers`, `appNam
 | Option        | What it does                                                                                            |
 | ------------- | ------------------------------------------------------------------------------------------------------- |
 | `path`        | Where the page lives: a leading slash, no trailing slash, no `.` or `..` segment. Anything else throws  |
-| `enabled`     | `false` registers no controller and no middleware. Default `true`                                       |
+| `enabled`     | Required, no default. `false` registers no controller and no middleware; `path` is still checked        |
 | `registry`    | Every notification the preview may render or send. Ids must be unique                                   |
 | `providers`   | `{email?, push?}`: `locales()`, `render` and `send` for each channel                                    |
 | `appName`     | The name on the page's brand, the inbox header and the phone                                            |
 | `environment` | A badge beside the title, such as `DEV`. None when left out or `null`                                   |
 | `strings`     | Replaces any of the page's words. Plain strings only (JSON); entries that build a sentence keep English |
-| `storageKey`  | Prefix for what the page keeps in the browser. Default `'notification-preview'`                         |
+| `storageKey`  | Prefix for what the page keeps in the browser. Default `'notification-preview:<path>'`                  |
 | `decorators`  | Decorators for the routes, below                                                                        |
 
 `strings` reaches the browser as JSON, so a value must be a string. An entry that builds a sentence around a value
@@ -158,18 +168,21 @@ import {SetMetadata, UseGuards} from '@nestjs/common';
 import {Throttle} from '@nestjs/throttler';
 import {NotificationPreviewModule} from '@vt-labs/nestjs-notification-preview';
 
-import {AdminGuard} from './admin.guard.js';
+import {AdminSessionGuard} from './admin-session.guard.js';
 
 // An app whose global guard refuses every route that lacks this marker:
 const Public = () => SetMetadata('isPublic', true);
 
 NotificationPreviewModule.forRoot({
   path: '/notification-preview',
+  enabled: process.env.NODE_ENV !== 'production',
   registry,
   providers,
   appName: 'Acme',
   decorators: {
-    all: [UseGuards(AdminGuard)], // or [Public()] when the app guards some other way
+    // A guard that reads the admin's session cookie, as the Authentication section below explains.
+    // Or [Public()], with the preview reached only where `enabled` is on.
+    all: [UseGuards(AdminSessionGuard)],
     send: [Throttle({default: {limit: 5, ttl: 60_000}})], // five test sends a minute
   },
 });
@@ -180,30 +193,55 @@ reads. The page itself, `GET <path>` and its assets, is served by a middleware b
 decorators do not reach it; it holds no data. Everything it shows comes from the three `api` routes. When a guard
 refuses, the page shows the status's message and, for a 429, the wait from `Retry-After`.
 
+## Authentication
+
+The page is a plain browser page, so its requests carry only what the browser sends by itself: the cookies for your
+origin, or HTTP Basic credentials once a `WWW-Authenticate: Basic` challenge has asked for them. It adds no header of
+its own. A guard that reads a bearer token from `Authorization` will therefore refuse every request the page makes,
+and the page shows that 401.
+
+Pick one of these:
+
+- **A session-cookie guard.** Your admin sign-in sets a cookie on the same origin, and a guard in `decorators.all`
+  checks it, as `AdminSessionGuard` does above.
+- **A Basic-auth guard.** A guard in `decorators.all` checks the `Authorization: Basic` header and, when it is missing
+  or wrong, answers 401 with `WWW-Authenticate: Basic realm="Notification preview"`. The browser then asks for a name
+  and password and sends them with every later request, the page's included. Put the same check in front of
+  `GET <path>` (a proxy or a middleware of your own), since the page itself is served before guards run.
+- **`Public()` with `enabled` off in production.** Mark the routes public and keep the preview to environments where
+  anyone who reaches the app may use it.
+
 ## Routes
 
 | Route                       | What it does                                                          |
 | --------------------------- | --------------------------------------------------------------------- |
 | `GET <path>`, `GET <path>/` | The page                                                              |
 | `GET <path>/assets/*`       | The page's hashed files, cached as `immutable` for a year             |
-| `GET <path>/api/catalog`    | The registry and each channel's locales                               |
+| `GET <path>/api/catalog`    | The registry, each channel's locales and each entry's fingerprints    |
 | `POST <path>/api/render`    | Renders one notification from `{id, locale, values}`                  |
 | `POST <path>/api/send`      | Sends one as a test, to `target` (an address, or an account for push) |
 
 The three `api` routes write their own responses (`@Res()`), so an app's global response interceptor does not wrap
 them, and read the body from `request.body` (`@Req()`), so an app's pipes do not change what a reviewer typed.
 
-| Answer | When                                                                                    |
-| ------ | --------------------------------------------------------------------------------------- |
-| 200    | The result                                                                              |
-| 404    | `{message}`: the id is not in the registry, or the request has no body (no id)          |
-| 422    | `{message, fieldErrors}`: a provider refused a value, or the locale is not one it lists |
-| other  | Anything else a provider throws goes to the app's exception filters                     |
+| Answer | When                                                                   |
+| ------ | ---------------------------------------------------------------------- |
+| 200    | The result                                                             |
+| 404    | `{message}`, when one of these holds:                                  |
+|        | - the id is not in the registry, or the request has no body (so no id) |
+|        | - the entry's channel has no provider configured                       |
+| 422    | `{message, fieldErrors}`, naming the field, when one of these holds:   |
+|        | - a provider refused a value (`InvalidValuesError`)                    |
+|        | - a value is not a string                                              |
+|        | - the locale is not one the channel lists                              |
+|        | - a send's `target` is empty                                           |
+| other  | Anything else a provider throws goes to the app's exception filters    |
 
 ### In production
 
-Set `enabled: false`. Nothing is registered: no controller, no middleware, and `forRootAsync` never calls `useFactory`,
-so `GET <path>` is the app's own 404. The page can render every template with chosen values and send mail from your
+Set `enabled: false`. `enabled` has no default, so each app writes its choice down. Nothing is registered: no
+controller, no middleware, and `forRootAsync` never calls `useFactory`, so `GET <path>` is the app's own 404. `path` is
+still checked, so a bad path fails in every environment. The page can render every template with chosen values and send mail from your
 account, so keep it off wherever that is not wanted.
 
 ### An app with `setGlobalPrefix`
@@ -223,10 +261,38 @@ ones.
 
 ## Test mode
 
-The switch in the header turns on test mode: a reviewer ticks each notification as tested, filters the list to what is
-left, and a notification whose render changed since the tick shows "retest". The ticks and the mode flag live in the
-browser's `localStorage`, under `<storageKey>:tested` and `<storageKey>:testMode`. Nothing is stored on the server,
-and the package logs nothing.
+The switch in the header turns on test mode: a reviewer ticks each notification as tested and filters the list to what
+is left.
+
+The catalog carries a fingerprint for each notification in each locale its provider lists (the fallback locale only,
+when `locales()` is empty). A fingerprint is a short hash of the notification rendered with its sample values. The
+server renders them on the first catalog request and keeps them for the life of the process, since templates change
+only with a deploy. A tick keeps the fingerprint the catalog gave. On every visit each notification is judged against
+the catalog, opened or not:
+
+- the same fingerprint as the tick: tested;
+- another fingerprint: "retest", counted in "N changed" and listed under "To test";
+- no tick: not tested.
+
+Typing other values into a notification does not change its tick. A sample render that throws leaves that fingerprint
+`null`, and the catalog still answers. A changed template is noticed after the server restarts, as a deploy does.
+
+The ticks and the mode flag live in the browser's `localStorage`, under `<storageKey>:tested` and
+`<storageKey>:testMode`. They hold ids, locales and fingerprints, never a render. Nothing is stored on the server, and
+the package logs nothing.
+
+## Moving from `@vt-labs/notification-preview`
+
+This package is the new name of `@vt-labs/notification-preview`, which is deprecated and gets no further releases.
+
+- The `languages` option is removed. Each channel's provider lists its own with `locales()`.
+- `ChannelProvider.locales()` is required. Return `[]` to accept any locale with `'en'` as the fallback.
+- `lang` is now `locale`, in render and send requests and in the provider's `render` and `send` arguments.
+- `Catalog.languages` is now `Catalog.locales`, one list per configured channel. The catalog also gains
+  `fingerprints`, and `preview.catalog()` now returns a promise.
+- The React entry (`./react`, with `NotificationPreviewPage` and `createFetchClient`) and `./style.css` are gone. Use
+  `NotificationPreviewModule`, which serves the prebuilt page and its routes; drop the page from your admin app.
+- `enabled` is required.
 
 ## What to know before you ship it
 
@@ -338,6 +404,9 @@ function toHttp(error: unknown): never {
 
 The page reads a refusal's body as `{message, fieldErrors?}` (`PreviewErrorBody`), and a 429's `Retry-After` header.
 A test send reaches real inboxes and phones: guard the routes as you would any test tool, and rate-limit `send`.
+
+`catalog()` returns a promise. On its first call it renders each entry with its samples in each listed locale, once,
+and keeps those fingerprints for the life of the preview.
 
 Each provider reports its own `locales()`, and the catalog lists them by channel. A request's `locale` reaches the provider
 untouched; one the channel does not list is refused with an `InvalidValuesError` on `locale`.

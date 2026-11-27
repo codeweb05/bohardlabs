@@ -22,8 +22,11 @@ import {UI_DIR} from './uiDir.js';
 const SETTINGS = Symbol('NotificationPreviewSettings');
 const PAGE = Symbol('NotificationPreviewPage');
 
-/** The page's handler and the path it answers under; `null` when the module is disabled. */
-interface PageMount {
+/**
+ * What the module's constructor takes: the page's handler and the path it answers under, or
+ * `null` when the module is disabled. Nest builds it; an app never makes one.
+ */
+export interface PageMount {
   readonly path: string;
   readonly handler: PageHandler;
 }
@@ -49,7 +52,7 @@ function pageConfig(path: string, settings: NotificationPreviewSettings): PageCo
     appName: settings.appName,
     environment: settings.environment ?? null,
     strings: settings.strings ?? {},
-    storageKey: settings.storageKey ?? 'notification-preview',
+    storageKey: settings.storageKey ?? `notification-preview:${path}`,
   };
 }
 
@@ -93,6 +96,7 @@ const disabled = (): DynamicModule => ({
  * ```ts
  * NotificationPreviewModule.forRoot({
  *   path: '/notification-preview',
+ *   enabled: config.previewEnabled,
  *   registry,
  *   providers: {email, push},
  *   appName: 'Acme',
@@ -116,8 +120,9 @@ export class NotificationPreviewModule implements NestModule {
   }
 
   static forRoot(options: NotificationPreviewModuleOptions): DynamicModule {
-    if (options.enabled === false) return disabled();
+    // Checked before the flag, so a bad path fails where the preview is off too.
     const path = checkedPath(options.path);
+    if (!options.enabled) return disabled();
     return {
       module: NotificationPreviewModule,
       controllers: [createPreviewController(path, options.decorators)],
@@ -127,8 +132,8 @@ export class NotificationPreviewModule implements NestModule {
 
   /** As `forRoot`, with every option but `path`, `enabled` and `decorators` from `useFactory`. */
   static forRootAsync(options: NotificationPreviewModuleAsyncOptions): DynamicModule {
-    if (options.enabled === false) return disabled();
     const path = checkedPath(options.path);
+    if (!options.enabled) return disabled();
     const {useFactory} = options;
     return {
       module: NotificationPreviewModule,

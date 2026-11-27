@@ -20,5 +20,8 @@ export default defineConfig({
     emptyOutDir: true,
     assetsDir: 'assets',
     sourcemap: false,
+    // Keep the bundled libraries' licence comments (React's `@license` header), which minifying
+    // drops by default. scripts/check-licence.mjs fails verify if they go missing.
+    rolldownOptions: {output: {comments: {legal: true}}},
   },
 });

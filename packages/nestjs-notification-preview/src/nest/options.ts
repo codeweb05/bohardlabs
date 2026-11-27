@@ -38,8 +38,12 @@ export interface NotificationPreviewModuleOptions {
    * excludes this path from it, since the page calls `<path>/api` as given.
    */
   readonly path: string;
-  /** `false` registers nothing: no page, no route, so the path is the app's 404. Default `true`. */
-  readonly enabled?: boolean;
+  /**
+   * Whether the preview is served. Required, so the choice is written beside the app's other
+   * per-environment settings; `false` registers nothing (no page, no route, so the path is the
+   * app's 404) and `path` is still checked.
+   */
+  readonly enabled: boolean;
   /** Every notification the preview may render or send. Ids must be unique. */
   readonly registry: readonly RegistryEntry[];
   /** The app's render and send for each channel. */
@@ -51,7 +55,8 @@ export interface NotificationPreviewModuleOptions {
   readonly strings?: NotificationPreviewStrings;
   /**
    * The prefix for what the page keeps in the browser: the theme, recent targets, test mode and
-   * its ticks. Nothing is kept on the server. Default `'notification-preview'`.
+   * its ticks. Nothing is kept on the server. Default `'notification-preview:<path>'`, so two
+   * previews on one origin keep their ticks apart.
    */
   readonly storageKey?: string;
   readonly decorators?: NotificationPreviewDecorators;
@@ -69,7 +74,7 @@ export interface NotificationPreviewModuleAsyncOptions {
   readonly inject?: FactoryProvider['inject'];
   readonly useFactory: (...args: never[]) => NotificationPreviewSettings | Promise<NotificationPreviewSettings>;
   readonly path: string;
-  /** `false` registers nothing and never calls `useFactory`. Default `true`. */
-  readonly enabled?: boolean;
+  /** Required. `false` registers nothing and never calls `useFactory`; `path` is still checked. */
+  readonly enabled: boolean;
   readonly decorators?: NotificationPreviewDecorators;
 }

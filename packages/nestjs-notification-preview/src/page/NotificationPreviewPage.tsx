@@ -1,4 +1,4 @@
-import {useMemo, useRef, useState} from 'react';
+import {useRef, useState} from 'react';
 import type {ReactNode} from 'react';
 
 import type {Catalog} from '../core/types.js';
@@ -11,7 +11,6 @@ import {Inspector} from './Inspector.js';
 import {PhoneFrame} from './PhoneFrame.js';
 import {mergeStrings, StringsContext, useStrings} from './strings.js';
 import type {PageStringsInput} from './strings.js';
-import {renderHash} from './testing/renderHash.js';
 import {shows} from './testing/testedStore.js';
 import type {TestFilter} from './testing/testedStore.js';
 import {useTesting} from './testing/useTesting.js';
@@ -127,7 +126,7 @@ function Workspace({
   const sender = useSend(client);
   const searchRef = useRef<HTMLInputElement>(null);
   const [view, setView] = useState<CanvasView>(FIRST_VIEW);
-  const testing = useTesting(testedKey, modeKey, preview.locale);
+  const testing = useTesting(testedKey, modeKey, preview.locale, catalog.fingerprints);
   const [filter, setFilter] = useState<TestFilter>('all');
   const {entry, render} = preview;
   // A render for another notification is never drawn under this one's name.
@@ -136,11 +135,11 @@ function Workspace({
   if (rendered?.channel === 'email') drawn = <EmailCanvas email={rendered} width={view.width} part={view.part} />;
   if (rendered?.channel === 'push')
     drawn = <PhoneFrame device={view.device} surface={view.surface} title={rendered.title} body={rendered.body} />;
-  // A tick is for the render of this notification in this language. Right after a language
-  // switch, `rendered` is still the last language's, so it is no hash to judge or tick by.
-  const current = rendered !== undefined && render.request?.locale === preview.locale ? rendered : undefined;
-  const hash = useMemo(() => (current === undefined ? null : renderHash(current)), [current]);
-  const state = entry === undefined ? 'untested' : testing.stateOf(entry, hash);
+  // A tick keeps the catalog's fingerprint for this notification in this language, and is offered
+  // once the page shows that language's render. Right after a language switch, `rendered` is still
+  // the last language's, so there is nothing yet for the reviewer to have looked at.
+  const shown = rendered !== undefined && render.request?.locale === preview.locale;
+  const state = entry === undefined ? 'untested' : testing.stateOf(entry);
   const step = (by: 1 | -1): void => {
     sender.clear();
     preview.step(by);
@@ -176,16 +175,10 @@ function Workspace({
           searchRef={searchRef}
           top={
             testing.on ? (
-              <TestProgress
-                counts={testing.count(preview.entries, entry?.id, hash)}
-                filter={filter}
-                onFilter={setFilter}
-              />
+              <TestProgress counts={testing.count(preview.entries)} filter={filter} onFilter={setFilter} />
             ) : undefined
           }
-          stateOf={
-            testing.on ? (candidate) => testing.stateOf(candidate, candidate.id === entry?.id ? hash : null) : undefined
-          }
+          stateOf={testing.on ? testing.stateOf : undefined}
           keeps={(candidate) => shows(filter, candidate)}
           onSelect={(id) => {
             sender.clear();
@@ -204,9 +197,9 @@ function Workspace({
               testing.on && entry !== undefined ? (
                 <TickButton
                   tested={state === 'tested'}
-                  disabled={hash === null || render.busy}
+                  disabled={!shown || render.busy}
                   onToggle={() => {
-                    if (hash !== null) testing.toggle(entry, hash);
+                    testing.toggle(entry);
                   }}
                 />
               ) : undefined
