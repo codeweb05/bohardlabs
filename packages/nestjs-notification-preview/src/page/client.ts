@@ -1,10 +1,8 @@
 import type {Catalog, RenderRequest, RenderResponse, SendRequest, SendResponse} from '../core/types.js';
+import {DEFAULT_PAGE_STRINGS} from './strings.js';
+import type {FailureStrings} from './strings.js';
 
-/**
- * What the page asks of the server. `createFetchClient` is one; a consumer with its own HTTP
- * client writes another. A refusal should reject with a `PreviewClientError`, so the page can
- * put each refused value under its field.
- */
+/** What the page asks of the server. A refusal rejects with a `PreviewClientError`. */
 export interface PreviewClient {
   readonly catalog: (options?: {readonly signal?: AbortSignal}) => Promise<Catalog>;
   readonly render: (request: RenderRequest, options?: {readonly signal?: AbortSignal}) => Promise<RenderResponse>;
@@ -36,15 +34,6 @@ export class PreviewClientError extends Error {
   }
 }
 
-export interface FetchClientOptions {
-  /** Where the three routes live: `${baseUrl}/catalog`, `/render` and `/send`. */
-  readonly baseUrl: string;
-  /** Sent with every request, such as an `Authorization` header. A function runs per request. */
-  readonly headers?: HeadersInit | (() => HeadersInit | Promise<HeadersInit>);
-  /** The `fetch` to call. Defaults to the global one. */
-  readonly fetch?: typeof fetch;
-}
-
 const isRecord = (value: unknown): value is Readonly<Record<string, unknown>> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
 
@@ -57,9 +46,18 @@ function fieldErrorsOf(body: unknown): Record<string, string> {
   );
 }
 
-async function errorOf(response: Response): Promise<PreviewClientError> {
+/** The sentence for `status`: its own, else the default. */
+const sentenceFor = (failure: FailureStrings, status: number): string => failure[status] ?? failure.default;
+
+/**
+ * A refusal as the page reads it. The body may be the app's own shape, as when a guard of the
+ * consumer's answers first: its string `message` is used when there is one, else the status's
+ * sentence.
+ */
+async function errorOf(response: Response, failure: FailureStrings): Promise<PreviewClientError> {
   const body: unknown = await response.json().catch(() => undefined);
-  const message = isRecord(body) && typeof body['message'] === 'string' ? body['message'] : response.statusText;
+  const own = isRecord(body) ? body['message'] : undefined;
+  const message = typeof own === 'string' && own !== '' ? own : sentenceFor(failure, response.status);
   const retryAfter = Number(response.headers.get('Retry-After') ?? Number.NaN);
   return new PreviewClientError(message, {
     status: response.status,
@@ -69,37 +67,35 @@ async function errorOf(response: Response): Promise<PreviewClientError> {
 }
 
 /**
- * A `PreviewClient` over `fetch`, for a server that mounts the three routes under one base
- * URL: `GET catalog`, `POST render` and `POST send`, each answering JSON. A refusal's body is
- * read as `PreviewErrorBody`.
+ * The page's client for the three routes under `apiBase`: `GET catalog`, `POST render` and
+ * `POST send`, each answering JSON. The page is served from the API's own origin, so the
+ * browser's cookies go with each call. `failure` names each refusal the body does not.
  */
-export function createFetchClient(options: FetchClientOptions): PreviewClient {
-  let base = options.baseUrl;
+export function createPageClient(
+  apiBase: string,
+  fetchImpl?: typeof fetch,
+  failure: FailureStrings = DEFAULT_PAGE_STRINGS.failure,
+): PreviewClient {
+  let base = apiBase;
   while (base.endsWith('/')) base = base.slice(0, -1);
   const call = async <T>(path: string, init: RequestInit): Promise<T> => {
-    const doFetch = options.fetch ?? fetch;
-    const extra = typeof options.headers === 'function' ? await options.headers() : options.headers;
-    const headers = new Headers(extra);
-    headers.set('Accept', 'application/json');
+    const doFetch = fetchImpl ?? fetch;
+    const headers = new Headers({Accept: 'application/json'});
     if (init.body !== undefined) headers.set('Content-Type', 'application/json');
     let response: Response;
     try {
-      response = await doFetch(`${base}/${path}`, {...init, headers});
+      response = await doFetch(`${base}/${path}`, {...init, headers, credentials: 'same-origin'});
     } catch (error: unknown) {
       if (init.signal?.aborted === true) throw error;
-      throw new PreviewClientError(error instanceof Error ? error.message : String(error), {status: 0});
+      throw new PreviewClientError(sentenceFor(failure, 0), {status: 0});
     }
-    if (!response.ok) throw await errorOf(response);
+    if (!response.ok) throw await errorOf(response, failure);
     return (await response.json()) as T;
   };
   return {
-    catalog: (callOptions) => call<Catalog>('catalog', {method: 'GET', signal: callOptions?.signal ?? null}),
-    render: (request, callOptions) =>
-      call<RenderResponse>('render', {
-        method: 'POST',
-        body: JSON.stringify(request),
-        signal: callOptions?.signal ?? null,
-      }),
+    catalog: (options) => call<Catalog>('catalog', {method: 'GET', signal: options?.signal ?? null}),
+    render: (request, options) =>
+      call<RenderResponse>('render', {method: 'POST', body: JSON.stringify(request), signal: options?.signal ?? null}),
     send: (request) => call<SendResponse>('send', {method: 'POST', body: JSON.stringify(request)}),
   };
 }

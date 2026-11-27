@@ -1,0 +1,1028 @@
+/*
+ * @vt-labs/nestjs-notification-preview: the served page's styles, after the page Promptiva had before
+ * the package. Every colour is a --np-* custom property written once as light-dark(light, dark), under
+ * :where() so an override on .np-root wins. Auto follows the system; data-theme="light" or "dark" on
+ * the root names one. The rendered email sits in a frame these never reach, so a mail looks the same
+ * in either theme.
+ *
+ * The document never scrolls: the list, the canvas and the inspector each scroll inside themselves.
+ */
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+:where(.np-root) {
+  color-scheme: light dark;
+  --np-font: 13px/1.45 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --np-bg: light-dark(#f5f6fa, #0b0d1f);
+  --np-surface: light-dark(#ffffff, #11152f);
+  --np-surface-2: light-dark(#f0f2f7, #181d3a);
+  --np-line: light-dark(#e4e7ef, #232846);
+  --np-line-strong: light-dark(#d3d8e4, #30365a);
+  --np-text: light-dark(#151a30, #eef0fb);
+  --np-text-2: light-dark(#4a5272, #aeb4cf);
+  --np-text-3: light-dark(#5f6684, #9aa1c2);
+  --np-accent: light-dark(#4b5fc4, #91a8ee);
+  --np-on-accent: light-dark(#ffffff, #11152c);
+  --np-accent-soft: light-dark(#eceffc, #1d2347);
+  --np-accent-text: light-dark(#3446a6, #b4c3f5);
+  --np-bad: light-dark(#b42318, #f97066);
+  --np-good: light-dark(#1a7f4b, #5fd39a);
+  --np-warn-bg: light-dark(#fff4db, #3a2e10);
+  --np-warn-text: light-dark(#7a4f00, #f5c84c);
+  --np-env-bg: light-dark(#fff4db, #3a2e10);
+  --np-env-text: light-dark(#7a4f00, #f5c84c);
+  --np-canvas: light-dark(#eceef4, #080a19);
+  --np-dot: light-dark(#d7dbe6, #1a1f3b);
+  --np-field: light-dark(#ffffff, #0d1127);
+  --np-kbd: light-dark(#f0f2f7, #1d2347);
+  --np-seg-on: light-dark(#ffffff, #30365a);
+  --np-shadow: light-dark(0 1px 2px rgba(21, 26, 48, 0.06), 0 1px 2px rgba(0, 0, 0, 0.4));
+  --np-mail-shadow: light-dark(0 12px 32px rgba(21, 26, 48, 0.1), 0 12px 32px rgba(0, 0, 0, 0.45));
+  /* The brand mark and the app icons: the old page's navy tile with a periwinkle ring. */
+  --np-mark-bg: light-dark(#1d2347, #1d2347);
+  --np-mark-ring: light-dark(#91a8ee, #91a8ee);
+  /* The mail client's chrome, white in either theme like the paper under it. */
+  --np-mail-paper: light-dark(#ffffff, #ffffff);
+  --np-mail-text: light-dark(#151a30, #151a30);
+  --np-mail-muted: light-dark(#4a5272, #4a5272);
+  --np-mail-line: light-dark(#e8eaf1, #e8eaf1);
+  /* The handsets. */
+  --np-phone-body: light-dark(#0e1124, #0e1124);
+  --np-phone-edge: light-dark(#2a3052, #2a3052);
+  --np-phone-shadow: light-dark(rgba(8, 10, 25, 0.28), rgba(0, 0, 0, 0.6));
+  --np-phone-wall: linear-gradient(165deg, #4b5fc4 0%, #1d2347 55%, #0b0d1f 100%);
+  --np-phone-clock: light-dark(#ffffff, #ffffff);
+  --np-phone-app: light-dark(#f3f4f8, #f3f4f8);
+  --np-phone-app-text: light-dark(#151a30, #151a30);
+  --np-phone-app-block: light-dark(#ffffff, #ffffff);
+  --np-notice-ios: light-dark(rgba(245, 246, 250, 0.86), rgba(245, 246, 250, 0.86));
+  --np-notice-ios-text: light-dark(#151a30, #151a30);
+  --np-notice-android: light-dark(#f2f1f8, #f2f1f8);
+  --np-notice-android-text: light-dark(#1b1b21, #1b1b21);
+  --np-notice-muted: light-dark(#46464f, #46464f);
+  --np-notice-banner: light-dark(rgba(255, 255, 255, 0.96), rgba(255, 255, 255, 0.96));
+  --np-notice-shadow: light-dark(rgba(8, 10, 25, 0.18), rgba(8, 10, 25, 0.18));
+
+  box-sizing: border-box;
+  display: grid;
+  grid-template-rows: 56px minmax(0, 1fr);
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  background: var(--np-bg);
+  color: var(--np-text);
+  font: var(--np-font);
+  -webkit-font-smoothing: antialiased;
+}
+.np-root[data-theme='light'] {
+  color-scheme: light;
+}
+.np-root[data-theme='dark'] {
+  color-scheme: dark;
+}
+.np-root *,
+.np-root *::before,
+.np-root *::after {
+  box-sizing: inherit;
+}
+.np-root code,
+.np-root kbd,
+.np-root pre {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+:where(.np-root) button,
+:where(.np-root) input,
+:where(.np-root) select {
+  margin: 0;
+  font: inherit;
+  color: inherit;
+}
+:where(.np-root) button {
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+.np-root button:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+.np-root :focus-visible {
+  outline: 2px solid var(--np-accent);
+  outline-offset: 2px;
+}
+.np-root kbd {
+  display: inline-block;
+  padding: 1px 5px;
+  border: 1px solid var(--np-line);
+  border-bottom-width: 2px;
+  border-radius: 5px;
+  background: var(--np-kbd);
+  color: var(--np-text-2);
+  font-size: 11px;
+  line-height: 1.3;
+}
+.np-icon {
+  flex: none;
+}
+.np-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.np-muted {
+  color: var(--np-text-3);
+}
+.np-spacer {
+  flex: 1;
+}
+
+/* Header */
+.np-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+  padding: 0 16px 0 18px;
+  border-bottom: 1px solid var(--np-line);
+  background: var(--np-surface);
+}
+.np-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.np-mark {
+  position: relative;
+  flex: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
+  background: var(--np-mark-bg);
+}
+.np-mark::after {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  border: 2.5px solid var(--np-mark-ring);
+  border-radius: 4px;
+}
+.np-sep {
+  flex: none;
+  width: 1px;
+  height: 20px;
+  background: var(--np-line-strong);
+}
+.np-title {
+  margin: 0;
+  color: var(--np-text-2);
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.np-env {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 9px 3px 8px;
+  border-radius: 999px;
+  background: var(--np-env-bg);
+  color: var(--np-env-text);
+  font-size: 11.5px;
+  font-weight: 600;
+}
+.np-env::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentcolor;
+}
+.np-select {
+  height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--np-line-strong);
+  border-radius: 8px;
+  background: var(--np-field);
+}
+
+/* A row of radios drawn as one segmented control. */
+.np-seg {
+  display: inline-flex;
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.np-seg-legend {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.np-seg-options {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--np-line);
+  border-radius: 9px;
+  background: var(--np-surface-2);
+}
+.np-seg-option {
+  position: relative;
+  display: inline-flex;
+}
+.np-seg-option input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  margin: 0;
+  cursor: pointer;
+}
+.np-seg-option > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 10px;
+  border-radius: 6px;
+  color: var(--np-text-2);
+  font-weight: 500;
+  white-space: nowrap;
+}
+.np-seg[data-icons] .np-seg-option > span {
+  padding: 0 7px;
+}
+.np-seg-option input:checked + span {
+  background: var(--np-seg-on);
+  box-shadow: 0 0 0 1px var(--np-line);
+  color: var(--np-text);
+}
+.np-seg-option input:focus-visible + span {
+  outline: 2px solid var(--np-accent);
+  outline-offset: 2px;
+}
+
+/* The three columns */
+.np-main {
+  display: grid;
+  grid-template-columns: 268px minmax(0, 1fr) 336px;
+  min-height: 0;
+}
+/* Narrower than a laptop, the columns keep their room and the row scrolls sideways inside itself. */
+@media (max-width: 1100px) {
+  .np-main {
+    grid-template-columns: 240px minmax(480px, 1fr) 320px;
+    overflow-x: auto;
+  }
+}
+
+/* The list */
+.np-list {
+  min-height: 0;
+  overflow: auto;
+  padding: 14px 12px;
+  border-right: 1px solid var(--np-line);
+  background: var(--np-surface);
+}
+.np-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  margin-bottom: 16px;
+  padding: 0 10px;
+  border: 1px solid var(--np-line-strong);
+  border-radius: 8px;
+  background: var(--np-field);
+  color: var(--np-text-3);
+}
+.np-search:focus-within {
+  border-color: var(--np-accent);
+  box-shadow: 0 0 0 3px var(--np-accent-soft);
+}
+.np-search-input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: none;
+  color: var(--np-text);
+}
+.np-search-input::placeholder {
+  color: var(--np-text-3);
+}
+.np-root .np-search-input:focus-visible {
+  outline: 0;
+}
+.np-group-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 0 8px;
+  padding: 0 8px;
+  color: var(--np-text-3);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+.np-count {
+  margin-left: auto;
+  letter-spacing: 0;
+}
+.np-items {
+  margin: 0 0 12px;
+  padding: 0;
+  list-style: none;
+}
+.np-item {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  margin-bottom: 2px;
+  padding: 9px 10px;
+  border-radius: 9px;
+  text-align: left;
+}
+.np-item:hover {
+  background: var(--np-surface-2);
+}
+.np-ico {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--np-surface-2);
+  color: var(--np-text-2);
+}
+.np-item-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+.np-item-text b {
+  font-weight: 600;
+}
+.np-item-text code,
+.np-item-recipient {
+  color: var(--np-text-3);
+  font-size: 11.5px;
+  word-break: break-all;
+}
+.np-item[aria-current='true'] {
+  background: var(--np-accent-soft);
+}
+.np-item[aria-current='true'] .np-ico {
+  background: var(--np-accent);
+  color: var(--np-on-accent);
+}
+.np-item[aria-current='true'] b {
+  color: var(--np-accent-text);
+}
+.np-item[aria-current='true']::before {
+  content: '';
+  position: absolute;
+  top: 10px;
+  bottom: 10px;
+  left: -12px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--np-accent);
+}
+
+/* The canvas: no card, the email straight on the dotted background. */
+.np-canvas {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  background-color: var(--np-canvas);
+  background-image: radial-gradient(var(--np-dot) 1px, transparent 1px);
+  background-size: 18px 18px;
+}
+.np-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+}
+.np-pager {
+  display: inline-flex;
+  align-items: center;
+  height: 34px;
+  padding: 0 4px;
+  border: 1px solid var(--np-line);
+  border-radius: 9px;
+  background: var(--np-surface);
+  color: var(--np-text-2);
+  font-weight: 500;
+}
+.np-pager-button {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  font-size: 16px;
+}
+.np-pager-button:hover:not(:disabled) {
+  background: var(--np-surface-2);
+}
+.np-pager-position {
+  padding: 0 6px;
+  font-variant-numeric: tabular-nums;
+}
+.np-keys {
+  color: var(--np-text-3);
+  font-size: 12px;
+  white-space: nowrap;
+}
+.np-status {
+  min-height: 1.45em;
+  margin: 0 16px 6px;
+}
+.np-status:empty {
+  margin-bottom: 0;
+}
+.np-status-error {
+  color: var(--np-bad);
+}
+.np-loading {
+  padding: 16px 0;
+}
+.np-warnings {
+  margin: 0 16px 8px;
+  color: var(--np-bad);
+}
+.np-warnings ul {
+  margin: 0;
+  padding-left: 18px;
+}
+.np-stage {
+  display: flex;
+  flex: 1;
+  align-items: flex-start;
+  justify-content: center;
+  min-height: 0;
+  overflow: auto;
+  padding: 6px 16px 24px;
+}
+
+/* The email, as a mail client shows it */
+.np-viewport {
+  flex: none;
+  width: 800px;
+  max-width: 100%;
+  overflow: hidden;
+  border-radius: 12px;
+  background: var(--np-mail-paper);
+  box-shadow: var(--np-mail-shadow);
+}
+.np-viewport-screen {
+  overflow: hidden;
+  background: var(--np-mail-paper);
+}
+.np-viewport[data-width='phone'] {
+  position: relative;
+  width: 410px;
+  margin: 0 12px;
+  padding: 10px;
+  border-radius: 42px;
+  background: var(--np-phone-body);
+  box-shadow:
+    0 30px 60px var(--np-phone-shadow),
+    inset 0 0 0 1.5px var(--np-phone-edge);
+}
+.np-viewport[data-width='phone']::before {
+  content: '';
+  position: absolute;
+  top: 18px;
+  left: 50%;
+  z-index: 1;
+  width: 84px;
+  height: 22px;
+  border-radius: 11px;
+  background: var(--np-phone-body);
+  translate: -50% 0;
+}
+.np-viewport[data-width='phone'] .np-viewport-screen {
+  border-radius: 33px;
+}
+.np-mailbar {
+  padding: 14px 18px 10px;
+  border-bottom: 1px solid var(--np-mail-line);
+  background: var(--np-mail-paper);
+  color: var(--np-mail-text);
+}
+.np-viewport[data-width='phone'] .np-mailbar {
+  padding: 46px 16px 10px;
+}
+.np-from {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.np-from > div {
+  display: flex;
+  flex-direction: column;
+}
+.np-from b {
+  font-size: 13px;
+}
+.np-from small {
+  color: var(--np-mail-muted);
+  font-size: 11px;
+}
+.np-avatar {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--np-mark-bg);
+  color: var(--np-mark-ring);
+  font-size: 14px;
+  font-weight: 700;
+}
+.np-subject {
+  margin-top: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.np-mail-frame {
+  display: block;
+  width: 100%;
+  height: 160px;
+  border: 0;
+  background: var(--np-mail-paper);
+}
+.np-mail-text {
+  margin: 0;
+  padding: 14px 16px;
+  background: var(--np-mail-paper);
+  color: var(--np-mail-text);
+  font-size: 12px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* The handset, for a push */
+.np-handset {
+  position: relative;
+  flex: none;
+  width: 320px;
+  height: 660px;
+  margin: 0;
+  padding: 10px;
+  border-radius: 46px;
+  background: var(--np-phone-body);
+  box-shadow:
+    0 30px 60px var(--np-phone-shadow),
+    inset 0 0 0 1.5px var(--np-phone-edge);
+}
+.np-handset[data-device='android'] {
+  border-radius: 36px;
+}
+.np-handset::before {
+  content: '';
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  z-index: 2;
+  width: 86px;
+  height: 24px;
+  border-radius: 12px;
+  background: var(--np-phone-body);
+  translate: -50% 0;
+}
+.np-handset[data-device='android']::before {
+  top: 22px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+.np-handset-screen {
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+  padding: 0 10px;
+  border-radius: 36px;
+  background: var(--np-phone-wall);
+  color: var(--np-phone-clock);
+  font-family: -apple-system, 'SF Pro Text', system-ui, sans-serif;
+}
+.np-handset[data-device='android'] .np-handset-screen {
+  border-radius: 26px;
+  font-family: Roboto, system-ui, sans-serif;
+}
+.np-handset[data-surface='banner'] .np-handset-screen {
+  background: var(--np-phone-app);
+  color: var(--np-phone-app-text);
+}
+.np-statusbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 44px;
+  padding: 2px 22px 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+.np-handset[data-device='android'] .np-statusbar {
+  height: 40px;
+  padding: 4px 12px 0;
+  font-size: 12px;
+  font-weight: 500;
+}
+.np-bars {
+  position: relative;
+  width: 24px;
+  height: 11px;
+  border: 1.5px solid currentcolor;
+  border-radius: 3px;
+}
+.np-bars::after {
+  content: '';
+  position: absolute;
+  inset: 1.5px 5px 1.5px 1.5px;
+  border-radius: 1px;
+  background: currentcolor;
+}
+.np-lock-clock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 20px 0 30px;
+}
+.np-lock-clock small {
+  font-size: 15px;
+  font-weight: 600;
+}
+.np-lock-clock b {
+  font-size: 78px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -1px;
+}
+.np-handset[data-device='android'] .np-lock-clock {
+  flex-direction: column-reverse;
+  margin-top: 36px;
+}
+.np-handset[data-device='android'] .np-lock-clock b {
+  font-size: 64px;
+  font-weight: 400;
+}
+.np-handset[data-device='android'] .np-lock-clock small {
+  margin-top: 6px;
+  font-size: 13px;
+}
+.np-app-behind {
+  display: grid;
+  gap: 12px;
+  margin-top: 64px;
+}
+.np-app-behind span {
+  height: 150px;
+  border-radius: 18px;
+  background: var(--np-phone-app-block);
+}
+.np-app-behind span:first-child {
+  height: 56px;
+}
+.np-notice {
+  display: flex;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 20px;
+  background: var(--np-notice-ios);
+  color: var(--np-notice-ios-text);
+  box-shadow: 0 4px 16px var(--np-notice-shadow);
+  backdrop-filter: blur(20px);
+}
+.np-handset[data-device='android'] .np-notice {
+  display: block;
+  padding: 14px 16px;
+  border-radius: 24px;
+  background: var(--np-notice-android);
+  color: var(--np-notice-android-text);
+}
+.np-handset[data-surface='banner'] .np-notice {
+  position: absolute;
+  top: 50px;
+  right: 10px;
+  left: 10px;
+  background: var(--np-notice-banner);
+}
+.np-app-icon {
+  position: relative;
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  background: var(--np-mark-bg);
+}
+.np-app-icon::after {
+  content: '';
+  position: absolute;
+  inset: 11px;
+  border: 2px solid var(--np-mark-ring);
+  border-radius: 3px;
+}
+.np-app-glyph {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--np-mark-bg);
+  box-shadow:
+    inset 0 0 0 4px var(--np-mark-bg),
+    inset 0 0 0 6px var(--np-mark-ring);
+}
+.np-notice-text {
+  flex: 1;
+  min-width: 0;
+}
+.np-notice-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.np-notice-head .np-notice-app {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+.np-notice small {
+  color: var(--np-notice-muted);
+  font-size: 12px;
+}
+.np-handset[data-device='android'] .np-notice-app {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+  color: var(--np-notice-muted);
+  font-size: 12px;
+}
+.np-notice-title {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.np-notice-body {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.32;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+/* The inspector */
+.np-inspector {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  border-left: 1px solid var(--np-line);
+  background: var(--np-surface);
+}
+.np-inspector-head {
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--np-line);
+}
+.np-inspector-title {
+  margin: 0 0 10px;
+  font-size: 15px;
+  font-weight: 650;
+}
+.np-inspector-head .np-facts {
+  display: block;
+  border: 0;
+}
+.np-inspector-head .np-facts dt {
+  margin-bottom: 6px;
+  padding: 0;
+  border: 0;
+  color: var(--np-text-3);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+.np-inspector-head .np-facts dd {
+  margin-bottom: 10px;
+  padding: 9px 11px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--np-accent-soft);
+  color: var(--np-accent-text);
+  font-weight: 400;
+  text-align: left;
+}
+.np-inspector-head .np-facts dd:last-child {
+  margin-bottom: 0;
+}
+.np-tabs {
+  display: flex;
+  flex: none;
+  align-items: flex-end;
+  gap: 18px;
+  height: 46px;
+  padding: 0 18px;
+  border-bottom: 1px solid var(--np-line);
+}
+.np-tab {
+  padding-bottom: 12px;
+  color: var(--np-text-3);
+  font-weight: 500;
+}
+.np-tab[aria-selected='true'] {
+  color: var(--np-text);
+  font-weight: 600;
+  box-shadow: inset 0 -2px 0 var(--np-accent);
+}
+.np-panel {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 0;
+  overflow: auto;
+  padding: 16px 18px;
+}
+.np-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.np-chip {
+  height: 28px;
+  padding: 0 11px;
+  border: 1px solid var(--np-line-strong);
+  border-radius: 999px;
+  color: var(--np-text-2);
+  font-size: 12px;
+}
+.np-chip:hover,
+.np-chip[aria-pressed='true'] {
+  border-color: var(--np-accent);
+  color: var(--np-accent-text);
+}
+.np-section-head {
+  display: flex;
+  align-items: center;
+}
+.np-section-title {
+  margin: 0;
+  color: var(--np-text-3);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+.np-link-button {
+  margin-left: auto;
+  color: var(--np-accent-text);
+  font-size: 12px;
+}
+.np-link-button:hover {
+  text-decoration: underline;
+}
+.np-field {
+  display: flex;
+  flex-direction: column;
+}
+.np-field-label {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+.np-field-name {
+  color: var(--np-text-3);
+  font-size: 11px;
+  font-weight: 400;
+}
+.np-input {
+  height: 36px;
+  padding: 0 11px;
+  border: 1px solid var(--np-line-strong);
+  border-radius: 8px;
+  background: var(--np-field);
+}
+.np-root .np-input:focus-visible {
+  outline: 0;
+  border-color: var(--np-accent);
+  box-shadow: 0 0 0 3px var(--np-accent-soft);
+}
+.np-input[aria-invalid='true'] {
+  border-color: var(--np-bad);
+}
+.np-hint {
+  margin: 6px 0 0;
+  color: var(--np-text-3);
+  font-size: 11.5px;
+}
+.np-error {
+  margin: 6px 0 0;
+  color: var(--np-bad);
+  font-size: 11.5px;
+}
+.np-send {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.np-warning {
+  margin: 0;
+  padding: 9px 11px;
+  border-radius: 8px;
+  background: var(--np-env-bg);
+  color: var(--np-env-text);
+  font-size: 12px;
+}
+.np-facts {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid var(--np-line);
+  border-radius: 10px;
+}
+.np-facts dt,
+.np-facts dd {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--np-line);
+  font-size: 12px;
+}
+.np-facts dt {
+  color: var(--np-text-3);
+}
+.np-facts dd {
+  margin: 0;
+  font-weight: 500;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+.np-facts dt:last-of-type,
+.np-facts dd:last-of-type {
+  border-bottom: 0;
+}
+.np-button {
+  display: inline-flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 12px;
+  border: 1px solid var(--np-line-strong);
+  border-radius: 8px;
+  background: var(--np-surface);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.np-button:hover:not(:disabled) {
+  border-color: var(--np-accent);
+  color: var(--np-accent-text);
+}
+.np-button-primary {
+  width: 100%;
+  height: auto;
+  padding: 9px 12px;
+  border-color: var(--np-accent);
+  background: var(--np-accent);
+  color: var(--np-on-accent);
+}
+.np-button-primary:hover:not(:disabled) {
+  color: var(--np-on-accent);
+}

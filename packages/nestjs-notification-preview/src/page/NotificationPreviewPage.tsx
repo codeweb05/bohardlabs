@@ -1,15 +1,18 @@
-import {useRef} from 'react';
+import {useRef, useState} from 'react';
+import type {ReactNode} from 'react';
 
 import type {Catalog} from '../core/types.js';
+import {AppNameContext} from './appName.js';
 import type {PreviewClient} from './client.js';
-import {Pager} from './controls.js';
 import {EmailCanvas} from './EmailCanvas.js';
 import {EntryList} from './EntryList.js';
 import {Header} from './Header.js';
 import {Inspector} from './Inspector.js';
-import {PushCanvas} from './PushCanvas.js';
-import {DEFAULT_NOTIFICATION_PREVIEW_STRINGS, StringsContext, useStrings} from './strings.js';
-import type {NotificationPreviewStrings} from './strings.js';
+import {PhoneFrame} from './PhoneFrame.js';
+import {mergeStrings, StringsContext, useStrings} from './strings.js';
+import type {PageStrings} from './strings.js';
+import {Toolbar} from './Toolbar.js';
+import type {CanvasView} from './Toolbar.js';
 import {useCatalog} from './useCatalog.js';
 import {usePreview} from './usePreview.js';
 import {useSend} from './useSend.js';
@@ -18,12 +21,14 @@ import {useTheme} from './useTheme.js';
 import type {ThemeChoice} from './useTheme.js';
 
 export interface NotificationPreviewPageProps {
-  /** How the page reaches the server: `createFetchClient`, or the consumer's own. */
+  /** How the page reaches the server; `main.tsx` passes `createPageClient`. */
   readonly client: PreviewClient;
+  /** The app's name, on the brand, the inbox header and the phone. */
+  readonly appName: string;
   /** Any of the page's words; the rest keep their English default. */
-  readonly strings?: Partial<NotificationPreviewStrings>;
-  /** A short name for the server the page talks to, such as `staging`, shown beside the title. */
-  readonly environment?: string;
+  readonly strings?: Partial<PageStrings>;
+  /** A short name for the server the page talks to, such as `DEV`, shown beside the title. */
+  readonly environment?: string | null;
   /**
    * The localStorage prefix for the theme and the recent send targets. Recent targets are
    * kept per channel and per `environment` under it.
@@ -31,48 +36,58 @@ export interface NotificationPreviewPageProps {
   readonly storageKey?: string;
 }
 
+const FIRST_VIEW: CanvasView = {width: 'desktop', part: 'html', device: 'ios', surface: 'lock'};
+
 /**
  * A page for looking at every notification the server's registry holds, as the recipient
- * would see it, and sending one as a test. Import `@vt-labs/notification-preview/style.css`
- * once beside it.
+ * would see it, and sending one as a test.
  */
 export function NotificationPreviewPage({
   client,
+  appName,
   strings,
   environment,
   storageKey = 'vt-labs.notification-preview',
 }: Readonly<NotificationPreviewPageProps>) {
-  const merged: NotificationPreviewStrings = {...DEFAULT_NOTIFICATION_PREVIEW_STRINGS, ...strings};
+  const merged = mergeStrings(strings);
   const [theme, setTheme] = useTheme(`${storageKey}.theme`);
   const catalog = useCatalog(client);
+  const environmentName = environment ?? undefined;
   return (
     <StringsContext value={merged}>
-      <div className="np-root" data-theme={theme === 'auto' ? undefined : theme}>
-        {catalog.state === 'loaded' ? (
-          <Workspace
-            client={client}
-            catalog={catalog.catalog}
-            environment={environment}
-            targetsKey={environment === undefined ? `${storageKey}.targets` : `${storageKey}.targets.${environment}`}
-            theme={theme}
-            onTheme={setTheme}
-          />
-        ) : (
-          <>
-            <Header
-              environment={environment}
-              locales={[]}
-              locale=""
+      <AppNameContext value={appName}>
+        <div className="np-root" data-theme={theme === 'auto' ? undefined : theme}>
+          {catalog.state === 'loaded' ? (
+            <Workspace
+              client={client}
+              catalog={catalog.catalog}
+              environment={environmentName}
+              targetsKey={
+                environmentName === undefined ? `${storageKey}.targets` : `${storageKey}.targets.${environmentName}`
+              }
               theme={theme}
-              onLanguage={() => undefined}
               onTheme={setTheme}
             />
-            <p className={catalog.state === 'failed' ? 'np-status np-status-error' : 'np-status'} role="status">
-              {catalog.state === 'failed' ? merged.catalogFailed : merged.loading}
-            </p>
-          </>
-        )}
-      </div>
+          ) : (
+            <>
+              <Header
+                environment={environmentName}
+                locales={[]}
+                locale=""
+                theme={theme}
+                onLanguage={() => undefined}
+                onTheme={setTheme}
+              />
+              <p
+                className={catalog.state === 'failed' ? 'np-status np-status-error np-loading' : 'np-status np-loading'}
+                role="status"
+              >
+                {catalog.state === 'failed' ? merged.catalogFailed : merged.loading}
+              </p>
+            </>
+          )}
+        </div>
+      </AppNameContext>
     </StringsContext>
   );
 }
@@ -96,18 +111,25 @@ function Workspace({
   const preview = usePreview(client, catalog);
   const sender = useSend(client);
   const searchRef = useRef<HTMLInputElement>(null);
+  const [view, setView] = useState<CanvasView>(FIRST_VIEW);
   const {entry, render} = preview;
   // A render for another notification is never drawn under this one's name.
   const rendered = entry !== undefined && render.request?.id === entry.id ? render.rendered : undefined;
+  let drawn: ReactNode = null;
+  if (rendered?.channel === 'email') drawn = <EmailCanvas email={rendered} width={view.width} part={view.part} />;
+  if (rendered?.channel === 'push')
+    drawn = <PhoneFrame device={view.device} surface={view.surface} title={rendered.title} body={rendered.body} />;
+  const step = (by: 1 | -1): void => {
+    sender.clear();
+    preview.step(by);
+  };
 
   useShortcuts({
     onPrevious: () => {
-      sender.clear();
-      preview.step(-1);
+      step(-1);
     },
     onNext: () => {
-      sender.clear();
-      preview.step(1);
+      step(1);
     },
     onSearch: () => {
       searchRef.current?.focus();
@@ -134,39 +156,30 @@ function Workspace({
             preview.select(id);
           }}
         />
-        <section className="np-stage" aria-label={strings.preview} aria-busy={render.busy}>
-          <div className="np-stage-head">
-            <h2 className="np-stage-title">{entry?.label ?? strings.preview}</h2>
-            {preview.entries.length > 0 ? (
-              <Pager
-                position={preview.index + 1}
-                count={preview.entries.length}
-                onStep={(by) => {
-                  sender.clear();
-                  preview.step(by);
-                }}
-              />
-            ) : null}
-          </div>
+        <section className="np-canvas" aria-label={strings.preview} aria-busy={render.busy}>
+          <Toolbar
+            channel={entry?.channel}
+            position={preview.index + 1}
+            count={preview.entries.length}
+            view={view}
+            onStep={step}
+            onView={setView}
+          />
           <p className="np-status np-status-error" role="status">
             {render.failure}
           </p>
-          {rendered === undefined ? null : (
-            <>
-              {rendered.channel === 'email' ? <EmailCanvas email={rendered} /> : <PushCanvas push={rendered} />}
-              {rendered.warnings.length > 0 ? (
-                <section className="np-warnings" aria-label={strings.warnings}>
-                  <h3 className="np-section-title">{strings.warnings}</h3>
-                  <ul>
-                    {/* A renderer may give the same warning twice; it is listed once. */}
-                    {[...new Set(rendered.warnings)].map((warning) => (
-                      <li key={warning}>{warning}</li>
-                    ))}
-                  </ul>
-                </section>
-              ) : null}
-            </>
+          {rendered === undefined || rendered.warnings.length === 0 ? null : (
+            <section className="np-warnings" aria-label={strings.warnings}>
+              <h2 className="np-visually-hidden">{strings.warnings}</h2>
+              <ul>
+                {/* A renderer may give the same warning twice; it is listed once. */}
+                {[...new Set(rendered.warnings)].map((warning) => (
+                  <li key={warning}>{warning}</li>
+                ))}
+              </ul>
+            </section>
           )}
+          <div className="np-stage">{drawn}</div>
         </section>
         {entry === undefined ? null : (
           <Inspector

@@ -1,5 +1,5 @@
 import {PreviewClientError} from './client.js';
-import type {NotificationPreviewStrings} from './strings.js';
+import type {PageStrings} from './strings.js';
 
 export interface Failure {
   readonly fieldErrors: Readonly<Record<string, string>>;
@@ -14,7 +14,7 @@ const statusOf = (error: PreviewClientError): number | undefined =>
   error.status === 0 || (error.status >= 200 && error.status < 300) ? undefined : error.status;
 
 /** A refused value goes on its field; anything else is one sentence in the status line. */
-export function renderFailureOf(error: unknown, strings: NotificationPreviewStrings): Failure {
+export function renderFailureOf(error: unknown, strings: PageStrings): Failure {
   if (!(error instanceof PreviewClientError)) return {fieldErrors: NO_ERRORS, message: strings.renderFailed(undefined)};
   if (Object.keys(error.fieldErrors).length > 0)
     return {fieldErrors: error.fieldErrors, message: strings.renderRefused};
@@ -22,7 +22,7 @@ export function renderFailureOf(error: unknown, strings: NotificationPreviewStri
 }
 
 /** As `renderFailureOf`, for a send: the refused field's message is said, and a 429 says when to retry. */
-export function sendFailureOf(error: unknown, strings: NotificationPreviewStrings): Failure {
+export function sendFailureOf(error: unknown, strings: PageStrings): Failure {
   if (!(error instanceof PreviewClientError)) return {fieldErrors: NO_ERRORS, message: strings.sendFailed(undefined)};
   if (error.status === TOO_MANY)
     return {fieldErrors: NO_ERRORS, message: strings.tooManySends(error.retryAfterSeconds)};

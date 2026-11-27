@@ -1,58 +1,72 @@
 import {useState} from 'react';
 
 import type {RenderedEmail} from '../core/types.js';
-import {Seg} from './controls.js';
-import {Icon} from './Icon.js';
+import {initialOf, useAppName} from './appName.js';
 import {useStrings} from './strings.js';
 
-type Width = 'desktop' | 'phone';
-type Part = 'html' | 'text';
+export type Width = 'desktop' | 'phone';
+export type Part = 'html' | 'text';
 
-/** The rendered email as a mail client shows it: sender, subject, then the sandboxed HTML or the plain text. */
-export function EmailCanvas({email}: Readonly<{email: RenderedEmail}>) {
+/**
+ * The height of the frame's document. A browser gives the root's box; jsdom lays nothing out,
+ * so its `scrollHeight` stands in there.
+ */
+function contentHeight(frame: HTMLIFrameElement): number {
+  const root = frame.contentDocument?.documentElement;
+  if (root === undefined) return 0;
+  const box = Math.ceil(root.getBoundingClientRect().height);
+  return box > 0 ? box : root.scrollHeight;
+}
+
+/**
+ * The email in its frame. The frame grows to the email's height, so a short email leaves no
+ * white box under it and a long one scrolls the canvas, not the frame. Measuring needs the
+ * frame's document, hence `allow-same-origin`; scripts stay off, so the email runs nothing.
+ */
+function EmailFrame({html, width}: Readonly<{html: string; width: Width}>) {
   const strings = useStrings();
-  const [width, setWidth] = useState<Width>('desktop');
-  const [part, setPart] = useState<Part>('html');
+  const [height, setHeight] = useState<number | undefined>(undefined);
   return (
-    <div className="np-canvas">
-      <div className="np-canvas-tools">
-        <Seg<Width>
-          legend={strings.width}
-          value={width}
-          onChange={setWidth}
-          options={[
-            {value: 'desktop', label: strings.desktop, icon: <Icon name="monitor" />},
-            {value: 'phone', label: strings.phone, icon: <Icon name="phone" />},
-          ]}
-        />
-        <Seg<Part>
-          legend={strings.part}
-          value={part}
-          onChange={setPart}
-          options={[
-            {value: 'html', label: strings.html},
-            {value: 'text', label: strings.plainText},
-          ]}
-        />
-      </div>
-      <div className="np-mail" data-width={width}>
-        <div className="np-mail-bar">
-          <span className="np-avatar" aria-hidden="true">
-            {strings.appName.charAt(0).toUpperCase()}
-          </span>
-          <div className="np-mail-meta">
-            <div className="np-mail-from">
-              <strong>{strings.appName}</strong>
-              <span className="np-muted">{strings.now}</span>
+    <iframe
+      className="np-mail-frame"
+      data-width={width}
+      title={strings.renderedEmail}
+      sandbox="allow-same-origin"
+      srcDoc={html}
+      style={height === undefined ? undefined : {height: `${String(height)}px`}}
+      onLoad={(event) => {
+        const measured = contentHeight(event.currentTarget);
+        if (measured > 0) setHeight(measured);
+      }}
+    />
+  );
+}
+
+/** The rendered email as a mail client shows it: sender, subject, then the HTML or the plain text. */
+export function EmailCanvas({email, width, part}: Readonly<{email: RenderedEmail; width: Width; part: Part}>) {
+  const strings = useStrings();
+  const appName = useAppName();
+  return (
+    <div className="np-viewport" data-width={width}>
+      <div className="np-viewport-screen">
+        <div className="np-mailbar" role="group" aria-label={strings.inboxHeader}>
+          <div className="np-from">
+            <span className="np-avatar" aria-hidden="true">
+              {initialOf(appName)}
+            </span>
+            <div>
+              <b>{appName}</b>
+              <small>{strings.now}</small>
             </div>
-            <div className="np-mail-subject">
-              <span className="np-visually-hidden">{strings.subject}: </span>
-              {email.subject === '' ? strings.emptyValue : email.subject}
-            </div>
+          </div>
+          <div className="np-subject">
+            <span className="np-visually-hidden">{strings.subject}: </span>
+            <span>{email.subject === '' ? strings.emptyValue : email.subject}</span>
           </div>
         </div>
         {part === 'html' ? (
-          <iframe className="np-mail-frame" title={strings.renderedEmail} sandbox="" srcDoc={email.html} />
+          // A new width is a new frame, so the email is laid out and measured again.
+          <EmailFrame key={width} html={email.html} width={width} />
         ) : (
           <pre className="np-mail-text" aria-label={strings.plainText}>
             {email.text}

@@ -3,14 +3,21 @@ import {createContext, useContext} from 'react';
 import type {SentPush} from '../core/types.js';
 
 /**
- * Every word the page shows or announces. Pass any subset through the page's `strings` prop;
- * the rest keep their English default. A function entry builds a sentence around a value.
- * Keys are added in minor versions, so type a translation as `Partial<NotificationPreviewStrings>`.
+ * A sentence for each refused or failed request, by HTTP status; `default` for any status not
+ * listed, and `0` when no answer came. The page shows the body's own `message` before these.
  */
-export interface NotificationPreviewStrings {
+export interface FailureStrings {
+  readonly default: string;
+  readonly [status: number]: string;
+}
+
+/**
+ * Every word the page shows or announces. The module's `strings` option passes any subset;
+ * the rest keep their English default. A function entry builds a sentence around a value and
+ * keeps its English default, since the settings reach the page as JSON.
+ */
+export interface PageStrings {
   readonly title: string;
-  /** The sender's name on the mail bar and the app's name on an Android push. */
-  readonly appName: string;
   readonly language: string;
   /** A language code as the language select shows it. */
   readonly languageName: (code: string) => string;
@@ -48,10 +55,16 @@ export interface NotificationPreviewStrings {
   readonly banner: string;
   readonly renderedEmail: string;
   readonly pushNotification: string;
+  /** The email's sender and subject, as a mail client draws them above the message. */
+  readonly inboxHeader: string;
+  /** The phone drawing's name: its device and where the push shows. */
+  readonly phoneLabel: (device: string, surface: string) => string;
   readonly now: string;
   /** A fixed moment on the phone's lock screen, so every preview looks the same. */
   readonly lockTime: string;
   readonly lockDate: string;
+  /** The same date, as Android's lock screen writes it. */
+  readonly lockDateShort: string;
   readonly warnings: string;
   readonly renderRefused: string;
   /** A render failed for a reason other than a refused value; `status` when the server answered. */
@@ -104,6 +117,8 @@ export interface NotificationPreviewStrings {
   readonly sendRefused: (message: string) => string;
   readonly sendFailed: (status: number | undefined) => string;
   readonly tooManySends: (retryAfterSeconds: number | undefined) => string;
+
+  readonly failure: FailureStrings;
 }
 
 const devices = (count: number): string => (count === 1 ? '1 device' : `${String(count)} devices`);
@@ -117,9 +132,8 @@ function englishLanguageName(code: string): string {
   }
 }
 
-export const DEFAULT_NOTIFICATION_PREVIEW_STRINGS: NotificationPreviewStrings = {
+export const DEFAULT_PAGE_STRINGS: PageStrings = {
   title: 'Notification preview',
-  appName: 'Your app',
   language: 'Language',
   languageName: englishLanguageName,
   theme: 'Theme',
@@ -155,9 +169,12 @@ export const DEFAULT_NOTIFICATION_PREVIEW_STRINGS: NotificationPreviewStrings = 
   banner: 'Banner',
   renderedEmail: 'Rendered email',
   pushNotification: 'Push notification',
+  inboxHeader: 'Inbox header',
+  phoneLabel: (device, surface) => `${device}, ${surface}`,
   now: 'now',
   lockTime: '9:41',
   lockDate: 'Wednesday, January 15',
+  lockDateShort: 'Wed, Jan 15',
   warnings: 'Warnings',
   renderRefused: 'Not rendered: a value was refused. The preview keeps the last render.',
   renderFailed: (status) =>
@@ -217,9 +234,33 @@ export const DEFAULT_NOTIFICATION_PREVIEW_STRINGS: NotificationPreviewStrings = 
     retryAfterSeconds === undefined
       ? 'Too many test sends. Try again shortly.'
       : `Too many test sends. Try again in ${String(retryAfterSeconds)} s.`,
+
+  failure: {
+    // Also said when no answer came at all (status 0), unless a translation names 0 itself.
+    default: 'The request failed. Check the connection and try again.',
+    400: 'The server refused the request.',
+    401: 'Sign in to use the notification preview.',
+    403: 'This account may not use the notification preview.',
+    404: 'The notification preview is not available here.',
+    422: 'A value was refused.',
+    429: 'Too many requests. Wait a moment and try again.',
+    500: 'The server failed. Try again.',
+    502: 'The server could not be reached.',
+    503: 'The server is unavailable. Try again shortly.',
+    504: 'The server took too long to answer.',
+  },
 };
 
-export const StringsContext = createContext<NotificationPreviewStrings>(DEFAULT_NOTIFICATION_PREVIEW_STRINGS);
+/** The defaults with `strings` over them; the failure sentences are merged one by one. */
+export function mergeStrings(strings: Partial<PageStrings> | undefined): PageStrings {
+  return {
+    ...DEFAULT_PAGE_STRINGS,
+    ...strings,
+    failure: {...DEFAULT_PAGE_STRINGS.failure, ...strings?.failure},
+  };
+}
+
+export const StringsContext = createContext<PageStrings>(DEFAULT_PAGE_STRINGS);
 
 /** The page's strings, with the consumer's overrides applied. */
-export const useStrings = (): NotificationPreviewStrings => useContext(StringsContext);
+export const useStrings = (): PageStrings => useContext(StringsContext);

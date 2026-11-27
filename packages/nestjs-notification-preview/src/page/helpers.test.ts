@@ -4,7 +4,7 @@ import type {RegistryEntry} from '../core/types.js';
 import {PreviewClientError} from './client.js';
 import {renderFailureOf, sendFailureOf} from './failures.js';
 import {recentTargets, rememberTarget} from './recentTargets.js';
-import {DEFAULT_NOTIFICATION_PREVIEW_STRINGS as S} from './strings.js';
+import {DEFAULT_PAGE_STRINGS as S} from './strings.js';
 import {fromLocal, samples, toLocal, variableLabel, withPreset} from './values.js';
 
 const entry: RegistryEntry = {

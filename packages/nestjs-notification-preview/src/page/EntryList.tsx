@@ -1,5 +1,5 @@
 import {useId, useState} from 'react';
-import type {RefObject} from 'react';
+import type {ReactNode, RefObject} from 'react';
 
 import type {Channel, RegistryEntry} from '../core/types.js';
 import {Icon} from './Icon.js';
@@ -10,17 +10,22 @@ const matches = (entry: RegistryEntry, query: string): boolean => {
   return needle === '' || [entry.label, entry.id, entry.trigger].some((field) => field.toLowerCase().includes(needle));
 };
 
-/** The registered notifications, by channel, with a search over label, id and trigger. */
+/**
+ * The registered notifications, by channel, with a search over label, id and trigger. `mark`
+ * puts something at each item's end, as test mode does with its state.
+ */
 export function EntryList({
   entries,
   selectedId,
   searchRef,
   onSelect,
+  mark,
 }: Readonly<{
   entries: readonly RegistryEntry[];
   selectedId: string | undefined;
   searchRef: RefObject<HTMLInputElement | null>;
   onSelect: (id: string) => void;
+  mark?: (entry: RegistryEntry) => ReactNode;
 }>) {
   const strings = useStrings();
   const searchId = useId();
@@ -59,7 +64,6 @@ export function EntryList({
         return (
           <section key={channel} className="np-group" aria-label={title}>
             <h2 className="np-group-title">
-              <Icon name={channel === 'email' ? 'envelope' : 'bell'} />
               {title}
               <span className="np-count">{inGroup.length}</span>
             </h2>
@@ -74,11 +78,17 @@ export function EntryList({
                       onSelect(entry.id);
                     }}
                   >
-                    <span className="np-item-label">{entry.label}</span>
-                    <code className="np-item-id">{entry.id}</code>
-                    {entry.recipient === undefined ? null : (
-                      <span className="np-item-recipient">{entry.recipient}</span>
-                    )}
+                    <span className="np-ico" aria-hidden="true">
+                      <Icon name={channel === 'email' ? 'envelope' : 'bell'} />
+                    </span>
+                    <span className="np-item-text">
+                      <b>{entry.label}</b>
+                      <code>{entry.id}</code>
+                      {entry.recipient === undefined ? null : (
+                        <span className="np-item-recipient">{entry.recipient}</span>
+                      )}
+                    </span>
+                    {mark?.(entry)}
                   </button>
                 </li>
               ))}
