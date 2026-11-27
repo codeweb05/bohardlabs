@@ -299,4 +299,13 @@ describe('NotificationPreviewPage', () => {
     // No script runs in the email; the page only reads its height.
     expect(element).toHaveAttribute('sandbox', 'allow-same-origin');
   });
+
+  it('lets the keyboard reach the stage that scrolls a long email', async () => {
+    render(<NotificationPreviewPage appName="Acme" client={fakeClient()} />);
+    await screen.findByTitle('Rendered email');
+    const stage = screen.getByRole('group', {name: 'The notification as it arrives'});
+    expect(stage).toHaveAttribute('tabindex', '0');
+    stage.focus();
+    expect(stage).toHaveFocus();
+  });
 });

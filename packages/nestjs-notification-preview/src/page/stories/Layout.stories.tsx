@@ -105,34 +105,86 @@ export const NoCardAroundTheCanvas: Story = {
   },
 };
 
+/**
+ * The height the email's own content takes, read from the root's box: inside a frame the root's
+ * `scrollHeight` is never less than the frame, so it cannot tell a measured frame from one left
+ * at its CSS height.
+ */
+const contentOf = (frame: HTMLIFrameElement): number =>
+  Math.ceil(frame.contentDocument?.documentElement.getBoundingClientRect().height ?? 0);
+
+/** The frame's CSS height before it is measured, in `style.css`. */
+const UNMEASURED = 160;
+
 /** 3. The frame is as tall as the email in it: no white box under a short email. */
 export const FrameFitsAShortEmail: Story = {
   play: async ({canvasElement}) => {
     const frame = await emailFrame(canvasElement, 'Hello Ada');
-    await waitFor(() => {
-      const content = frame.contentDocument?.documentElement.scrollHeight ?? 0;
-      return expect(Math.abs(frame.getBoundingClientRect().height - content)).toBeLessThanOrEqual(1);
-    });
+    await waitFor(() => expect(frame.style.height).not.toBe(''));
+    // One paragraph is far shorter than the unmeasured frame: this fails if nothing measures.
+    await expect(frame.getBoundingClientRect().height).toBeLessThan(UNMEASURED);
+    await expect(Math.abs(frame.getBoundingClientRect().height - contentOf(frame))).toBeLessThanOrEqual(1);
     const stage = canvasElement.querySelector('.np-stage');
-    await expect(stage === null ? 0 : stage.getBoundingClientRect().height).toBeGreaterThan(
-      frame.getBoundingClientRect().height,
-    );
     await expect(stage === null ? 0 : stage.scrollHeight - stage.clientHeight).toBe(0);
   },
 };
 
-/** 3. A long email grows the frame past the canvas, and the canvas scrolls. */
+/**
+ * 3. A long email grows the frame past the canvas, and the canvas scrolls. The stage takes focus
+ * and has a name, so the keyboard can scroll it.
+ */
 export const FrameGrowsWithALongEmail: Story = {
   args: {client: longClient},
   play: async ({canvasElement}) => {
     const frame = await emailFrame(canvasElement, 'Paragraph 80.');
-    await waitFor(() => {
-      const content = frame.contentDocument?.documentElement.scrollHeight ?? 0;
-      return expect(Math.abs(frame.getBoundingClientRect().height - content)).toBeLessThanOrEqual(1);
-    });
-    const stage = canvasElement.querySelector('.np-stage');
-    await expect(stage === null ? 0 : stage.scrollHeight).toBeGreaterThan(stage?.clientHeight ?? 0);
+    await waitFor(() => expect(frame.getBoundingClientRect().height).toBeGreaterThan(1000));
+    await expect(Math.abs(frame.getBoundingClientRect().height - contentOf(frame))).toBeLessThanOrEqual(1);
+    const stage = within(canvasElement).getByRole('group', {name: 'The notification as it arrives'});
+    await expect(stage.scrollHeight).toBeGreaterThan(stage.clientHeight);
+    await expect(stage).toHaveAttribute('tabindex', '0');
+    stage.focus();
+    await expect(stage).toHaveFocus();
     await expect(document.scrollingElement?.scrollHeight).toBe(window.innerHeight);
+  },
+};
+
+/** 3. An email whose html and body are `height: 100%` is measured by its content, not by the frame. */
+export const FrameMeasuresAFullHeightEmail: Story = {
+  args: {
+    client: {
+      ...longClient,
+      render: async (request: Parameters<typeof longClient.render>[0]) => {
+        const rendered = await longClient.render(request);
+        if (rendered.channel !== 'email') return rendered;
+        return {
+          ...rendered,
+          html: rendered.html
+            .replace('<html>', '<html style="height:100%">')
+            .replace('<body style="', '<body style="height:100%;margin:0;'),
+        };
+      },
+    },
+  },
+  play: async ({canvasElement}) => {
+    const frame = await emailFrame(canvasElement, 'Paragraph 80.');
+    // Eighty paragraphs are far taller than the canvas; a frame measured by its viewport stays short.
+    await waitFor(() => expect(frame.getBoundingClientRect().height).toBeGreaterThan(1000));
+    const inner = frame.contentDocument?.documentElement;
+    await expect(inner === undefined ? 1 : inner.scrollHeight - inner.clientHeight).toBeLessThanOrEqual(1);
+  },
+};
+
+/** 3. At phone width a short email still sits in a whole handset, the paper filling its screen. */
+export const PhoneWidthKeepsTheHandset: Story = {
+  play: async ({canvasElement}) => {
+    await emailFrame(canvasElement, 'Hello Ada');
+    await userEvent.click(within(canvasElement).getByRole('radio', {name: 'Phone'}));
+    const screen = await waitFor(() => {
+      const found = canvasElement.querySelector('.np-viewport[data-width="phone"] .np-viewport-screen');
+      if (found === null) throw new Error('No phone viewport');
+      return found;
+    });
+    await expect(screen.getBoundingClientRect().height).toBeGreaterThanOrEqual(560);
   },
 };
 

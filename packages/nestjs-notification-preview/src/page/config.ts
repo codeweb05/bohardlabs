@@ -1,5 +1,5 @@
 import {DEFAULT_PAGE_STRINGS} from './strings.js';
-import type {FailureStrings, PageStrings} from './strings.js';
+import type {FailureStringsInput, PageStringsInput} from './strings.js';
 
 /** What the module writes into the page, in `<script type="application/json" id="np-config">`. */
 export interface PageConfig {
@@ -10,7 +10,7 @@ export interface PageConfig {
   /** The badge beside the title, such as `DEV`; `null` for none. */
   readonly environment: string | null;
   /** Merged over the English defaults. Only plain strings arrive this way: JSON holds no function. */
-  readonly strings: Partial<PageStrings>;
+  readonly strings: PageStringsInput;
   /** The prefix for what the page keeps in this browser: the theme and the recent targets. */
   readonly storageKey: string;
 }
@@ -22,16 +22,19 @@ const malformed = (): Error => new Error('Notification preview settings are malf
 const isRecord = (value: unknown): value is Readonly<Record<string, unknown>> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
 
-/** The failure sentences: `default` is required, and every other entry must be a string to be kept. */
-function failureOf(raw: unknown): FailureStrings {
-  if (!isRecord(raw) || typeof raw['default'] !== 'string') throw malformed();
+/**
+ * The failure sentences the module gave, any of them: an entry must be a string to be kept, and
+ * `mergeStrings` fills in the rest, `default` among them.
+ */
+function failureOf(raw: unknown): FailureStringsInput {
+  if (!isRecord(raw)) throw malformed();
   return Object.fromEntries(
     Object.entries(raw).filter((entry): entry is [string, string] => typeof entry[1] === 'string'),
-  ) as unknown as FailureStrings;
+  ) as FailureStringsInput;
 }
 
 /** The words the page knows as plain strings; an unknown key, a non-string or a function entry is dropped. */
-function stringsOf(raw: unknown): Partial<PageStrings> {
+function stringsOf(raw: unknown): PageStringsInput {
   if (!isRecord(raw)) throw malformed();
   const kept: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(raw)) {
@@ -43,7 +46,7 @@ function stringsOf(raw: unknown): Partial<PageStrings> {
     )
       kept[key] = value;
   }
-  return kept as Partial<PageStrings>;
+  return kept as PageStringsInput;
 }
 
 /** The settings the module wrote into `doc`. Throws when the block is missing or not the settings. */

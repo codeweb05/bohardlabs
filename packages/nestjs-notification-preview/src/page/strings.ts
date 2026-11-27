@@ -11,6 +11,15 @@ export interface FailureStrings {
   readonly [status: number]: string;
 }
 
+/** Any of the failure sentences; `mergeStrings` keeps the defaults for the rest. */
+export interface FailureStringsInput {
+  readonly default?: string;
+  readonly [status: number]: string;
+}
+
+/** Any of the page's words, as a caller gives them; the failure sentences may be some of them. */
+export type PageStringsInput = Partial<Omit<PageStrings, 'failure'>> & {readonly failure?: FailureStringsInput};
+
 /**
  * Every word the page shows or announces. The module's `strings` option passes any subset;
  * the rest keep their English default. A function entry builds a sentence around a value and
@@ -36,6 +45,8 @@ export interface PageStrings {
   readonly loading: string;
 
   readonly preview: string;
+  /** The scrolling stage under the toolbar, which takes focus so the keyboard can scroll it. */
+  readonly stage: string;
   readonly previous: string;
   readonly next: string;
   /** The open notification's place in the list, from 1. */
@@ -151,6 +162,7 @@ export const DEFAULT_PAGE_STRINGS: PageStrings = {
   loading: 'Loading…',
 
   preview: 'Preview',
+  stage: 'The notification as it arrives',
   previous: 'Previous notification',
   next: 'Next notification',
   position: (position, count) => `${String(position)} / ${String(count)}`,
@@ -252,7 +264,7 @@ export const DEFAULT_PAGE_STRINGS: PageStrings = {
 };
 
 /** The defaults with `strings` over them; the failure sentences are merged one by one. */
-export function mergeStrings(strings: Partial<PageStrings> | undefined): PageStrings {
+export function mergeStrings(strings: PageStringsInput | undefined): PageStrings {
   return {
     ...DEFAULT_PAGE_STRINGS,
     ...strings,

@@ -1,6 +1,7 @@
 import {describe, expect, it} from 'vitest';
 
 import {readPageConfig} from './config.js';
+import {DEFAULT_PAGE_STRINGS, mergeStrings} from './strings.js';
 
 /** A document holding the settings block the module writes, with `text` as its content. */
 function documentWith(text: string | undefined): Document {
@@ -45,6 +46,17 @@ describe('readPageConfig', () => {
     expect(config.strings).toEqual({title: 'T', failure: {default: 'F'}});
   });
 
+  it('takes some of the failure sentences, and the defaults fill the rest', () => {
+    const config = readPageConfig(
+      documentWith(JSON.stringify({...SETTINGS, strings: {failure: {401: 'Inicia sesión.'}}})),
+    );
+    expect(config.strings).toEqual({failure: {401: 'Inicia sesión.'}});
+    const failure = mergeStrings(config.strings).failure;
+    expect(failure[401]).toBe('Inicia sesión.');
+    expect(failure.default).toBe(DEFAULT_PAGE_STRINGS.failure.default);
+    expect(failure[500]).toBe(DEFAULT_PAGE_STRINGS.failure[500]);
+  });
+
   it('throws when the block is missing', () => {
     expect(() => readPageConfig(documentWith(undefined))).toThrow('Notification preview settings are missing');
   });
@@ -61,8 +73,8 @@ describe('readPageConfig', () => {
     expect(() => readPageConfig(documentWith(JSON.stringify({...SETTINGS, strings: 'x'})))).toThrow(
       'Notification preview settings are malformed',
     );
-    expect(() =>
-      readPageConfig(documentWith(JSON.stringify({...SETTINGS, strings: {failure: {500: 'No default.'}}}))),
-    ).toThrow('Notification preview settings are malformed');
+    expect(() => readPageConfig(documentWith(JSON.stringify({...SETTINGS, strings: {failure: 'x'}})))).toThrow(
+      'Notification preview settings are malformed',
+    );
   });
 });

@@ -10,7 +10,7 @@ import {Header} from './Header.js';
 import {Inspector} from './Inspector.js';
 import {PhoneFrame} from './PhoneFrame.js';
 import {mergeStrings, StringsContext, useStrings} from './strings.js';
-import type {PageStrings} from './strings.js';
+import type {PageStringsInput} from './strings.js';
 import {Toolbar} from './Toolbar.js';
 import type {CanvasView} from './Toolbar.js';
 import {useCatalog} from './useCatalog.js';
@@ -26,7 +26,7 @@ export interface NotificationPreviewPageProps {
   /** The app's name, on the brand, the inbox header and the phone. */
   readonly appName: string;
   /** Any of the page's words; the rest keep their English default. */
-  readonly strings?: Partial<PageStrings>;
+  readonly strings?: PageStringsInput;
   /** A short name for the server the page talks to, such as `DEV`, shown beside the title. */
   readonly environment?: string | null;
   /**
@@ -179,7 +179,12 @@ function Workspace({
               </ul>
             </section>
           )}
-          <div className="np-stage">{drawn}</div>
+          {/* The stage scrolls a long email, and a region that scrolls must take focus for the
+              keyboard to scroll it (axe scrollable-region-focusable, WCAG 2.1.1). */}
+          {/* oxlint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- a scrolling region is the exception the rule allows for */}
+          <div className="np-stage" role="group" aria-label={strings.stage} tabIndex={0}>
+            {drawn}
+          </div>
         </section>
         {entry === undefined ? null : (
           <Inspector

@@ -489,6 +489,10 @@ body,
   overflow: auto;
   padding: 6px 16px 24px;
 }
+.np-root .np-stage:focus-visible {
+  outline-offset: -2px;
+  border-radius: 6px;
+}
 
 /* The email, as a mail client shows it */
 .np-viewport {
@@ -527,7 +531,9 @@ body,
   background: var(--np-phone-body);
   translate: -50% 0;
 }
+/* A short email still sits in a whole handset: the paper fills the screen under it. */
 .np-viewport[data-width='phone'] .np-viewport-screen {
+  min-height: 560px;
   border-radius: 33px;
 }
 .np-mailbar {
