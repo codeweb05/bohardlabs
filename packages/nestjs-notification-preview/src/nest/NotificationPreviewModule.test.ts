@@ -11,6 +11,8 @@ import {
   type ExecutionContext,
   type INestApplication,
   type NestInterceptor,
+  type PipeTransform,
+  UseGuards,
 } from '@nestjs/common';
 import {Reflector} from '@nestjs/core';
 import {Test} from '@nestjs/testing';
@@ -87,12 +89,24 @@ class WrapInterceptor implements NestInterceptor {
   }
 }
 
+/** An app pipe that trims every string in a body, as an app may register for its own routes. */
+class TrimPipe implements PipeTransform {
+  transform(value: unknown): unknown {
+    if (typeof value === 'string') return value.trim();
+    if (Array.isArray(value)) return value.map((item: unknown) => this.transform(item));
+    if (typeof value === 'object' && value !== null)
+      return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, this.transform(item)]));
+    return value;
+  }
+}
+
 async function boot(module: DynamicModule): Promise<INestApplication> {
   const moduleRef = await Test.createTestingModule({imports: [module]}).compile();
   const app = moduleRef.createNestApplication({logger: false});
   const reflector = app.get(Reflector);
   app.useGlobalGuards(new AuthGuard(reflector), new LimitGuard(reflector));
   app.useGlobalInterceptors(new WrapInterceptor());
+  app.useGlobalPipes(new TrimPipe());
   await app.init();
   return app;
 }
@@ -173,6 +187,42 @@ describe('NotificationPreviewModule routes', () => {
     await request(server).post(`${PATH}/api/render`).send({id: 'welcome', locale: 'en', values: {}}).expect(200);
   });
 
+  it('passes the body as sent, past an app pipe that trims every string', async () => {
+    const response = await request(app.getHttpServer())
+      .post(`${PATH}/api/render`)
+      .send({id: 'welcome', locale: 'en', values: {firstName: '  Ada  '}})
+      .expect(200);
+    expect(response.body).toMatchObject({html: '<p>  Ada  </p>'});
+  });
+
+  it('runs a guard in decorators.all once per request, on each of the three routes', async () => {
+    const seen: string[] = [];
+    const counting: CanActivate = {
+      canActivate: (context: ExecutionContext) => {
+        seen.push(context.getHandler().name);
+        return true;
+      },
+    };
+    const counted = await boot(
+      NotificationPreviewModule.forRoot({
+        ...OPTIONS,
+        path: '/counted-preview',
+        decorators: {all: [Public(), UseGuards(counting)]},
+      }),
+    );
+    try {
+      const server = counted.getHttpServer();
+      await request(server).get('/counted-preview/api/catalog');
+      await request(server).post('/counted-preview/api/render').send({id: 'task-reminder', locale: 'en', values: {}});
+      await request(server)
+        .post('/counted-preview/api/send')
+        .send({id: 'task-reminder', locale: 'en', values: {}, target: 'ada@example.com'});
+      expect(seen).toEqual(['catalog', 'render', 'send']);
+    } finally {
+      await counted.close();
+    }
+  });
+
   it('leaves a route without decorators.all to the app guard', async () => {
     const closed = await boot(NotificationPreviewModule.forRoot({...OPTIONS, path: '/closed-preview', decorators: {}}));
     try {
@@ -235,7 +285,7 @@ describe('NotificationPreviewModule page', () => {
   it('escapes a </script> in the settings, so it cannot close the block', async () => {
     const response = await request(app.getHttpServer()).get(PATH).expect(200);
     expect(response.text).not.toContain('</script><b>x');
-    expect(response.text).toContain(String.raw`</script><b>x`);
+    expect(response.text).toContain(String.raw`\u003c/script>\u003cb>x`);
   });
 
   it('serves the page at a trailing slash too, with asset links under the path', async () => {
@@ -248,7 +298,7 @@ describe('NotificationPreviewModule page', () => {
     const response = await request(app.getHttpServer()).get(`${PATH}/assets/app-test.js`).expect(200);
     expect(response.headers['content-type']).toBe('text/javascript; charset=utf-8');
     expect(response.headers['cache-control']).toBe('public, max-age=31536000, immutable');
-    expect(response.text).toContain('export {};');
+    expect(response.text).toContain("export const fixture = 'app-test';");
   });
 
   it('passes a missing asset and a path outside assets on to the app, which answers 404', async () => {
@@ -323,7 +373,22 @@ describe('NotificationPreviewModule.forRootAsync', () => {
 });
 
 describe('NotificationPreviewModule path', () => {
-  it.each(['notification-preview', '/notification-preview/', '/a b', '/a"b', '/'])('refuses %j', (path) => {
+  it.each([
+    'notification-preview',
+    '/notification-preview/',
+    '/a b',
+    '/a"b',
+    '/',
+    '/.',
+    '/..',
+    '/a/./b',
+    '/a/../b',
+    '/a/..',
+  ])('refuses %j', (path) => {
     expect(() => NotificationPreviewModule.forRoot({...OPTIONS, path})).toThrow(/must start with a slash/);
+  });
+
+  it.each(['/notification-preview', '/admin/notification-preview', '/a.b/c~d', '/...'])('takes %j', (path) => {
+    expect(() => NotificationPreviewModule.forRoot({...OPTIONS, path})).not.toThrow();
   });
 });
