@@ -2,49 +2,70 @@ import type {Catalog, RegistryEntry, RenderRequest, RenderResponse, SendRequest,
 import {PreviewClientError} from '../page/client.js';
 import type {PreviewClient} from '../page/client.js';
 
+const ENTRIES: readonly RegistryEntry[] = [
+  {
+    id: 'welcome',
+    channel: 'email',
+    label: 'Welcome',
+    recipient: 'A new account holder',
+    trigger: 'An account is created.',
+    variables: [
+      {name: 'firstName', type: 'text', sample: 'Ada'},
+      {name: 'verifyUrl', type: 'url', sample: 'https://example.com/verify/abc'},
+    ],
+  },
+  {
+    id: 'invoice-due',
+    channel: 'email',
+    label: 'Invoice due',
+    trigger: 'An invoice is three days from its due date.',
+    variables: [
+      {name: 'amount', type: 'number', sample: '42'},
+      {name: 'dueAt', type: 'datetime', sample: '2026-01-15T09:30:00.000Z'},
+      {name: 'plan', type: 'enum', options: ['basic', 'pro'], sample: 'pro'},
+    ],
+  },
+  {
+    id: 'task-reminder',
+    channel: 'push',
+    label: 'Task reminder',
+    recipient: 'The task owner',
+    trigger: 'A task is due in fifteen minutes.',
+    variables: [{name: 'taskName', type: 'text', sample: 'Water the plants'}],
+  },
+  {
+    id: 'weekly-summary',
+    channel: 'push',
+    label: 'Weekly summary',
+    trigger: 'Every Monday at nine.',
+    variables: [],
+  },
+];
+
+/**
+ * A stand-in fingerprint for each entry in each of its channel's locales (`en` for a channel that
+ * lists none), as the server would give. An id in `changed` gets another, as a render changed
+ * since a tick would.
+ */
+function fingerprintsOf(
+  entries: readonly RegistryEntry[],
+  locales: Catalog['locales'],
+  changed: readonly string[] = [],
+): Catalog['fingerprints'] {
+  return Object.fromEntries(
+    entries.map((entry) => {
+      const listed = locales[entry.channel] ?? [];
+      const offered = listed.length === 0 ? ['en'] : listed;
+      const version = changed.includes(entry.id) ? 'v2' : 'v1';
+      return [entry.id, Object.fromEntries(offered.map((locale) => [locale, `${entry.id}.${locale}.${version}`]))];
+    }),
+  );
+}
+
+const LOCALES: Catalog['locales'] = {email: ['en', 'es'], push: ['en', 'es']};
+
 /** A registry with two emails and two pushes, in two locales, for the tests and the stories. */
-export const CATALOG: Catalog = {
-  locales: {email: ['en', 'es'], push: ['en', 'es']},
-  entries: [
-    {
-      id: 'welcome',
-      channel: 'email',
-      label: 'Welcome',
-      recipient: 'A new account holder',
-      trigger: 'An account is created.',
-      variables: [
-        {name: 'firstName', type: 'text', sample: 'Ada'},
-        {name: 'verifyUrl', type: 'url', sample: 'https://example.com/verify/abc'},
-      ],
-    },
-    {
-      id: 'invoice-due',
-      channel: 'email',
-      label: 'Invoice due',
-      trigger: 'An invoice is three days from its due date.',
-      variables: [
-        {name: 'amount', type: 'number', sample: '42'},
-        {name: 'dueAt', type: 'datetime', sample: '2026-01-15T09:30:00.000Z'},
-        {name: 'plan', type: 'enum', options: ['basic', 'pro'], sample: 'pro'},
-      ],
-    },
-    {
-      id: 'task-reminder',
-      channel: 'push',
-      label: 'Task reminder',
-      recipient: 'The task owner',
-      trigger: 'A task is due in fifteen minutes.',
-      variables: [{name: 'taskName', type: 'text', sample: 'Water the plants'}],
-    },
-    {
-      id: 'weekly-summary',
-      channel: 'push',
-      label: 'Weekly summary',
-      trigger: 'Every Monday at nine.',
-      variables: [],
-    },
-  ],
-};
+export const CATALOG: Catalog = {locales: LOCALES, entries: ENTRIES, fingerprints: fingerprintsOf(ENTRIES, LOCALES)};
 
 const GREETING: Readonly<Record<string, string>> = {en: 'Hello', es: 'Hola'};
 
@@ -121,17 +142,22 @@ export interface FakeClient extends PreviewClient {
 /**
  * A client that answers from `CATALOG` with no server. A `verifyUrl` not starting https:// is
  * refused, a send to `refuse@example.com` is refused on its target, and a send to
- * `busy@example.com` is a 429. `extra` adds that many short entries after the four.
+ * `busy@example.com` is a 429. `extra` adds that many short entries after the four, and each id
+ * in `changed` gets another fingerprint than `CATALOG` gives it.
  */
 export function fakeClient(
-  options: {readonly failCatalog?: boolean; readonly locales?: Catalog['locales']; readonly extra?: number} = {},
+  options: {
+    readonly failCatalog?: boolean;
+    readonly locales?: Catalog['locales'];
+    readonly extra?: number;
+    readonly changed?: readonly string[];
+  } = {},
 ): FakeClient {
   const renders: RenderRequest[] = [];
   const sends: SendRequest[] = [];
-  const catalog: Catalog = {
-    locales: options.locales ?? CATALOG.locales,
-    entries: [...CATALOG.entries, ...extraEntries(options.extra ?? 0)],
-  };
+  const locales = options.locales ?? CATALOG.locales;
+  const entries = [...CATALOG.entries, ...extraEntries(options.extra ?? 0)];
+  const catalog: Catalog = {locales, entries, fingerprints: fingerprintsOf(entries, locales, options.changed)};
   return {
     renders,
     sends,

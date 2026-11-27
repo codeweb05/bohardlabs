@@ -3,6 +3,7 @@ import {describe, expect, expectTypeOf, it, vi} from 'vitest';
 import {createNotificationPreview} from './createNotificationPreview.js';
 import type {NotificationPreviewOptions} from './createNotificationPreview.js';
 import {InvalidValuesError, UnregisteredNotificationError} from './errors.js';
+import {fingerprint} from './fingerprint.js';
 import type {ChannelProvider, RegistryEntry, RenderRequest, SendRequest} from './types.js';
 
 const RESET: RegistryEntry = {
@@ -43,16 +44,85 @@ function pushProvider(locales: readonly string[] = ['en']): ChannelProvider<'pus
 }
 
 describe('createNotificationPreview', () => {
-  it('lists the registry', () => {
+  it('lists the registry', async () => {
     const preview = createNotificationPreview({registry: [RESET, REMINDER], providers: {}});
-    expect(preview.catalog()).toEqual({locales: {}, entries: [RESET, REMINDER]});
+    await expect(preview.catalog()).resolves.toEqual({
+      locales: {},
+      entries: [RESET, REMINDER],
+      fingerprints: {'password-reset': {}, reminder: {}},
+    });
   });
 
-  it("catalog lists each configured channel's locales", () => {
+  it("catalog lists each configured channel's locales", async () => {
     const email = emailProvider(['en', 'es']);
     const push = pushProvider(['en']);
     const preview = createNotificationPreview({registry: [RESET, REMINDER], providers: {email, push}});
-    expect(preview.catalog().locales).toEqual({email: ['en', 'es'], push: ['en']});
+    expect((await preview.catalog()).locales).toEqual({email: ['en', 'es'], push: ['en']});
+  });
+
+  it('fingerprints each entry in each locale its provider lists, rendered with its samples', async () => {
+    const email = emailProvider(['en', 'es']);
+    const push = pushProvider(['en']);
+    const preview = createNotificationPreview({registry: [RESET, REMINDER], providers: {email, push}});
+    const {fingerprints} = await preview.catalog();
+    expect(email.render).toHaveBeenCalledWith('password-reset', {resetUrl: 'https://example.com/reset'}, 'en');
+    expect(email.render).toHaveBeenCalledWith('password-reset', {resetUrl: 'https://example.com/reset'}, 'es');
+    expect(fingerprints).toEqual({
+      'password-reset': {
+        en: fingerprint({
+          channel: 'email',
+          subject: 'password-reset en',
+          html: '<p>https://example.com/reset</p>',
+          text: 'https://example.com/reset',
+          warnings: [],
+        }),
+        es: fingerprint({
+          channel: 'email',
+          subject: 'password-reset es',
+          html: '<p>https://example.com/reset</p>',
+          text: 'https://example.com/reset',
+          warnings: [],
+        }),
+      },
+      reminder: {en: fingerprint({channel: 'push', title: 'Time', body: 'Your reminder', warnings: ['draft']})},
+    });
+    expect(fingerprints['password-reset']?.['en']).toMatch(/^[0-9a-f]{8}$/u);
+    expect(fingerprints['password-reset']?.['en']).not.toBe(fingerprints['password-reset']?.['es']);
+  });
+
+  it('fingerprints a channel that lists no locale in its fallback locale only', async () => {
+    const email = emailProvider([]);
+    const preview = createNotificationPreview({registry: [RESET], providers: {email}});
+    const {fingerprints} = await preview.catalog();
+    expect(Object.keys(fingerprints['password-reset'] ?? {})).toEqual(['en']);
+    expect(email.render).toHaveBeenCalledOnce();
+  });
+
+  it('renders the fingerprints once, on the first catalog, and keeps them', async () => {
+    const email = emailProvider(['en', 'es']);
+    const push = pushProvider(['en']);
+    const preview = createNotificationPreview({registry: [RESET, REMINDER], providers: {email, push}});
+    expect(email.render).not.toHaveBeenCalled();
+    const first = await preview.catalog();
+    const second = await preview.catalog();
+    expect(second.fingerprints).toEqual(first.fingerprints);
+    expect(email.render).toHaveBeenCalledTimes(2);
+    expect(push.render).toHaveBeenCalledTimes(1);
+  });
+
+  it('leaves a fingerprint null when its render throws, and still answers the catalog', async () => {
+    const email: ChannelProvider<'email'> = {
+      locales: () => ['en', 'es'],
+      render: vi.fn((_id: string, _values: Readonly<Record<string, string>>, locale: string) => {
+        if (locale === 'es') throw new Error('No Spanish template.');
+        return {subject: 'Hi', html: '<p>Hi</p>', text: 'Hi'};
+      }),
+      send: vi.fn(async () => ({messageId: null})),
+    };
+    const preview = createNotificationPreview({registry: [RESET], providers: {email}});
+    const {fingerprints} = await preview.catalog();
+    expect(fingerprints['password-reset']?.['es']).toBeNull();
+    expect(fingerprints['password-reset']?.['en']).toMatch(/^[0-9a-f]{8}$/u);
   });
 
   it('render passes the locale through untouched', async () => {
@@ -77,9 +147,9 @@ describe('createNotificationPreview', () => {
     expect(email.send).not.toHaveBeenCalled();
   });
 
-  it('options without languages', () => {
+  it('options without languages', async () => {
     expectTypeOf<NotificationPreviewOptions>().not.toHaveProperty('languages');
-    expect(createNotificationPreview({registry: [RESET], providers: {}}).catalog().entries).toEqual([RESET]);
+    expect((await createNotificationPreview({registry: [RESET], providers: {}}).catalog()).entries).toEqual([RESET]);
   });
 
   it('refuses an id registered twice', () => {
@@ -176,6 +246,16 @@ describe('createNotificationPreview', () => {
     const noValues: unknown = {id: 'password-reset', locale: 'en'};
     await preview.render(noValues as RenderRequest);
     expect(email.render).toHaveBeenCalledWith('password-reset', {}, 'en');
+  });
+
+  it('reads only values the body holds itself, so a variable named constructor is not the prototype', async () => {
+    const entry: RegistryEntry = {...RESET, id: 'built', variables: [{name: 'constructor', type: 'text', sample: 'x'}]};
+    const email = emailProvider();
+    const preview = createNotificationPreview({registry: [entry], providers: {email}});
+    await preview.render({id: 'built', locale: 'en', values: {}});
+    expect(email.render).toHaveBeenLastCalledWith('built', {}, 'en');
+    await preview.render({id: 'built', locale: 'en', values: {constructor: 'Ada'}});
+    expect(email.render).toHaveBeenLastCalledWith('built', {constructor: 'Ada'}, 'en');
   });
 
   it('sends an email to a trimmed target', async () => {

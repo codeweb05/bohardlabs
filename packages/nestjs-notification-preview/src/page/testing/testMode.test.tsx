@@ -48,26 +48,61 @@ describe('test mode', () => {
     expect(within(progress).getByText('0 / 4')).toBeInTheDocument();
   });
 
-  it('asks for a retest when an edit changes the render', async () => {
+  it('keeps a tick as it is while values are typed', async () => {
     const user = userEvent.setup();
     render(<NotificationPreviewPage appName="Acme" client={fakeClient()} storageKey={KEY} />);
     await open(user);
     await user.click(await screen.findByRole('checkbox', {name: 'Mark as tested'}));
-    expect(screen.queryByText('Changed since you tested it.')).not.toBeInTheDocument();
 
     const name = screen.getByLabelText(/First name/u);
     await user.clear(name);
     await user.type(name, 'Grace');
+    await waitFor(() => {
+      expect(screen.getByRole('checkbox', {name: 'Tested'})).toBeEnabled();
+    });
+    expect(screen.getByRole('checkbox', {name: 'Tested'})).toBeChecked();
+    expect(screen.queryByText('Changed since you tested it.')).not.toBeInTheDocument();
+    expect(within(screen.getByRole('group', {name: 'Test progress'})).getByText('1 / 4')).toBeInTheDocument();
+  });
+
+  it("asks for a retest when the server's fingerprint for the open one changed since the tick", async () => {
+    const user = userEvent.setup();
+    const view = render(<NotificationPreviewPage appName="Acme" client={fakeClient()} storageKey={KEY} />);
+    await open(user);
+    await user.click(await screen.findByRole('checkbox', {name: 'Mark as tested'}));
+    view.unmount();
+
+    render(<NotificationPreviewPage appName="Acme" client={fakeClient({changed: ['welcome']})} storageKey={KEY} />);
+    await open(user);
     expect(await screen.findByText('Changed since you tested it.')).toBeInTheDocument();
     expect(screen.getByRole('checkbox', {name: 'Mark as tested'})).not.toBeChecked();
     expect(screen.getByRole('button', {name: /Welcome/u})).toHaveTextContent('Changed since tested');
-    expect(within(screen.getByRole('group', {name: 'Test progress'})).getByText('0 / 4')).toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', {name: 'Reset'}));
-    await waitFor(() => {
-      expect(screen.queryByText('Changed since you tested it.')).not.toBeInTheDocument();
-    });
+    await user.click(screen.getByRole('checkbox', {name: 'Mark as tested'}));
     expect(screen.getByRole('checkbox', {name: 'Tested'})).toBeChecked();
+    expect(screen.queryByText('Changed since you tested it.')).not.toBeInTheDocument();
+  });
+
+  it('counts a ticked one that is not open as changed, and lists it to test, when its fingerprint changed', async () => {
+    const user = userEvent.setup();
+    const view = render(<NotificationPreviewPage appName="Acme" client={fakeClient()} storageKey={KEY} />);
+    await open(user);
+    await user.click(screen.getByRole('button', {name: /Invoice due/u}));
+    await waitFor(() => {
+      expect(screen.getByRole('checkbox', {name: 'Mark as tested'})).toBeEnabled();
+    });
+    await user.click(screen.getByRole('checkbox', {name: 'Mark as tested'}));
+    expect(screen.getByRole('checkbox', {name: 'Tested'})).toBeChecked();
+    view.unmount();
+
+    render(<NotificationPreviewPage appName="Acme" client={fakeClient({changed: ['invoice-due']})} storageKey={KEY} />);
+    await open(user);
+    const progress = screen.getByRole('group', {name: 'Test progress'});
+    expect(within(progress).getByText('1 changed · 3 not tested')).toBeInTheDocument();
+    expect(screen.getByRole('button', {name: /Invoice due/u})).toHaveTextContent('Changed since tested');
+
+    await user.click(screen.getByRole('radio', {name: 'To test'}));
+    expect(screen.getByRole('button', {name: /Invoice due/u})).toBeInTheDocument();
   });
 
   it('remembers a tick in this browser across visits', async () => {
@@ -109,11 +144,6 @@ describe('test mode', () => {
     await user.click(await screen.findByRole('checkbox', {name: 'Mark as tested'}));
     expect(within(progress).getByText('0 changed · 3 not tested')).toBeInTheDocument();
     expect(within(email).getByRole('heading')).toHaveTextContent('1 / 2');
-
-    const name = screen.getByLabelText(/First name/u);
-    await user.clear(name);
-    await user.type(name, 'Grace');
-    expect(await within(progress).findByText('1 changed · 3 not tested')).toBeInTheDocument();
   });
 
   it('filters the list to what is left to test, or what is tested', async () => {

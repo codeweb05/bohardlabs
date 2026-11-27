@@ -24,11 +24,14 @@ describe('the tested store', () => {
     expect(store.stateOf('welcome', 'en', 'h2')).toBe('retest');
   });
 
-  it('gives the stored state as it is when no hash is known', () => {
+  it('judges a fingerprint the server could not render as a value of its own, never as tested', () => {
     const store = createTestedStore(null, KEY);
     expect(store.stateOf('welcome', 'en', null)).toBe('untested');
     store.tick('welcome', 'en', 'h1');
+    expect(store.stateOf('welcome', 'en', null)).toBe('retest');
+    store.tick('welcome', 'en', null);
     expect(store.stateOf('welcome', 'en', null)).toBe('tested');
+    expect(store.stateOf('welcome', 'en', 'h1')).toBe('retest');
   });
 
   it('keeps a tick for each entry and locale', () => {

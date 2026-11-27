@@ -18,11 +18,13 @@ import {Reflector} from '@nestjs/core';
 import {Test} from '@nestjs/testing';
 import {map, type Observable} from 'rxjs';
 import request from 'supertest';
+import {expectTypeOf} from 'vitest';
 
 import {InvalidValuesError} from '../core/errors.js';
 import type {ChannelProvider, Providers} from '../core/types.js';
 import {CATALOG} from '../test/fakeClient.js';
 import {NotificationPreviewModule} from './NotificationPreviewModule.js';
+import type {NotificationPreviewModuleAsyncOptions, NotificationPreviewModuleOptions} from './options.js';
 import {pageHeaders} from './pageHeaders.js';
 
 vi.mock('./uiDir.js', async () => {
@@ -113,12 +115,22 @@ async function boot(module: DynamicModule): Promise<INestApplication> {
 
 const OPTIONS = {
   path: PATH,
+  enabled: true,
   registry: CATALOG.entries,
   providers: PROVIDERS,
   appName: 'Acme',
   environment: 'DEV',
   decorators: {all: [Public()], send: [Limited()]},
 } as const;
+
+// The catalog's fingerprints: each entry in each locale its channel's provider lists.
+const HASH = expect.stringMatching(/^[0-9a-f]{8}$/u);
+const FINGERPRINTS = {
+  welcome: {en: HASH, es: HASH},
+  'invoice-due': {en: HASH, es: HASH},
+  'task-reminder': {en: HASH},
+  'weekly-summary': {en: HASH},
+};
 
 const configOf = (html: string): unknown => {
   const match = /<script type="application\/json" id="np-config">([\s\S]*?)<\/script>/.exec(html);
@@ -136,7 +148,11 @@ describe('NotificationPreviewModule routes', () => {
 
   it('answers the catalog raw, past an interceptor that wraps bodies, with channels from the providers', async () => {
     const response = await request(app.getHttpServer()).get(`${PATH}/api/catalog`).expect(200);
-    expect(response.body).toEqual({entries: CATALOG.entries, locales: {email: ['en', 'es'], push: ['en']}});
+    expect(response.body).toEqual({
+      entries: CATALOG.entries,
+      locales: {email: ['en', 'es'], push: ['en']},
+      fingerprints: FINGERPRINTS,
+    });
   });
 
   it('answers a render raw with 200', async () => {
@@ -278,7 +294,7 @@ describe('NotificationPreviewModule page', () => {
       appName: 'Acme </script><b>x',
       environment: 'DEV',
       strings: {},
-      storageKey: 'notification-preview',
+      storageKey: `notification-preview:${PATH}`,
     });
   });
 
@@ -350,6 +366,7 @@ describe('NotificationPreviewModule.forRootAsync', () => {
     app = await boot(
       NotificationPreviewModule.forRootAsync({
         path: PATH,
+        enabled: true,
         imports: [ConfigModule],
         inject: [AppConfig],
         useFactory: (config: AppConfig) => ({registry: CATALOG.entries, providers: PROVIDERS, appName: config.appName}),
@@ -363,12 +380,45 @@ describe('NotificationPreviewModule.forRootAsync', () => {
 
   it('builds the same routes from the injected config', async () => {
     const response = await request(app.getHttpServer()).get(`${PATH}/api/catalog`).expect(200);
-    expect(response.body).toEqual({entries: CATALOG.entries, locales: {email: ['en', 'es'], push: ['en']}});
+    expect(response.body).toEqual({
+      entries: CATALOG.entries,
+      locales: {email: ['en', 'es'], push: ['en']},
+      fingerprints: FINGERPRINTS,
+    });
   });
 
   it('writes the injected app name into the page', async () => {
     const response = await request(app.getHttpServer()).get(PATH).expect(200);
     expect(configOf(response.text)).toMatchObject({appName: 'From config', environment: null});
+  });
+});
+
+describe('NotificationPreviewModule enabled', () => {
+  it('is required, with no default, in both forms', () => {
+    expectTypeOf<NotificationPreviewModuleOptions['enabled']>().toEqualTypeOf<boolean>();
+    expectTypeOf<NotificationPreviewModuleAsyncOptions['enabled']>().toEqualTypeOf<boolean>();
+  });
+
+  it('checks the path even when disabled, so a typo shows before the flag is turned on', () => {
+    const useFactory = vi.fn(() => ({registry: CATALOG.entries, providers: PROVIDERS, appName: 'Acme'}));
+    expect(() => NotificationPreviewModule.forRoot({...OPTIONS, enabled: false, path: 'preview'})).toThrow(
+      /must start with a slash/,
+    );
+    expect(() => NotificationPreviewModule.forRootAsync({path: '/preview/', enabled: false, useFactory})).toThrow(
+      /must start with a slash/,
+    );
+  });
+});
+
+describe('NotificationPreviewModule storage key', () => {
+  it('defaults to one per path, so two previews on one origin keep apart', async () => {
+    const other = await boot(NotificationPreviewModule.forRoot({...OPTIONS, path: '/admin/preview'}));
+    try {
+      const response = await request(other.getHttpServer()).get('/admin/preview').expect(200);
+      expect(configOf(response.text)).toMatchObject({storageKey: 'notification-preview:/admin/preview'});
+    } finally {
+      await other.close();
+    }
   });
 });
 
