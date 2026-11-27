@@ -4,6 +4,8 @@ import type {ReactNode, RefObject} from 'react';
 import type {Channel, RegistryEntry} from '../core/types.js';
 import {Icon} from './Icon.js';
 import {useStrings} from './strings.js';
+import type {TestState} from './testing/testedStore.js';
+import {StateMark} from './testing/views/StateMark.js';
 
 const matches = (entry: RegistryEntry, query: string): boolean => {
   const needle = query.trim().toLowerCase();
@@ -11,21 +13,23 @@ const matches = (entry: RegistryEntry, query: string): boolean => {
 };
 
 /**
- * The registered notifications, by channel, with a search over label, id and trigger. `mark`
- * puts something at each item's end, as test mode does with its state.
+ * The registered notifications, by channel, with a search over label, id and trigger. `stateOf`
+ * marks each item's end with its test state, as test mode does; `top` goes under the search, where test mode puts its progress.
  */
 export function EntryList({
   entries,
   selectedId,
   searchRef,
   onSelect,
-  mark,
+  stateOf,
+  top,
 }: Readonly<{
   entries: readonly RegistryEntry[];
   selectedId: string | undefined;
   searchRef: RefObject<HTMLInputElement | null>;
   onSelect: (id: string) => void;
-  mark?: (entry: RegistryEntry) => ReactNode;
+  stateOf?: (entry: RegistryEntry) => TestState;
+  top?: ReactNode;
 }>) {
   const strings = useStrings();
   const searchId = useId();
@@ -56,6 +60,7 @@ export function EntryList({
         />
         <kbd aria-hidden="true">/</kbd>
       </div>
+      {top}
       {entries.length === 0 ? <p className="np-muted">{strings.empty}</p> : null}
       {entries.length > 0 && shown.length === 0 ? <p className="np-muted">{strings.noMatch}</p> : null}
       {groups.map(({channel, title}) => {
@@ -88,7 +93,7 @@ export function EntryList({
                         <span className="np-item-recipient">{entry.recipient}</span>
                       )}
                     </span>
-                    {mark?.(entry)}
+                    {stateOf === undefined ? null : <StateMark state={stateOf(entry)} />}
                   </button>
                 </li>
               ))}

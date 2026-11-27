@@ -32,6 +32,7 @@ body,
   --np-accent-text: light-dark(#3446a6, #b4c3f5);
   --np-bad: light-dark(#b42318, #f97066);
   --np-good: light-dark(#1a7f4b, #5fd39a);
+  --np-good-bg: light-dark(#e3f4ea, #12301f);
   --np-warn-bg: light-dark(#fff4db, #3a2e10);
   --np-warn-text: light-dark(#7a4f00, #f5c84c);
   --np-env-bg: light-dark(#fff4db, #3a2e10);
@@ -1031,4 +1032,163 @@ body,
 }
 .np-button-primary:hover:not(:disabled) {
   color: var(--np-on-accent);
+}
+
+/* Test mode: the header's switch. */
+.np-mode {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+  padding: 0 10px 0 6px;
+  border: 1px solid var(--np-line-strong);
+  border-radius: 8px;
+  background: var(--np-surface);
+  font-weight: 500;
+}
+.np-track {
+  position: relative;
+  width: 28px;
+  height: 16px;
+  border-radius: 999px;
+  background: var(--np-line-strong);
+  transition: background 0.15s;
+}
+.np-track::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--np-surface);
+  transition: transform 0.15s;
+}
+.np-mode[aria-checked='true'] .np-track {
+  background: var(--np-good);
+}
+.np-mode[aria-checked='true'] .np-track::after {
+  transform: translateX(12px);
+}
+
+/* Test mode: how far the tester has got, and each item's mark. */
+.np-progress {
+  display: grid;
+  gap: 6px;
+  margin: 0 0 14px;
+  padding: 10px;
+  border-radius: 8px;
+  background: var(--np-good-bg);
+}
+.np-progress-row,
+.np-progress-channels {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--np-text-2);
+  font-size: 12px;
+}
+.np-progress b {
+  color: var(--np-text);
+  font-variant-numeric: tabular-nums;
+}
+.np-bar {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--np-surface);
+  overflow: hidden;
+}
+.np-bar i {
+  display: block;
+  height: 100%;
+  background: var(--np-good);
+}
+.np-state {
+  position: relative;
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  margin: 2px 0 0 auto;
+  border-radius: 50%;
+  font-size: 11px;
+  font-weight: 700;
+}
+.np-state[data-state='tested'] {
+  background: var(--np-good-bg);
+  color: var(--np-good);
+}
+.np-state[data-state='retest'] {
+  background: var(--np-warn-bg);
+  color: var(--np-warn-text);
+}
+.np-state[data-state='untested'] {
+  border: 1.5px dashed var(--np-line-strong);
+}
+
+/* Test mode: the toolbar's tick, and the notice when the render changed after it. */
+.np-check {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 34px;
+  padding: 0 10px 0 8px;
+  border: 1px solid var(--np-line-strong);
+  border-radius: 9px;
+  background: var(--np-surface);
+  font-weight: 500;
+  cursor: pointer;
+}
+/* The checkbox covers its label unseen, so the label shows its focus. */
+.np-check input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.np-check:has(input:focus-visible) {
+  outline: 2px solid var(--np-accent);
+  outline-offset: 2px;
+}
+.np-check:has(input:disabled) {
+  opacity: 0.55;
+  cursor: default;
+}
+.np-box {
+  display: grid;
+  place-items: center;
+  width: 15px;
+  height: 15px;
+  border: 1.5px solid var(--np-text-3);
+  border-radius: 4px;
+  font-size: 11px;
+  line-height: 1;
+}
+.np-check:has(input:checked) {
+  border-color: transparent;
+  background: var(--np-good-bg);
+  color: var(--np-good);
+}
+.np-check:has(input:checked) .np-box {
+  border-color: var(--np-good);
+  background: var(--np-good);
+  color: var(--np-surface);
+}
+.np-retest {
+  margin: 0 16px 8px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  background: var(--np-warn-bg);
+  color: var(--np-warn-text);
+  font-size: 12px;
 }

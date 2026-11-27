@@ -23,7 +23,7 @@ describe('the page strings', () => {
     expect(S.languageName('es')).toBe('Spanish (es)');
     expect(S.languageName('not a code!')).toBe('not a code!');
     expect(S.position(2, 9)).toBe('2 / 9');
-    expect(S.testProgress(3, 39)).toBe('3 / 39');
+    expect(S.testedOf(3, 39)).toBe('3 / 39');
     expect(S.phoneLabel('iPhone', 'Lock screen')).toBe('iPhone, Lock screen');
     expect(S.renderFailed(undefined)).toBe('The preview failed.');
     expect(S.renderFailed(500)).toBe('The preview failed with 500.');

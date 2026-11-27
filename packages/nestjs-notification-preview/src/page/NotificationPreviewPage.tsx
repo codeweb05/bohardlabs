@@ -11,6 +11,11 @@ import {Inspector} from './Inspector.js';
 import {PhoneFrame} from './PhoneFrame.js';
 import {mergeStrings, StringsContext, useStrings} from './strings.js';
 import type {PageStringsInput} from './strings.js';
+import {useTesting} from './testing/useTesting.js';
+import {RetestNotice} from './testing/views/RetestNotice.js';
+import {TestModeSwitch} from './testing/views/TestModeSwitch.js';
+import {TestProgress} from './testing/views/TestProgress.js';
+import {TickButton} from './testing/views/TickButton.js';
 import {Toolbar} from './Toolbar.js';
 import type {CanvasView} from './Toolbar.js';
 import {useCatalog} from './useCatalog.js';
@@ -30,8 +35,9 @@ export interface NotificationPreviewPageProps {
   /** A short name for the server the page talks to, such as `DEV`, shown beside the title. */
   readonly environment?: string | null;
   /**
-   * The localStorage prefix for the theme and the recent send targets. Recent targets are
-   * kept per channel and per `environment` under it.
+   * The localStorage prefix for the theme, the recent send targets and test mode's ticks, which
+   * are kept under `<storageKey>:tested`. Recent targets are kept per channel and per
+   * `environment` under it.
    */
   readonly storageKey?: string;
 }
@@ -61,6 +67,7 @@ export function NotificationPreviewPage({
             <Workspace
               client={client}
               catalog={catalog.catalog}
+              testedKey={`${storageKey}:tested`}
               environment={environmentName}
               targetsKey={
                 environmentName === undefined ? `${storageKey}.targets` : `${storageKey}.targets.${environmentName}`
@@ -96,6 +103,7 @@ function Workspace({
   client,
   catalog,
   environment,
+  testedKey,
   targetsKey,
   theme,
   onTheme,
@@ -103,6 +111,7 @@ function Workspace({
   client: PreviewClient;
   catalog: Catalog;
   environment: string | undefined;
+  testedKey: string;
   targetsKey: string;
   theme: ThemeChoice;
   onTheme: (theme: ThemeChoice) => void;
@@ -112,6 +121,7 @@ function Workspace({
   const sender = useSend(client);
   const searchRef = useRef<HTMLInputElement>(null);
   const [view, setView] = useState<CanvasView>(FIRST_VIEW);
+  const testing = useTesting(testedKey, preview.locale);
   const {entry, render} = preview;
   // A render for another notification is never drawn under this one's name.
   const rendered = entry !== undefined && render.request?.id === entry.id ? render.rendered : undefined;
@@ -119,6 +129,7 @@ function Workspace({
   if (rendered?.channel === 'email') drawn = <EmailCanvas email={rendered} width={view.width} part={view.part} />;
   if (rendered?.channel === 'push')
     drawn = <PhoneFrame device={view.device} surface={view.surface} title={rendered.title} body={rendered.body} />;
+  const state = entry === undefined ? 'untested' : testing.stateOf(entry, rendered);
   const step = (by: 1 | -1): void => {
     sender.clear();
     preview.step(by);
@@ -145,12 +156,19 @@ function Workspace({
         theme={theme}
         onLanguage={preview.language}
         onTheme={onTheme}
+        tools={<TestModeSwitch on={testing.on} onChange={testing.setOn} />}
       />
       <div className="np-main">
         <EntryList
           entries={preview.entries}
           selectedId={entry?.id}
           searchRef={searchRef}
+          top={testing.on ? <TestProgress {...testing.count(preview.entries, entry, rendered)} /> : undefined}
+          stateOf={
+            testing.on
+              ? (candidate) => testing.stateOf(candidate, candidate.id === entry?.id ? rendered : undefined)
+              : undefined
+          }
           onSelect={(id) => {
             sender.clear();
             preview.select(id);
@@ -164,7 +182,19 @@ function Workspace({
             view={view}
             onStep={step}
             onView={setView}
+            end={
+              testing.on && entry !== undefined ? (
+                <TickButton
+                  tested={state === 'tested'}
+                  disabled={rendered === undefined}
+                  onToggle={() => {
+                    if (rendered !== undefined) testing.toggle(entry, rendered);
+                  }}
+                />
+              ) : undefined
+            }
           />
+          {testing.on && state === 'retest' ? <RetestNotice /> : null}
           <p className="np-status np-status-error" role="status">
             {render.failure}
           </p>

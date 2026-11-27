@@ -129,6 +129,19 @@ export interface PageStrings {
   readonly sendFailed: (status: number | undefined) => string;
   readonly tooManySends: (retryAfterSeconds: number | undefined) => string;
 
+  /** The header's switch for test mode, where a reviewer ticks each notification as tested. */
+  readonly testMode: string;
+  readonly testProgress: string;
+  readonly tested: string;
+  /** Tested notifications over all of them, as "3 / 39". */
+  readonly testedOf: (tested: number, total: number) => string;
+  readonly markTested: string;
+  readonly stateTested: string;
+  readonly stateRetest: string;
+  readonly stateUntested: string;
+  readonly retestTitle: string;
+  readonly retestBody: string;
+
   readonly failure: FailureStrings;
 }
 
@@ -246,6 +259,17 @@ export const DEFAULT_PAGE_STRINGS: PageStrings = {
     retryAfterSeconds === undefined
       ? 'Too many test sends. Try again shortly.'
       : `Too many test sends. Try again in ${String(retryAfterSeconds)} s.`,
+
+  testMode: 'Test mode',
+  testProgress: 'Test progress',
+  tested: 'Tested',
+  testedOf: (tested, total) => `${String(tested)} / ${String(total)}`,
+  markTested: 'Mark as tested',
+  stateTested: 'Tested',
+  stateRetest: 'Changed since tested',
+  stateUntested: 'Not tested',
+  retestTitle: 'Changed since you tested it.',
+  retestBody: 'Test this version and tick it again.',
 
   failure: {
     // Also said when no answer came at all (status 0), unless a translation names 0 itself.
