@@ -28,13 +28,16 @@ interface PageMount {
   readonly handler: PageHandler;
 }
 
-/** A path from the origin root, safe to write into the page's HTML: `/a/b`, no trailing slash. */
-const PATH = /^(?:\/[\w.~-]+)+$/;
+/**
+ * A path from the origin root, safe to write into the page's HTML: `/a/b`, no trailing slash,
+ * and no `.` or `..` segment, which a browser would resolve to another path.
+ */
+const PATH = /^(?:\/(?!\.\.?(?:\/|$))[\w.~-]+)+$/;
 
 function checkedPath(path: string): string {
   if (!PATH.test(path)) {
     throw new Error(
-      `NotificationPreviewModule: path "${path}" must start with a slash, end without one, and hold only letters, digits and . _ ~ -`,
+      `NotificationPreviewModule: path "${path}" must start with a slash, end without one, hold only letters, digits and . _ ~ -, and have no . or .. segment`,
     );
   }
   return path;

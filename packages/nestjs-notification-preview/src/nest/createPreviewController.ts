@@ -1,10 +1,10 @@
 import type {ServerResponse} from 'node:http';
 
-import {applyDecorators, Body, Controller, Get, Inject, Post, Res, type Type} from '@nestjs/common';
+import {applyDecorators, Controller, Get, Inject, Post, Req, Res, type Type} from '@nestjs/common';
 
 import type {NotificationPreview} from '../core/createNotificationPreview.js';
 import {InvalidValuesError, UnregisteredNotificationError} from '../core/errors.js';
-import type {RenderRequest, SendRequest} from '../core/types.js';
+import type {SendRequest} from '../core/types.js';
 import type {NotificationPreviewDecorators} from './options.js';
 
 /** The injection token for the module's `NotificationPreview`. */
@@ -12,6 +12,15 @@ export const PREVIEW = Symbol('NotificationPreview');
 
 /** What a body that is not an object reads as: an id nothing is registered under. */
 const NO_REQUEST: SendRequest = {id: '', locale: '', values: {}, target: ''};
+
+/**
+ * The request as Express parsed it. Its body is read here rather than through `@Body()`, which
+ * an app's global pipes would rewrite (a pipe that trims strings would trim a value the
+ * reviewer typed). Its shape is unchecked: the core refuses any id or value it does not hold.
+ */
+interface PreviewRequest {
+  readonly body?: SendRequest | null;
+}
 
 function writeJson(response: ServerResponse, status: number, body: unknown): void {
   response.statusCode = status;
@@ -35,9 +44,11 @@ async function answer(response: ServerResponse, run: () => unknown): Promise<voi
 
 /**
  * The routes' controller, made for one module: `@Controller(path)` with `GET api/catalog`,
- * `POST api/render` and `POST api/send`, each with `decorators.all` and its own decorators.
+ * `POST api/render` and `POST api/send`, each with `decorators.all` and its own decorators,
+ * all on the method, so a guard runs once and a reader of handler metadata sees each one.
  * Each method writes its own response (`@Res()`), so an app's interceptor that reshapes bodies
- * never reaches what the page reads.
+ * never reaches what the page reads, and reads the body as Express parsed it (`@Req()`), so an
+ * app's pipes never rewrite what is rendered.
  *
  * Decorators are applied by call rather than written as `@` syntax, so the package needs no
  * decorator transform and no emitted type metadata; the one dependency is named by `@Inject`.
@@ -54,12 +65,12 @@ export function createPreviewController(path: string, decorators: NotificationPr
       return answer(response, () => this.#preview.catalog());
     }
 
-    render(body: RenderRequest | null | undefined, response: ServerResponse): Promise<void> {
-      return answer(response, () => this.#preview.render(body ?? NO_REQUEST));
+    render(request: PreviewRequest, response: ServerResponse): Promise<void> {
+      return answer(response, () => this.#preview.render(request.body ?? NO_REQUEST));
     }
 
-    send(body: SendRequest | null | undefined, response: ServerResponse): Promise<void> {
-      return answer(response, () => this.#preview.send(body ?? NO_REQUEST));
+    send(request: PreviewRequest, response: ServerResponse): Promise<void> {
+      return answer(response, () => this.#preview.send(request.body ?? NO_REQUEST));
     }
   }
 
@@ -76,13 +87,13 @@ export function createPreviewController(path: string, decorators: NotificationPr
     if (descriptor === undefined) throw new Error(`The preview controller has no ${name} method`);
     applyDecorators(route, ...all, ...own)(prototype, name, descriptor);
     if (body) {
-      Body()(prototype, name, 0);
+      Req()(prototype, name, 0);
       Res()(prototype, name, 1);
     } else {
       Res()(prototype, name, 0);
     }
   }
   Inject(PREVIEW)(NotificationPreviewController, undefined, 0);
-  applyDecorators(Controller(path), ...all)(NotificationPreviewController);
+  Controller(path)(NotificationPreviewController);
   return NotificationPreviewController;
 }

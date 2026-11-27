@@ -1,8 +1,7 @@
 // A Nest app serving the built package, to look at the page and click through it by hand.
 // Build first (`pnpm build`), then `pnpm serve:demo [port]`. Its notifications and providers
 // are made up; a send goes nowhere. Not published: scripts/ is outside `files`.
-import 'reflect-metadata';
-
+// `@nestjs/common` loads reflect-metadata itself.
 import {Module} from '@nestjs/common';
 import {NestFactory} from '@nestjs/core';
 

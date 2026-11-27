@@ -18,11 +18,11 @@ export type NotificationPreviewStrings = PageTextStrings;
  */
 export interface NotificationPreviewDecorators {
   /**
-   * Applied to the controller class and to each of its three routes. Each one must accept both
-   * a class and a method, as `SetMetadata`, `UseGuards`, `UseInterceptors` and decorators built
-   * from them do.
+   * Applied to each of the three routes, on the method, never on the class: a guard or
+   * interceptor here runs once per request, and a reader of handler metadata (`Reflector.get`
+   * with `context.getHandler()`) finds what it set.
    */
-  readonly all?: readonly (MethodDecorator | ClassDecorator)[];
+  readonly all?: readonly MethodDecorator[];
   /** `GET <path>/api/catalog` only. */
   readonly catalog?: readonly MethodDecorator[];
   /** `POST <path>/api/render` only. */

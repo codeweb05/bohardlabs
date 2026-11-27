@@ -10,6 +10,9 @@
     "emitDeclarationOnly": true,
     "declaration": true,
     "declarationMap": false,
+    // The Nest module runs on Node: its files read the built page from disk and answer
+    // through node:http's types. The page's React code is excluded below.
+    "types": ["node"],
     "outDir": "dist",
     "rootDir": "src"
   },
