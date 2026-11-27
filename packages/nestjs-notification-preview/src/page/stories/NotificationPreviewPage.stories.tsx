@@ -1,8 +1,8 @@
 import type {Meta, StoryObj} from '@storybook/react-vite';
 import {expect, screen, userEvent, waitFor, within} from 'storybook/test';
 
-import {NotificationPreviewPage} from '../page/NotificationPreviewPage.js';
-import {fakeClient} from '../test/fakeClient.js';
+import {fakeClient} from '../../test/fakeClient.js';
+import {NotificationPreviewPage} from '../NotificationPreviewPage.js';
 
 import styles from '../style.css?inline';
 
@@ -15,8 +15,10 @@ function frame(root: HTMLElement): string {
 const meta = {
   title: 'NotificationPreview/NotificationPreviewPage',
   component: NotificationPreviewPage,
-  parameters: {layout: 'fullscreen'},
-  // The stylesheet a consumer imports once, inlined here so it reaches only these stories.
+  // Each story in a frame of its own on the docs page too: the page holds the whole document, so
+  // its stylesheet stops the document scrolling, and inlined there it would stop the docs page.
+  parameters: {layout: 'fullscreen', docs: {story: {inline: false, height: '720px'}}},
+  // The stylesheet the served page links, inlined here so it reaches only these stories.
   decorators: [
     (Story) => (
       <>
@@ -25,7 +27,7 @@ const meta = {
       </>
     ),
   ],
-  args: {client: fakeClient(), environment: 'staging'},
+  args: {client: fakeClient(), appName: 'Acme', environment: 'staging'},
 } satisfies Meta<typeof NotificationPreviewPage>;
 
 export default meta;

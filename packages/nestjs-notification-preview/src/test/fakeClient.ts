@@ -1,4 +1,4 @@
-import type {Catalog, RenderRequest, RenderResponse, SendRequest, SendResponse} from '../core/types.js';
+import type {Catalog, RegistryEntry, RenderRequest, RenderResponse, SendRequest, SendResponse} from '../core/types.js';
 import {PreviewClientError} from '../page/client.js';
 import type {PreviewClient} from '../page/client.js';
 
@@ -51,8 +51,19 @@ const GREETING: Readonly<Record<string, string>> = {en: 'Hello', es: 'Hola'};
 const escape = (text: string): string =>
   text.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
 
-function renderOf(request: RenderRequest): RenderResponse {
-  const entry = CATALOG.entries.find((candidate) => candidate.id === request.id);
+/** `count` more entries, alternating email and push, for a list long enough to scroll. */
+function extraEntries(count: number): RegistryEntry[] {
+  return Array.from({length: count}, (_, index): RegistryEntry => ({
+    id: `extra-${String(index + 1)}`,
+    channel: index % 2 === 0 ? 'email' : 'push',
+    label: `Extra notification ${String(index + 1)}`,
+    trigger: 'Only in the long-list fixture.',
+    variables: [],
+  }));
+}
+
+function renderOf(catalog: Catalog, request: RenderRequest): RenderResponse {
+  const entry = catalog.entries.find((candidate) => candidate.id === request.id);
   if (entry === undefined) throw new PreviewClientError('Not registered.', {status: 404});
   const v = request.values;
   const url = v['verifyUrl'];
@@ -63,6 +74,17 @@ function renderOf(request: RenderRequest): RenderResponse {
     });
   }
   const hello = GREETING[request.locale] ?? 'Hello';
+  if (entry.id.startsWith('extra-')) {
+    return entry.channel === 'push'
+      ? {channel: 'push', title: entry.label, body: `${hello}! A short push.`, warnings: []}
+      : {
+          channel: 'email',
+          subject: entry.label,
+          html: `<!doctype html><html><body style="font-family:sans-serif"><p>${hello}, a short email.</p></body></html>`,
+          text: `${hello}, a short email.`,
+          warnings: [],
+        };
+  }
   if (entry.channel === 'push') {
     return entry.id === 'task-reminder'
       ? {
@@ -99,23 +121,27 @@ export interface FakeClient extends PreviewClient {
 /**
  * A client that answers from `CATALOG` with no server. A `verifyUrl` not starting https:// is
  * refused, a send to `refuse@example.com` is refused on its target, and a send to
- * `busy@example.com` is a 429.
+ * `busy@example.com` is a 429. `extra` adds that many short entries after the four.
  */
 export function fakeClient(
-  options: {readonly failCatalog?: boolean; readonly locales?: Catalog['locales']} = {},
+  options: {readonly failCatalog?: boolean; readonly locales?: Catalog['locales']; readonly extra?: number} = {},
 ): FakeClient {
   const renders: RenderRequest[] = [];
   const sends: SendRequest[] = [];
+  const catalog: Catalog = {
+    locales: options.locales ?? CATALOG.locales,
+    entries: [...CATALOG.entries, ...extraEntries(options.extra ?? 0)],
+  };
   return {
     renders,
     sends,
     catalog: async () => {
       if (options.failCatalog === true) throw new PreviewClientError('Down.', {status: 503});
-      return options.locales === undefined ? CATALOG : {...CATALOG, locales: options.locales};
+      return catalog;
     },
     render: async (request) => {
       renders.push(request);
-      return renderOf(request);
+      return renderOf(catalog, request);
     },
     send: async (request): Promise<SendResponse> => {
       sends.push(request);
@@ -128,7 +154,7 @@ export function fakeClient(
       if (request.target === 'busy@example.com') {
         throw new PreviewClientError('Slow down.', {status: 429, retryAfterSeconds: 30});
       }
-      const rendered = renderOf(request);
+      const rendered = renderOf(catalog, request);
       return rendered.channel === 'email'
         ? {channel: 'email', messageId: 'msg-1'}
         : {channel: 'push', devices: 2, sent: 2, failed: 0, removed: 0};

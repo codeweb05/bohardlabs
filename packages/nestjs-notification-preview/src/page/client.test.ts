@@ -1,18 +1,17 @@
 import {describe, expect, it, vi} from 'vitest';
 
-import {createFetchClient, PreviewClientError} from './client.js';
+import {createPageClient, PreviewClientError} from './client.js';
+import {DEFAULT_PAGE_STRINGS} from './strings.js';
 
 const json = (body: unknown, init: ResponseInit = {}): Response =>
   new Response(JSON.stringify(body), {status: 200, headers: {'Content-Type': 'application/json'}, ...init});
 
-describe('createFetchClient', () => {
-  it('calls the three routes under the base URL with JSON and the given headers', async () => {
+const refusal = async (promise: Promise<unknown>): Promise<unknown> => promise.catch((caught: unknown) => caught);
+
+describe('createPageClient', () => {
+  it('calls the three routes under the API base with JSON', async () => {
     const fetch = vi.fn<typeof globalThis.fetch>(async () => json({ok: true}));
-    const client = createFetchClient({
-      baseUrl: 'https://api.test/preview/',
-      headers: {Authorization: 'Bearer t'},
-      fetch,
-    });
+    const client = createPageClient('/notification-preview/api/', fetch);
 
     await client.catalog();
     await client.render({id: 'a', locale: 'en', values: {x: '1'}});
@@ -20,82 +19,76 @@ describe('createFetchClient', () => {
 
     const calls = fetch.mock.calls.map(([url, init]) => [url, init?.method, init?.body]);
     expect(calls).toEqual([
-      ['https://api.test/preview/catalog', 'GET', undefined],
-      ['https://api.test/preview/render', 'POST', JSON.stringify({id: 'a', locale: 'en', values: {x: '1'}})],
+      ['/notification-preview/api/catalog', 'GET', undefined],
+      ['/notification-preview/api/render', 'POST', JSON.stringify({id: 'a', locale: 'en', values: {x: '1'}})],
       [
-        'https://api.test/preview/send',
+        '/notification-preview/api/send',
         'POST',
         JSON.stringify({id: 'a', locale: 'en', values: {}, target: 't@example.com'}),
       ],
     ]);
-    const headers = new Headers(fetch.mock.calls[1]?.[1]?.headers);
-    expect(headers.get('Authorization')).toBe('Bearer t');
-    expect(headers.get('Content-Type')).toBe('application/json');
+    expect(new Headers(fetch.mock.calls[1]?.[1]?.headers).get('Content-Type')).toBe('application/json');
     expect(new Headers(fetch.mock.calls[0]?.[1]?.headers).get('Content-Type')).toBeNull();
-  });
-
-  it('asks a header function on every request', async () => {
-    let n = 0;
-    const fetch = vi.fn<typeof globalThis.fetch>(async () => json({}));
-    const client = createFetchClient({
-      baseUrl: '/p',
-      headers: async () => {
-        n += 1;
-        return {'X-N': String(n)};
-      },
-      fetch,
-    });
-    await client.catalog();
-    await client.catalog();
-    expect(new Headers(fetch.mock.calls[1]?.[1]?.headers).get('X-N')).toBe('2');
+    // The page is served from the same origin as its API; the browser's own cookies go with each call.
+    expect(fetch.mock.calls[0]?.[1]?.credentials).toBe('same-origin');
   });
 
   it('uses the global fetch when none is given', async () => {
     const spy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(json({locales: {}, entries: []}));
-    await expect(createFetchClient({baseUrl: '/p'}).catalog()).resolves.toEqual({locales: {}, entries: []});
+    await expect(createPageClient('/p').catalog()).resolves.toEqual({locales: {}, entries: []});
     expect(spy).toHaveBeenCalledOnce();
   });
 
-  it('reads a refusal as a PreviewClientError with its field errors and Retry-After', async () => {
+  it("reads a guard's 429 with its Retry-After and its own message", async () => {
     const fetch = vi.fn<typeof globalThis.fetch>(async () =>
-      json(
-        {message: 'Refused.', fieldErrors: {url: 'Must be a link.', count: 3}},
-        {status: 422, headers: {'Retry-After': '12'}},
-      ),
+      json({message: 'Too many requests'}, {status: 429, headers: {'Retry-After': '120'}}),
     );
-    const error = await createFetchClient({baseUrl: '/p', fetch})
-      .render({id: 'a', locale: 'en', values: {}})
-      .catch((caught: unknown) => caught);
+    const error = await refusal(createPageClient('/p', fetch).send({id: 'a', locale: 'en', values: {}, target: 't'}));
     expect(error).toBeInstanceOf(PreviewClientError);
+    expect(error).toMatchObject({status: 429, message: 'Too many requests', retryAfterSeconds: 120, fieldErrors: {}});
+  });
+
+  it('says what a 401 means when the body says nothing', async () => {
+    const fetch = vi.fn<typeof globalThis.fetch>(async () => json({}, {status: 401}));
+    const error = await refusal(createPageClient('/p', fetch).catalog());
+    expect(error).toMatchObject({status: 401, message: DEFAULT_PAGE_STRINGS.failure[401]});
+    expect(DEFAULT_PAGE_STRINGS.failure[401]).toEqual(expect.any(String));
+  });
+
+  it('falls back to the default failure for a status with no sentence, and for a body that is not JSON', async () => {
+    const fetch = vi.fn<typeof globalThis.fetch>(
+      async () => new Response('nope', {status: 418, statusText: "I'm a teapot"}),
+    );
+    const error = await refusal(createPageClient('/p', fetch).catalog());
     expect(error).toMatchObject({
-      status: 422,
-      message: 'Refused.',
-      fieldErrors: {url: 'Must be a link.'},
-      retryAfterSeconds: 12,
+      status: 418,
+      message: DEFAULT_PAGE_STRINGS.failure.default,
+      fieldErrors: {},
+      retryAfterSeconds: undefined,
     });
   });
 
-  it('falls back to the status text when the body is not JSON', async () => {
-    const fetch = vi.fn<typeof globalThis.fetch>(
-      async () => new Response('nope', {status: 500, statusText: 'Server Error'}),
-    );
-    const error = await createFetchClient({baseUrl: '/p', fetch})
-      .catalog()
-      .catch((caught: unknown) => caught);
-    expect(error).toMatchObject({status: 500, message: 'Server Error', fieldErrors: {}, retryAfterSeconds: undefined});
+  it("takes the consumer's failure sentences over the English ones", async () => {
+    const fetch = vi.fn<typeof globalThis.fetch>(async () => json({message: 42}, {status: 403}));
+    const error = await refusal(createPageClient('/p', fetch, {default: 'Falló.', 403: 'Prohibido.'}).catalog());
+    expect(error).toMatchObject({status: 403, message: 'Prohibido.'});
   });
 
-  it('reads a network failure as status 0', async () => {
+  it('reads the field errors of a refused value, and nothing that is not a string', async () => {
+    const fetch = vi.fn<typeof globalThis.fetch>(async () =>
+      json({message: 'Refused.', fieldErrors: {url: 'Must be a link.', count: 3}}, {status: 422}),
+    );
+    const error = await refusal(createPageClient('/p', fetch).render({id: 'a', locale: 'en', values: {}}));
+    expect(error).toMatchObject({status: 422, message: 'Refused.', fieldErrors: {url: 'Must be a link.'}});
+  });
+
+  it('reads a network failure as status 0 with the default sentence', async () => {
     const fetch = vi.fn<typeof globalThis.fetch>(async () => {
       throw new TypeError('Failed to fetch');
     });
-    await expect(createFetchClient({baseUrl: '/p', fetch}).catalog()).rejects.toMatchObject({
+    await expect(createPageClient('/p', fetch).catalog()).rejects.toMatchObject({
       status: 0,
-      message: 'Failed to fetch',
-    });
-    const notError = vi.fn<typeof globalThis.fetch>(() => Promise.reject('down'));
-    await expect(createFetchClient({baseUrl: '/p', fetch: notError}).catalog()).rejects.toMatchObject({
-      message: 'down',
+      message: DEFAULT_PAGE_STRINGS.failure.default,
     });
   });
 
@@ -106,6 +99,6 @@ describe('createFetchClient', () => {
       controller.abort();
       throw abort;
     });
-    await expect(createFetchClient({baseUrl: '/p', fetch}).catalog({signal: controller.signal})).rejects.toBe(abort);
+    await expect(createPageClient('/p', fetch).catalog({signal: controller.signal})).rejects.toBe(abort);
   });
 });

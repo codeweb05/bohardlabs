@@ -12,7 +12,7 @@ const frame = (): HTMLIFrameElement => screen.getByTitle<HTMLIFrameElement>('Ren
 describe('NotificationPreviewPage', () => {
   it('lists the registry by channel and renders the first email', async () => {
     const client = fakeClient();
-    render(<NotificationPreviewPage client={client} environment="staging" />);
+    render(<NotificationPreviewPage appName="Acme" client={client} environment="staging" />);
     expect(screen.getByRole('status')).toHaveTextContent('Loading…');
 
     const list = await screen.findByRole('navigation', {name: 'Notifications'});
@@ -32,13 +32,13 @@ describe('NotificationPreviewPage', () => {
   });
 
   it('says when the list did not load', async () => {
-    render(<NotificationPreviewPage client={fakeClient({failCatalog: true})} />);
+    render(<NotificationPreviewPage appName="Acme" client={fakeClient({failCatalog: true})} />);
     expect(await screen.findByText('The notification list did not load.')).toBeInTheDocument();
   });
 
   it('re-renders a moment after an edit, and shows a refusal under its field', async () => {
     const user = userEvent.setup();
-    render(<NotificationPreviewPage client={fakeClient()} />);
+    render(<NotificationPreviewPage appName="Acme" client={fakeClient()} />);
     const name = await screen.findByLabelText(/First name/u);
     await user.clear(name);
     await user.type(name, 'Grace');
@@ -65,7 +65,7 @@ describe('NotificationPreviewPage', () => {
 
   it('switches language, plain text and width', async () => {
     const user = userEvent.setup();
-    render(<NotificationPreviewPage client={fakeClient()} />);
+    render(<NotificationPreviewPage appName="Acme" client={fakeClient()} />);
     await screen.findByTitle('Rendered email');
     await user.selectOptions(screen.getByLabelText('Language'), 'es');
     await waitFor(() => {
@@ -78,13 +78,15 @@ describe('NotificationPreviewPage', () => {
 
   it('offers no language picker for one locale, and each channel its own list', async () => {
     const user = userEvent.setup();
-    const {unmount} = render(<NotificationPreviewPage client={fakeClient({locales: {email: ['en'], push: ['en']}})} />);
+    const {unmount} = render(
+      <NotificationPreviewPage appName="Acme" client={fakeClient({locales: {email: ['en'], push: ['en']}})} />,
+    );
     await screen.findByTitle('Rendered email');
     expect(screen.queryByLabelText('Language')).not.toBeInTheDocument();
     unmount();
 
     const client = fakeClient({locales: {email: ['en', 'es'], push: ['en']}});
-    render(<NotificationPreviewPage client={client} />);
+    render(<NotificationPreviewPage appName="Acme" client={client} />);
     await screen.findByTitle('Rendered email');
     await user.selectOptions(screen.getByLabelText('Language'), 'es');
     await user.click(screen.getByRole('button', {name: 'Next notification'}));
@@ -99,7 +101,7 @@ describe('NotificationPreviewPage', () => {
 
   it('moves between notifications with the pager, the keys and the list, and renders a push', async () => {
     const user = userEvent.setup();
-    render(<NotificationPreviewPage client={fakeClient()} />);
+    render(<NotificationPreviewPage appName="Acme" client={fakeClient()} />);
     await screen.findByTitle('Rendered email');
     await user.click(screen.getByRole('button', {name: 'Next notification'}));
     expect(await screen.findByText('2 / 4')).toBeInTheDocument();
@@ -126,7 +128,7 @@ describe('NotificationPreviewPage', () => {
     const user = userEvent.setup();
     const writeText = vi.fn(async () => undefined);
     Object.defineProperty(navigator, 'clipboard', {value: {writeText}, configurable: true});
-    render(<NotificationPreviewPage client={fakeClient()} />);
+    render(<NotificationPreviewPage appName="Acme" client={fakeClient()} />);
     await screen.findByTitle('Rendered email');
     const tab = screen.getByRole('tab', {name: 'Variables'});
     tab.focus();
@@ -144,7 +146,7 @@ describe('NotificationPreviewPage', () => {
   it('sends a test email, remembers the address, and reports a refusal and a 429', async () => {
     const user = userEvent.setup();
     const client = fakeClient();
-    render(<NotificationPreviewPage client={client} />);
+    render(<NotificationPreviewPage appName="Acme" client={client} />);
     await screen.findByTitle('Rendered email');
     await user.click(screen.getByRole('tab', {name: 'Send test'}));
     await user.type(screen.getByLabelText('To'), ' me@example.com ');
@@ -170,7 +172,7 @@ describe('NotificationPreviewPage', () => {
   it('sends a test push to an account', async () => {
     const user = userEvent.setup();
     const client = fakeClient();
-    render(<NotificationPreviewPage client={client} strings={{sendPush: 'Push it'}} />);
+    render(<NotificationPreviewPage appName="Acme" client={client} strings={{sendPush: 'Push it'}} />);
     await screen.findByTitle('Rendered email');
     await user.click(screen.getByRole('button', {name: /Task reminder/u}));
     await user.click(screen.getByRole('tab', {name: 'Send test'}));
@@ -184,7 +186,7 @@ describe('NotificationPreviewPage', () => {
   it('refuses an empty target in its own words, before asking the server', async () => {
     const user = userEvent.setup();
     const client = fakeClient();
-    render(<NotificationPreviewPage client={client} strings={{targetRequired: 'Falta el destino.'}} />);
+    render(<NotificationPreviewPage appName="Acme" client={client} strings={{targetRequired: 'Falta el destino.'}} />);
     await screen.findByTitle('Rendered email');
     await user.click(screen.getByRole('tab', {name: 'Send test'}));
     await user.click(screen.getByRole('button', {name: 'Send test email'}));
@@ -195,7 +197,9 @@ describe('NotificationPreviewPage', () => {
 
   it('keeps recent targets per channel and per environment', async () => {
     const user = userEvent.setup();
-    const {unmount} = render(<NotificationPreviewPage client={fakeClient()} environment="staging" storageKey="np" />);
+    const {unmount} = render(
+      <NotificationPreviewPage appName="Acme" client={fakeClient()} environment="staging" storageKey="np" />,
+    );
     await screen.findByTitle('Rendered email');
     await user.click(screen.getByRole('button', {name: /Task reminder/u}));
     await user.click(screen.getByRole('tab', {name: 'Send test'}));
@@ -210,7 +214,7 @@ describe('NotificationPreviewPage', () => {
     expect(screen.queryByRole('button', {name: 'account-7'})).not.toBeInTheDocument();
     unmount();
 
-    render(<NotificationPreviewPage client={fakeClient()} environment="production" storageKey="np" />);
+    render(<NotificationPreviewPage appName="Acme" client={fakeClient()} environment="production" storageKey="np" />);
     await screen.findByTitle('Rendered email');
     await user.click(screen.getByRole('button', {name: /Task reminder/u}));
     await user.click(screen.getByRole('tab', {name: 'Send test'}));
@@ -228,7 +232,7 @@ describe('NotificationPreviewPage', () => {
           answer = resolve;
         }),
     };
-    render(<NotificationPreviewPage client={slow} />);
+    render(<NotificationPreviewPage appName="Acme" client={slow} />);
     await screen.findByTitle('Rendered email');
     await user.click(screen.getByRole('tab', {name: 'Send test'}));
     await user.type(screen.getByLabelText('To'), 'me@example.com');
@@ -243,16 +247,56 @@ describe('NotificationPreviewPage', () => {
 
   it('keeps a chosen theme and forgets Auto', async () => {
     const user = userEvent.setup();
-    const {unmount} = render(<NotificationPreviewPage client={fakeClient()} />);
+    const {unmount} = render(<NotificationPreviewPage appName="Acme" client={fakeClient()} />);
     await screen.findByRole('navigation', {name: 'Notifications'});
     await user.click(screen.getByRole('radio', {name: 'Dark'}));
     expect(localStorage.getItem('vt-labs.notification-preview.theme')).toBe('dark');
     unmount();
-    render(<NotificationPreviewPage client={fakeClient()} />);
+    render(<NotificationPreviewPage appName="Acme" client={fakeClient()} />);
     await screen.findByRole('navigation', {name: 'Notifications'});
     expect(screen.getByRole('radio', {name: 'Dark'})).toBeChecked();
     await user.click(screen.getByRole('radio', {name: 'Auto'}));
     expect(screen.getByRole('radio', {name: 'Auto'})).toBeChecked();
     expect(localStorage.getItem('vt-labs.notification-preview.theme')).toBeNull();
+  });
+
+  it("names the app on the inbox header, the brand and the phone, and never 'Your app'", async () => {
+    const user = userEvent.setup();
+    const {container} = render(<NotificationPreviewPage appName="acme" client={fakeClient()} environment="DEV" />);
+    await screen.findByTitle('Rendered email');
+    const inbox = screen.getByRole('group', {name: 'Inbox header'});
+    expect(within(inbox).getByText('acme')).toBeInTheDocument();
+    expect(within(inbox).getByText('A')).toHaveAttribute('aria-hidden', 'true');
+    expect(within(inbox).getByText('Hello Ada')).toBeInTheDocument();
+    expect(screen.getByRole('banner')).toHaveTextContent('acme');
+    expect(screen.getByText('DEV')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', {name: /Task reminder/u}));
+    const phone = await screen.findByRole('figure', {name: 'iPhone, Lock screen'});
+    expect(within(phone).getByRole('article', {name: 'Push notification'})).toHaveTextContent('Due soon');
+    expect(within(phone).getByText('acme')).toBeInTheDocument();
+    await user.click(screen.getByRole('radio', {name: 'Android'}));
+    const android = screen.getByRole('figure', {name: 'Android, Lock screen'});
+    expect(within(android).getByText('acme')).toBeInTheDocument();
+    await user.click(screen.getByRole('radio', {name: 'Banner'}));
+    expect(screen.getByRole('figure', {name: 'Android, Banner'})).toBeInTheDocument();
+    expect(container).not.toHaveTextContent('Your app');
+  });
+
+  it('sizes the email frame to its content once the frame has loaded', async () => {
+    render(<NotificationPreviewPage appName="Acme" client={fakeClient()} />);
+    const element = await screen.findByTitle<HTMLIFrameElement>('Rendered email');
+    await waitFor(() => {
+      expect(element.srcdoc).toContain('Hello Ada');
+    });
+    const body = element.contentDocument?.documentElement;
+    expect(body).toBeDefined();
+    if (body !== undefined) Object.defineProperty(body, 'scrollHeight', {value: 240, configurable: true});
+    element.dispatchEvent(new Event('load'));
+    await waitFor(() => {
+      expect(element).toHaveStyle({height: '240px'});
+    });
+    // No script runs in the email; the page only reads its height.
+    expect(element).toHaveAttribute('sandbox', 'allow-same-origin');
   });
 });
