@@ -34,8 +34,8 @@ describe('createPageClient', () => {
   });
 
   it('uses the global fetch when none is given', async () => {
-    const spy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(json({locales: {}, entries: []}));
-    await expect(createPageClient('/p').catalog()).resolves.toEqual({locales: {}, entries: []});
+    const spy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(json({locales: {}, entries: [], fingerprints: {}}));
+    await expect(createPageClient('/p').catalog()).resolves.toEqual({locales: {}, entries: [], fingerprints: {}});
     expect(spy).toHaveBeenCalledOnce();
   });
 

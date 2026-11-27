@@ -1,5 +1,5 @@
 import type {Meta, StoryObj} from '@storybook/react-vite';
-import {expect, userEvent, waitFor, within} from 'storybook/test';
+import {expect, userEvent, within} from 'storybook/test';
 
 import {fakeClient} from '../../test/fakeClient.js';
 import {NotificationPreviewPage} from '../NotificationPreviewPage.js';
@@ -47,8 +47,8 @@ export const TickANotification: Story = {
   },
 };
 
-/** A variable that changes the render after a tick turns the notice to retest. */
-export const RetestAfterAnEdit: Story = {
+/** Typing other values into a ticked notification leaves its tick as it is. */
+export const TypingKeepsTheTick: Story = {
   play: async ({canvasElement}) => {
     const canvas = within(canvasElement);
     await canvas.findByTitle('Rendered email');
@@ -57,8 +57,35 @@ export const RetestAfterAnEdit: Story = {
     const name = canvas.getByLabelText(/First name/u);
     await userEvent.clear(name);
     await userEvent.type(name, 'Grace');
-    await waitFor(() => expect(canvas.getByText('Changed since you tested it.')).toBeInTheDocument());
-    await expect(canvas.getByRole('button', {name: /Welcome/u})).toHaveTextContent('Changed since tested');
+    await expect(await canvas.findByRole('checkbox', {name: 'Tested'})).toBeChecked();
+    await expect(canvas.queryByText('Changed since you tested it.')).not.toBeInTheDocument();
+  },
+};
+
+/**
+ * Welcome was ticked on an earlier visit, and its template has changed since: the catalog now gives
+ * another fingerprint for it. The page shows it as changed, counts it and lists it to test.
+ */
+export const RetestAfterATemplateChange: Story = {
+  args: {client: fakeClient({extra: 35, changed: ['welcome']})},
+  beforeEach: () => {
+    try {
+      // The tick as the earlier visit stored it, with the fingerprint the catalog gave then.
+      localStorage.setItem('np-story-test-mode:tested', JSON.stringify([['welcome', 'en', 'welcome.en.v1']]));
+      localStorage.setItem('np-story-test-mode:testMode', '1');
+    } catch {
+      // Without storage the story shows no tick.
+    }
+  },
+  play: async ({canvasElement}) => {
+    const canvas = within(canvasElement);
+    await canvas.findByTitle('Rendered email');
+    await expect(await canvas.findByText('Changed since you tested it.')).toBeInTheDocument();
     await expect(canvas.getByRole('checkbox', {name: 'Mark as tested'})).not.toBeChecked();
+    await expect(canvas.getByRole('button', {name: /Welcome/u})).toHaveTextContent('Changed since tested');
+    const progress = canvas.getByRole('group', {name: 'Test progress'});
+    await expect(within(progress).getByText(/1 changed/u)).toBeInTheDocument();
+    await userEvent.click(canvas.getByRole('radio', {name: 'To test'}));
+    await expect(await canvas.findByRole('button', {name: /Welcome/u})).toBeInTheDocument();
   },
 };
