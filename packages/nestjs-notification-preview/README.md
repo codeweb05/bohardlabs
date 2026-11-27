@@ -71,8 +71,9 @@ export const providers: Providers = {
 
 `mailer` and `pushes` are your own code. `values` holds only the variables the entry declares, each as a string. A
 provider refuses a value by throwing `new InvalidValuesError({resetUrl: 'Must start with https://.'})`; the page shows
-the message under that field. `locales()` lists the languages the channel can render. An empty list accepts any locale
-and falls back to the provider's first locale, or `'en'`. Your provider resolves the messages for a locale itself.
+the message under that field. `locales()` lists the languages the channel can render, the first being the default. An
+empty list accepts any locale and uses `'en'` when a request names none. Your provider resolves the messages for a
+locale itself.
 
 ```ts
 // app.module.ts
@@ -146,7 +147,9 @@ module is built. `useFactory` returns the rest: `registry`, `providers`, `appNam
 
 `strings` reaches the browser as JSON, so a value must be a string. An entry that builds a sentence around a value
 (the position in the list, a language's name, the test-mode counts) is a function and keeps its English default.
-`failure` takes sentences by HTTP status, with or without `default`:
+`failure` takes sentences by HTTP status, with or without `default`. When a request is refused, the page shows the
+answer's own `message` when its body has one, else the `failure` sentence for the status, and for a 429 adds the wait
+from `Retry-After`. That holds for the list, the render and the send alike:
 
 ```ts
 strings: {title: 'Notifications', failure: {429: 'Too many sends. Wait a moment.', default: 'Something went wrong.'}}
@@ -221,21 +224,26 @@ Pick one of these:
 | `POST <path>/api/render`    | Renders one notification from `{id, locale, values}`                  |
 | `POST <path>/api/send`      | Sends one as a test, to `target` (an address, or an account for push) |
 
+`render` and `send` take only an `application/json` body and answer any other with 415. A form or `text/plain` post is
+what another site can make a reviewer's browser send without asking first, with their cookies or Basic credentials
+attached; JSON from another origin needs a CORS preflight, which your app does not grant it.
+
 The three `api` routes write their own responses (`@Res()`), so an app's global response interceptor does not wrap
 them, and read the body from `request.body` (`@Req()`), so an app's pipes do not change what a reviewer typed.
 
-| Answer | When                                                                   |
-| ------ | ---------------------------------------------------------------------- |
-| 200    | The result                                                             |
-| 404    | `{message}`, when one of these holds:                                  |
-|        | - the id is not in the registry, or the request has no body (so no id) |
-|        | - the entry's channel has no provider configured                       |
-| 422    | `{message, fieldErrors}`, naming the field, when one of these holds:   |
-|        | - a provider refused a value (`InvalidValuesError`)                    |
-|        | - a value is not a string                                              |
-|        | - the locale is not one the channel lists                              |
-|        | - a send's `target` is empty                                           |
-| other  | Anything else a provider throws goes to the app's exception filters    |
+| Answer | When                                                                  |
+| ------ | --------------------------------------------------------------------- |
+| 200    | The result                                                            |
+| 404    | `{message}`, when one of these holds:                                 |
+|        | - the id is not in the registry, or the JSON body names none          |
+|        | - the entry's channel has no provider configured                      |
+| 422    | `{message, fieldErrors}`, naming the field, when one of these holds:  |
+|        | - a provider refused a value (`InvalidValuesError`)                   |
+|        | - a value is not a string                                             |
+|        | - the locale is not one the channel lists                             |
+|        | - a send's `target` is empty                                          |
+| 415    | `{message}`: a `render` or `send` body that is not `application/json` |
+| other  | Anything else a provider throws goes to the app's exception filters   |
 
 ### In production
 
@@ -277,9 +285,16 @@ the catalog, opened or not:
 Typing other values into a notification does not change its tick. A sample render that throws leaves that fingerprint
 `null`, and the catalog still answers. A changed template is noticed after the server restarts, as a deploy does.
 
+Each notification is judged in its own channel's language: the page's current one when that channel lists it, else
+the channel's first, else `'en'`. So with a Spanish email open, an English-only push still counts as tested.
+
 The ticks and the mode flag live in the browser's `localStorage`, under `<storageKey>:tested` and
-`<storageKey>:testMode`. They hold ids, locales and fingerprints, never a render. Nothing is stored on the server, and
-the package logs nothing.
+`<storageKey>:testMode`. They hold ids, locales and fingerprints, never a render.
+
+The page keeps two more things there: the theme choice under `<storageKey>.theme`, and the last few send targets under
+`<storageKey>.targets[.<environment>].<channel>`, the environment part only when one is set. Those targets are what reviewers typed:
+email addresses and account ids. They stay in that browser and are never sent anywhere but the send they were typed
+for. Nothing is stored on the server, and the package logs nothing.
 
 ## Moving from `@vt-labs/notification-preview`
 
