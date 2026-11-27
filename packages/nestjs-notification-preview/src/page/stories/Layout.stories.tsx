@@ -148,29 +148,70 @@ export const FrameGrowsWithALongEmail: Story = {
   },
 };
 
-/** 3. An email whose html and body are `height: 100%` is measured by its content, not by the frame. */
-export const FrameMeasuresAFullHeightEmail: Story = {
-  args: {
-    client: {
-      ...longClient,
-      render: async (request: Parameters<typeof longClient.render>[0]) => {
-        const rendered = await longClient.render(request);
-        if (rendered.channel !== 'email') return rendered;
-        return {
-          ...rendered,
-          html: rendered.html
-            .replace('<html>', '<html style="height:100%">')
-            .replace('<body style="', '<body style="height:100%;margin:0;'),
-        };
-      },
-    },
+/** `html` with its root and body made `height: 100%`, as some email templates are. */
+const fullHeight = (html: string): string =>
+  html.replace('<html>', '<html style="height:100%">').replace('<body style="', '<body style="height:100%;margin:0;');
+
+/** The render of `client`, its email made full-height. */
+const fullHeightClient = (client: typeof longClient): typeof longClient => ({
+  ...client,
+  render: async (request: Parameters<typeof longClient.render>[0]) => {
+    const rendered = await client.render(request);
+    return rendered.channel === 'email' ? {...rendered, html: fullHeight(rendered.html)} : rendered;
   },
+});
+
+/**
+ * Where the email's last paragraph ends, in the frame's own coordinates. A full-height email's
+ * root box is the frame, so this, not the root, says how tall the content is.
+ */
+const lastLineOf = (frame: HTMLIFrameElement): number => {
+  const paragraphs = frame.contentDocument?.querySelectorAll('p');
+  const last = paragraphs?.item(paragraphs.length - 1);
+  return last === null || last === undefined ? 0 : Math.ceil(last.getBoundingClientRect().bottom);
+};
+
+/**
+ * The frame holds the whole email, and leaves no white box under it beyond the last
+ * paragraph's own bottom margin (16px). The frame is tested, not the stage: the stage scrolls a
+ * long email by design. The frame's document may still scroll by the body's collapsed top
+ * margin: a `height: 100%` body pushed down by its first paragraph's margin ends 16px below
+ * the root at every frame height, so no height makes that scroll go away, and it scrolls only
+ * the body's empty tail, never content.
+ */
+const holdsTheWholeEmail = async (frame: HTMLIFrameElement): Promise<void> => {
+  const height = frame.getBoundingClientRect().height;
+  const lastLine = lastLineOf(frame);
+  await expect(lastLine).toBeGreaterThan(0);
+  await expect(height).toBeGreaterThanOrEqual(lastLine - 1);
+  await expect(height).toBeLessThanOrEqual(lastLine + 17);
+};
+
+/**
+ * 3. An email whose html and body are `height: 100%` is measured by its content, not by the
+ * frame: a long one grows the frame past the canvas.
+ */
+export const FrameMeasuresAFullHeightEmail: Story = {
+  args: {client: fullHeightClient(longClient)},
   play: async ({canvasElement}) => {
     const frame = await emailFrame(canvasElement, 'Paragraph 80.');
-    // Eighty paragraphs are far taller than the canvas; a frame measured by its viewport stays short.
+    // A frame measured by its own viewport, or its root's box, stays short.
     await waitFor(() => expect(frame.getBoundingClientRect().height).toBeGreaterThan(1000));
-    const inner = frame.contentDocument?.documentElement;
-    await expect(inner === undefined ? 1 : inner.scrollHeight - inner.clientHeight).toBeLessThanOrEqual(1);
+    await holdsTheWholeEmail(frame);
+  },
+};
+
+/**
+ * 3. A short full-height email shrinks the frame below its unmeasured height. Measured at the
+ * frame's current height, its root and body would answer that height back and the frame would
+ * never shrink; this fails unless the frame is reset before it is measured.
+ */
+export const FrameShrinksToAShortFullHeightEmail: Story = {
+  args: {client: fullHeightClient(fakeClient())},
+  play: async ({canvasElement}) => {
+    const frame = await emailFrame(canvasElement, 'Hello Ada');
+    await waitFor(() => expect(frame.getBoundingClientRect().height).toBeLessThan(UNMEASURED));
+    await holdsTheWholeEmail(frame);
   },
 };
 
