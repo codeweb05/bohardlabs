@@ -1,6 +1,6 @@
 {
   "name": "@vt-labs/nestjs-notification-preview",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "A NestJS module that serves a preview and test-send page for an app's email and push notifications",
   "license": "MIT",
   "type": "module",

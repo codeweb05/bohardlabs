@@ -1,6 +1,6 @@
 {
   "name": "@vt-labs/form",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "MUI fields for TanStack Form, with date, phone and address fields behind their own entry points",
   "license": "MIT",
   "type": "module",

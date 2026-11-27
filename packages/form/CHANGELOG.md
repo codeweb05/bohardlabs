@@ -1,5 +1,14 @@
 # @vt-labs/form
 
+## 0.2.0
+
+### Minor Changes
+
+- 5651a97: New `FileField` for a file or a photo, held in the form as a `File` (or `File[]` with `multiple`). The user chooses with a button or drops a file on the field. `accept` and `maxBytes` are checked on the way in: a refused file never reaches the value, and the field says why through the new `fileTooLarge` and `fileWrongType` labels. `variant="photo"` shows a square preview with Replace and Remove, and `onEdit` adds an Edit button that hands the current file to your editor (such as `@vt-labs/image-editor`) and keeps the file it resolves, or the original on `null`. The field never uploads; send the file from your submit handler. Other new labels: `chooseFile`, `dropFile`, `replaceFile`, `removeFile`, `choosePhoto`, `editPhoto`, `replacePhoto`, `removePhoto` and `fileSize`. A refused file shows its message without blocking submit, since the value still holds only what was accepted.
+- bc8666f: New `IntegerListField` for a list of whole numbers held as `number[]`, such as reminder offsets. Comma, `Enter` or blur commits an entry as a chip, a pasted "15, 30, 60" becomes three chips, and it takes `min`, `max`, `unit`, `allowDuplicates` and `sorted`. An entry that is not a whole number, is out of range or repeats stays on screen as an error chip, is kept out of the value, and blocks submit until it is fixed or removed. New labels: `integerListInvalid`, `integerListDuplicate`, `integerListOutOfRange` and `removeEntry`.
+- 4731da2: `NumberField` takes `unit`, `min`, `max` and `step`. The unit shows at the end of the input, the range shows as the helper line when there is no `description` (new `numberRange`, `numberMin` and `numberMax` labels), and the arrow keys step the value and stop at the bounds. Typing is not clamped, so the schema still rejects an out-of-range value. With a bound or a `step` the input's role is `spinbutton`; without one it stays a `textbox`, as before.
+- 32c2e74: Every field takes `size: 'small' | 'medium'`, and `FormConfigProvider` takes a `size` that every field below it follows, along with `SubmitButton` and `CancelButton`. A field's own `size` wins; with neither, MUI's default applies as before.
+
 ## 0.1.1
 
 ### Patch Changes

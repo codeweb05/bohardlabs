@@ -1,6 +1,6 @@
 {
   "name": "@vt-labs/image-editor",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "A MUI dialog that crops, rotates, straightens and adjusts an image and hands back a File that fits your upload rules",
   "license": "MIT",
   "type": "module",

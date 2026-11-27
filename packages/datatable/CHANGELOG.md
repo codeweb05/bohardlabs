@@ -1,5 +1,65 @@
 # @vt-labs/datatable
 
+## 1.1.0
+
+### Minor Changes
+
+- f342aac: A bulk action can now report rows that failed on their own. Return a `BulkActionResult` (`{succeeded, failed}`, both lists of row ids as `getRowId` gives them) from a bulk action's `onClick`, and the rows that failed stay selected for a retry while the rest leave the selection. On desktop the bulk bar shows a message such as "8 updated, 2 failed. The 2 failed rows are still selected.", which closes from its button or once the selection changes. The new `onBulkActionResult(action, result)` prop hears every result, for logging or a toast; on mobile it is the only report. An action that returns nothing behaves exactly as before, and existing actions compile unchanged.
+
+  The message is translatable through the new `bulkResult(succeeded, failed)` key in `labels`. A consumer passing a complete `DataTableLabels` object (rather than a `Partial`) has to add it.
+
+- 5969cd9: The phone card layout gets the controls the table header has on desktop. A bar above the cards holds a select-all checkbox for the cards on the page (indeterminate when only some are selected), the selection count with a Clear button, and a Sort button. Sort opens a menu of the visible sortable columns, named as the cards name them, and once a column is picked, ascending and descending. It writes the same `sorting` state as the headers, so a sort carries across when the layout switches, and like a header sort it keeps the current page. The bar appears whenever the table selects or sorts, with `renderMobileCard` too; there is no prop to turn it off.
+
+  Two new keys in `labels`: `sortMenu` ("Sort") and `sortedBy(column, desc)` ("Sorted by Placed, descending", the button's accessible name). The rest reuse `selectAll`, `selected`, `clearSelection`, `sortAsc` and `sortDesc`. A consumer passing a complete `DataTableLabels` object (rather than a `Partial`) has to add the two new keys.
+
+- 90d1add: Cards in the phone layout can now open a row on a tap and do nothing else. Set `cardTapAction: 'open'` and a tap calls `onRowClick` without also selecting or expanding the row; selection stays on the card's checkbox, expansion on its chevron button, and a chevron on the right of the card shows that it opens. The default stays `'select'`, so a tap behaves as it always has. The next major makes `'open'` the default whenever `onRowClick` is set.
+
+  Cards can also be reached from the keyboard, whichever mode is set. A card with `onRowClick` or a selection checkbox is a tab stop named by its title, with a focus ring in the theme's primary colour: Enter calls `onRowClick` and Space toggles the selection. A card with neither stays out of the tab order. A card drawn by `renderMobileCard` is your own and ignores the new prop. No new labels.
+
+- 03b749c: The Columns menu copes with a long column list. A search box at the top matches a column's header text and its id, so `placed_at` finds a column headed "Placed". Give a column `meta: {group: 'Billing'}` and it is listed under a "Billing" heading; groups follow the ungrouped columns, in the order their first column appears, and a drag or an arrow key moves a column only inside its own group. The foot of the menu shows how many columns are hidden and a "Reset columns" button that puts the column order, visibility, widths and freezing back to the table's defaults, and with a `tableId` clears those saved preferences. Sorting, filters, density and the page are left alone; "Reset to default" in the toolbar still resets everything. The menu's list is now built only while it is open, and after an arrow-key move it shows the new order straight away.
+
+  `meta.group` is read from TanStack's `meta`, and no type changes: if your app declares its own `ColumnMeta`, add `group?: string` to it. Groups are headings only, not collapsible sections.
+
+  Three new keys in `labels`: `searchColumns` ("Search columns", the box's placeholder and accessible name), `hiddenCount(count)` ("Hidden (2)") and `resetColumns` ("Reset columns"). A consumer passing a complete `DataTableLabels` object (rather than a `Partial`) has to add them.
+
+- 254f036: A Display menu in the toolbar, behind `enableDisplayMenu` (off by default). It has three items. "Wrap cells" lets long values break onto more lines instead of clipping: it switches `cellOverflow` to `'wrap'` and back, a column's own `overflow` still wins, and the choice is saved per `tableId` and cleared by Reset to Default. "Fullscreen" covers the screen with the table, with `Escape` to leave, and appears only where the browser allows fullscreen. "Fit columns to content" sizes every resizable column to its widest rendered cell, header included, within the column's `minSize` and `maxSize`; it needs `enableColumnResizing` and is not offered on the phone card view. Density keeps its own toolbar button.
+
+  Five new keys in `labels`: `display`, `wrapCells`, `fullscreen`, `exitFullscreen` and `fitColumns`. A consumer passing a complete `DataTableLabels` object (rather than a `Partial`) has to add them.
+
+- 6c47104: Export can now cover every row the filters match, not just the page on screen. Pass `exportRows`, a function that takes the table's current state (sorting, filters, search) and resolves to the rows, and the export menu offers each format twice: "Current page" and "All matching", the second counted from `totalRows`. While the rows load, the menu shows progress and a Cancel item; a failed fetch shows a message in the menu and reports `onExportComplete(format, false)`, as does a cancel. Above `exportRowLimit` (default 10,000) the "All matching" file holds the first 10,000 rows in the table's order, and the menu says so before the click. Fetched rows get the same columns and cell text as the page, and `onExport` receives them when set.
+
+  Visible change: under `manualPagination` without `exportRows`, the export menu now carries a "Current page only · n rows" heading, so nobody mistakes the file for the whole list. The new strings are translatable through `exportCurrentPage`, `exportAllMatching`, `exportCurrentPageOnly`, `exportRowLimitReached`, `exportPreparing` and `exportFailed` in `labels`. A consumer passing a complete `DataTableLabels` object (rather than a `Partial`) has to add these keys.
+
+- cae28ae: CSV and Excel exports now hold the columns on screen, in the order the user arranged them, so a reordered table exports in that order and a hidden column stays out. Set `enableExport: false` on a column to keep a visible one out of the file. Headings come from `meta.label`, then a string `header`, then the column id made readable (`payout_status` becomes "Payout status"), so a column with a component header no longer exports its raw id. When no column is left to write, the CSV and Excel items are disabled with a tooltip, translatable through the new `exportNoColumns` label. JSON export and `onExport` still receive the records whole.
+- 11642ec: New prop `enableFilterChips` (default `false`) adds a row under the toolbar that says what is narrowing the list: one chip per active column filter and one for the search. Each chip reads the way the request sends it, with the operator the table infers, which is what `useServerSidePagination` sends: "Status is not Cancelled", "Total between 10 and 50", "Items at least 2", "Placed after 01/11/2026". A select shows the option's label, a yes/no shows `labels.yes` or `labels.no`, and a date is written in `dateFormats.display`. A chip's remove button clears that filter, "Clear all" clears every filter and the search, and both go back to page 1. The search chip has no remove button; the search box clears it. With the prop off, nothing changes.
+
+  Six new keys in `labels`: `filterChip(column, operator, value)` (the chip text, so a language can reorder the three parts), `filterOperator(operator)` (the words for each operator, plus `atLeast`, `atMost`, `after` and `before` for a range with one end set), `filterRange(from, to)` ("10 and 50"), `filterSearch(term)`, `removeFilter(chip)` (the remove button's accessible name) and `clearAllFilters` ("Clear all"). A consumer passing a complete `DataTableLabels` object (rather than a `Partial`) has to add them.
+
+- 2e7fe49: With a `tableId`, the saved column layout now holds only what the user changed. A column whose visibility matches its default is not written, and neither is a column order or a pinning equal to the one the props declare. So a default changed in a later release reaches every user who never touched that column, while a user who did keeps their choice. Columns that no longer exist are dropped from the saved entry when it loads, so a renamed or removed column falls back to its default instead of leaving a stray width or a hidden flag behind.
+
+  The column prop `hidden` now works: a column declared `hidden: true` starts hidden, and that default is never saved. It was declared before but did nothing, so a table that already sets it will now hide that column. `initialColumnVisibility` still wins over it. A column with `enableHiding: false` ignores `hidden`, since the user could never show it again.
+
+  `onColumnVisibilityChange` on mount reports the visibility that renders, with columns declared `hidden` as `false`, and fires only when the user has a saved visibility choice.
+
+  The entry stays under the same key, `getTableStateStorageKey(tableId)`, and gains a `version: 2` field. An entry written by an earlier version is read as it is, never throws, and is written back once in the new shape. The migration keeps what each user saw: a value that differed from today's defaults is kept as their choice, so for those columns a later default change will not reach them. Sorting, filters, the search, density, page size, page index and grouping are saved exactly as before.
+
+- 9745277: The bulk-action bar can float at the bottom of the viewport. Set `bulkActionsPosition: 'sticky'` and the bar appears there on the first selection, stays in view while the page scrolls, and keeps clear of a phone's home indicator. The default stays `'inline'`, the bar above the table as before. The partial-result message from a `BulkActionResult` shows inside the floating bar too. On mobile the actions stay in the toolbar menu.
+
+  With `manualPagination`, once the whole page is selected and `totalRows` is larger, the sticky bar offers "Select all 137 matching". After that the count reads "All 137 matching selected", a confirmation message function receives 137, and the action's `onClick` gets `allMatching: true` in a new second argument, `BulkActionContext`, alongside `state`, the same `ServerTableState` that `onServerStateChange` reports. The rows passed are still the page, so act on `state`'s filters, not the ids. The choice drops as soon as the selection, the filters or the search change. Every action gets the second argument, with `allMatching: false` outside that case; existing actions compile unchanged.
+
+  Two new keys in `labels`: `selectAllMatching(count)` and `allMatchingSelected(count)`. A consumer passing a complete `DataTableLabels` object (rather than a `Partial`) has to add them.
+
+- acbb3a6: New `toolbarContent` prop: put your own controls in the toolbar, right after the search box. The table renders them as given and holds none of their state, so a status menu that drives your own query param works without touching the table's filters. `showToolbar={false}` hides them with the rest of the toolbar.
+- 5809588: A footer row of column totals. Give a column `meta: {aggregate: 'sum'}` (or `'avg'`, `'count'`, `'min'`, `'max'`, `'median'`, `'distinct'`, or your own function over the values) and the table totals every row its filters keep, on every page, not just the one on screen. `meta.formatAggregate` formats a total; by default it is a plain number in the user's locale. The named aggregates read numbers only, so a `null` amount is skipped rather than counted as zero, and with no rows a total is empty rather than `0`. The `Aggregate` type is exported for annotating your own columns.
+
+  In server mode (`manualPagination` or `manualFiltering`) the table never adds up the page it holds. Pass the totals your API computed as the new `aggregates` prop, `{amount: 18250.5}`; a column missing from it, or `null` in it, shows an empty cell. The footer appears only while at least one column has a total to show, and not on the phone card view. Subtotals per group are not part of this release.
+
+### Patch Changes
+
+- 33ea66b: `enableSorting={false}` now turns sorting off in the desktop headers too. Before, a header still sorted on click and showed the sort arrow.
+- 2a17305: The Filters button now includes the active filter count in its accessible name ("Filters, 2 active filter(s)"), so screen readers announce the number its badge shows.
+- 4e35e97: The select-all checkbox now sets the input's own indeterminate state when some rows on the page are selected, so screen readers and accessibility checkers agree that it is partly checked.
+
 ## 1.0.0
 
 ### Major Changes

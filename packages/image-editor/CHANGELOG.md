@@ -1,5 +1,12 @@
 # @vt-labs/image-editor
 
+## 0.2.0
+
+### Minor Changes
+
+- 8561436: Where the browser cannot apply adjustments (Safari before 18), the editor now shows a short note in place of the missing Adjust tab instead of dropping it silently. The text is the new `labels.adjustUnavailable` (default "Adjustments aren't available in this browser.").
+- 774f85e: The floating tool pill on phones now has Redo and Rotate left beside Undo and Rotate right. On a screen narrower than 352 px with every tool on, the two flips fold into one Flip button that opens a menu, labelled by the new `labels.flip` (default "Flip").
+
 ## 0.1.1
 
 ### Patch Changes
