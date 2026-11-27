@@ -1,6 +1,6 @@
 import {describe, expect, it} from 'vitest';
 
-import {createTestedStore} from './testedStore.js';
+import {createTestedStore, readFlag, shows, writeFlag} from './testedStore.js';
 
 const KEY = 'np:tested';
 
@@ -77,5 +77,41 @@ describe('the tested store', () => {
     expect(store.stateOf('welcome', 'en', 'h1')).toBe('tested');
     store.untick('welcome', 'en');
     expect(store.stateOf('welcome', 'en', 'h1')).toBe('untested');
+  });
+});
+
+describe('the test mode flag', () => {
+  it('is off when nothing is stored, and reads back what was written', () => {
+    localStorage.clear();
+    expect(readFlag(localStorage, 'np:testMode')).toBe(false);
+    writeFlag(localStorage, 'np:testMode', true);
+    expect(readFlag(localStorage, 'np:testMode')).toBe(true);
+    writeFlag(localStorage, 'np:testMode', false);
+    expect(localStorage.getItem('np:testMode')).toBeNull();
+    expect(readFlag(localStorage, 'np:testMode')).toBe(false);
+  });
+
+  it('is off with no storage or a storage that throws, and writing does not throw', () => {
+    expect(readFlag(null, 'k')).toBe(false);
+    expect(readFlag(blocked(), 'k')).toBe(false);
+    expect(() => {
+      writeFlag(null, 'k', true);
+      writeFlag(blocked(), 'k', true);
+    }).not.toThrow();
+  });
+});
+
+describe('the list filter', () => {
+  it('shows everything, what is left to test, or what is tested', () => {
+    expect(['untested', 'tested', 'retest'].map((state) => shows('all', state as 'tested'))).toEqual([
+      true,
+      true,
+      true,
+    ]);
+    expect(shows('todo', 'untested')).toBe(true);
+    expect(shows('todo', 'retest')).toBe(true);
+    expect(shows('todo', 'tested')).toBe(false);
+    expect(shows('tested', 'tested')).toBe(true);
+    expect(shows('tested', 'retest')).toBe(false);
   });
 });
