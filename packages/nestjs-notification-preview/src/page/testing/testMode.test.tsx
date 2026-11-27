@@ -10,7 +10,10 @@ const KEY = 'np-spec';
 
 const open = async (user: ReturnType<typeof userEvent.setup>): Promise<void> => {
   await screen.findByTitle('Rendered email');
-  await user.click(screen.getByRole('switch', {name: 'Test mode'}));
+  // The mode is remembered, so a second visit opens with it on already.
+  const mode = screen.getByRole('switch', {name: 'Test mode'});
+  if (mode.getAttribute('aria-checked') !== 'true') await user.click(mode);
+  expect(mode).toBeChecked();
 };
 
 describe('test mode', () => {

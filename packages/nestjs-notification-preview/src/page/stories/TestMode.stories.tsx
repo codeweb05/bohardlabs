@@ -18,11 +18,12 @@ const meta = {
       </>
     ),
   ],
-  // A fresh key for each visit, so a tick from another story never shows here.
+  // Each story starts with no ticks and test mode off, which the page remembers between visits.
   args: {client: fakeClient({extra: 35}), appName: 'Acme', storageKey: 'np-story-test-mode'},
   beforeEach: () => {
     try {
       localStorage.removeItem('np-story-test-mode:tested');
+      localStorage.removeItem('np-story-test-mode:testMode');
     } catch {
       // Nothing was kept.
     }
