@@ -103,12 +103,12 @@ These are the body of the changeset and of the README's "Upgrading from 1.x" sec
 ## Decisions this plan needs
 
 Neither parked question in `docs/decisions/open-questions.md` (A, the palette's contrast; B, the
-response envelope) touches this port. Three new ones do. Each has a default the plan executes
-if nobody answers; record the answer as a decision file in Task 7.
+response envelope) touches this port. Three new ones do. All three are answered below;
+record them as a decision file in Task 7.
 
-- **D1. Export a `DataTableFeatures` type?** Default: yes, type-only. Without it a consumer cannot spell `CellContext<DataTableFeatures, Order, string>` for a renderer written outside the column array. It is a semver-locked name. (Task 5.)
-- **D2. Keep accepting `{left, right}` in `initialColumnPinning`?** Default: no, break it outright in 2.0 and document it. The alternative is a deprecated fallback that maps `left` to `start` and `right` to `end`, removed in 3.0, which needs a wider prop type. (Task 3 carries the optional step.)
-- **D3. Let consumers register their own string `filterFn`/`sortFn` names?** Default: no. 2.0 ships the fixed registry and function values. Registry extension means a `features` prop and generic plumbing through every public type; it is a feature for a later minor if asked.
+- **D1. Export a `DataTableFeatures` type?** Answered 2026-11-27: **yes**, type-only. Without it a consumer cannot spell `CellContext<DataTableFeatures, Order, string>` for a renderer written outside the column array. It is a semver-locked name. (Task 5.)
+- **D2. Keep accepting `{left, right}` in `initialColumnPinning`?** Answered 2026-11-27: **keep a deprecated fallback**, removed in 3.0. `left` maps to `start` and `right` to `end`, the prop type widens to a `@deprecated` union member, and development builds warn once. Task 3 Step 4 is therefore required, not optional. Breaking change 2 in the changeset becomes a deprecation for this prop (the context value and the table's own state are still `{start, end}` only).
+- **D3. Let consumers register their own string `filterFn`/`sortFn` names?** Answered 2026-11-27: **no, a fixed registry**. 2.0 registers every built-in name react-table 8 resolved, so any string a 1.x consumer can write keeps working, and custom logic is passed as a function. Opening the registry is a later minor if asked. The `filterFns` list in Task 2 therefore also includes `includesStringSensitive` and `equalsString`, and `sortFns` also includes `alphanumericCaseSensitive` and `textCaseSensitive`, wherever v9 exports them; a v8 name v9 no longer ships is reimplemented in `core/features.ts` with a test, not dropped. `features.test.ts` asserts the full v8 list.
 
 ## What stays on v8
 
